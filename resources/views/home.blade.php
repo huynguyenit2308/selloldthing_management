@@ -22,6 +22,17 @@
                     <li class="menu_item"><a href="#">Trang chủ</a></li>
                     <li class="menu_item"><a href="#">Danh mục</a></li>
                     <li class="menu_item"><a href="#">Sản phẩm</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Admin
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="adminDropdown">
+                            <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
+                            <a class="dropdown-item" href="#">Quản lý danh mục</a>
+                            <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
+                        </div>
+                    </li>
                 </ul>
             </div>
         </div>
