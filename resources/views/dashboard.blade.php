@@ -14,9 +14,10 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('plugins/OwlCarousel2-2.2.1/animate.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('styles/main_styles.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('styles/responsive.css') }}">
+    @stack('styles')
 </head>
 
-<body>
+<body class="@yield('body-class')">
 
     <div class="super_container">
 
@@ -67,7 +68,7 @@
                                 <ul class="navbar_menu">
                                     <li><a href="#">Trang chủ</a></li>
                                     <li><a href="#">Danh mục</a></li>
-                                    <li><a href="#">Sản phẩm</a></li>
+                                    <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown"
                                             role="button" data-toggle="dropdown" aria-haspopup="true"
