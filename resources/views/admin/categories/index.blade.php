@@ -159,7 +159,7 @@
                                         @endif
                                     </td>
                                     <td class="text-right">
-                                        <a href="#" class="action-btn edit mr-1" title="Sửa">
+                                        <a href="{{ route('admin.categories.edit', $cat->id) }}" class="action-btn edit mr-1" title="Sửa">
                                             <i class="fa fa-pencil"></i>
                                             <span class="d-none d-sm-inline">Sửa</span>
                                         </a>
