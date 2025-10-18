@@ -1,0 +1,321 @@
+.account-products-page {
+    background-color: #f6f7fb;
+    padding-bottom: 60px;
+}
+
+.account-products-wrapper {
+    padding: 40px 0;
+    color: #1c1e21;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.account-breadcrumb {
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.account-breadcrumb ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.account-breadcrumb a {
+    color: #0071ce;
+    text-decoration: none;
+}
+
+.account-products-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.account-products-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.btn-primary {
+    background-color: #ff5722;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #e14b1f;
+    color: #fff;
+}
+
+.account-products-content {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+}
+
+.account-products-summary {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(28, 30, 33, 0.08);
+}
+
+.account-products-summary h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px;
+}
+
+.account-products-summary ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.account-products-summary li {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+}
+
+.account-products-summary .label {
+    color: #6b7280;
+}
+
+.account-products-summary .value {
+    font-weight: 600;
+}
+
+.account-products-panel {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(28, 30, 33, 0.08);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.account-products-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.toolbar-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+}
+
+.toolbar-group select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background-color: #fff;
+}
+
+.toolbar-status {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #cfd4dc;
+    background-color: #fff;
+    color: #1c1e21;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.status-pill .badge {
+    background-color: #f3f4f6;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-weight: 600;
+}
+
+.status-pill.is-active {
+    background-color: #0071ce;
+    color: #fff;
+    border-color: #0071ce;
+}
+
+.status-pill.is-active .badge {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.account-products-table {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.account-products-table .table-header,
+.account-products-table .table-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 140px 110px 160px 160px;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+}
+
+.account-products-table .table-header {
+    background-color: #f9fafb;
+    font-weight: 600;
+    font-size: 14px;
+    color: #4b5563;
+    text-transform: uppercase;
+}
+
+.account-products-table .table-row {
+    background-color: #fff;
+    border-top: 1px solid #edf0f5;
+    font-size: 14px;
+}
+
+.account-products-table .cell.image img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+.account-products-table .cell.info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: #1c1e21;
+}
+
+.account-products-table .cell.info p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.account-products-table .cell.price span,
+.account-products-table .cell.views span {
+    font-weight: 600;
+    color: #1c1e21;
+}
+
+.status-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-published {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.status-pending {
+    background-color: rgba(250, 204, 21, 0.2);
+    color: #b45309;
+}
+
+.status-hidden {
+    background-color: rgba(107, 114, 128, 0.15);
+    color: #374151;
+}
+
+.status-sold {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+.account-products-table .cell.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.account-products-table .cell.actions button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.account-products-table .cell.actions button:hover {
+    border-color: #0071ce;
+    color: #0071ce;
+}
+
+.table-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.account-products-pagination {
+    display: flex;
+    justify-content: center;
+}
+
+@media (max-width: 1024px) {
+    .account-products-content {
+        grid-template-columns: 1fr;
+    }
+
+    .account-products-table .table-header,
+    .account-products-table .table-row {
+        grid-template-columns: 90px 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 12px;
+    }
+
+    .account-products-table .cell.price,
+    .account-products-table .cell.views,
+    .account-products-table .cell.status,
+    .account-products-table .cell.actions {
+        grid-column: span 2;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .account-products-table .cell.actions {
+        justify-content: flex-start;
+    }
+}
