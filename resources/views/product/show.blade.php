@@ -88,6 +88,7 @@
                         <button type="button" class="btn-primary btn-icon-only" aria-label="Thêm vào giỏ hàng">
                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                         </button>
+                        <button type="button" class="btn-primary" aria-label="Mua ngay">Mua ngay</button>
                         <button type="button" class="btn-outline btn-icon-only" aria-label="Yêu thích">
                             <i class="fa fa-heart" aria-hidden="true"></i>
                         </button>
