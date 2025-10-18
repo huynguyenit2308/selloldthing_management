@@ -18,11 +18,17 @@ class CategoryController extends Controller
             $categoriesQuery->where('name', 'like', "%{$q}%");
         }
 
-        if (in_array($status, ['active', 'inactive'], true)) {
-            $categoriesQuery->where('status', $status);
+        $statusMap = [
+            'active' => 1,
+            'inactive' => 0,
+        ];
+
+        if (array_key_exists($status, $statusMap)) {
+            $categoriesQuery->where('status', $statusMap[$status]);
         }
 
         $categories = $categoriesQuery->orderByDesc('created_at')->paginate(10)->withQueryString();
+        
 
         return view('admin.categories.index', [
             'categories' => $categories,
