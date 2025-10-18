@@ -2,11 +2,16 @@
 
 use App\Http\Controllers\CRUD_VoucherController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CategoryController;
+
 use App\Http\Controllers\ProductController;
 Route::get('/', function () {
     return view('home');
 });
 
+// Admin routes
+Route::prefix('admin')->group(function () {
+    Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 // Danh sách voucher
