@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CRUD_VoucherController;
 use Illuminate\Support\Facades\Route;
 
@@ -8,6 +7,7 @@ Route::get('/', function () {
     return view('home');
 });
 
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 // Danh sách voucher
 Route::get('voucher/list', [CRUD_VoucherController::class, 'listvoucher'])->name('voucher.list');
