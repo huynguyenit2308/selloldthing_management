@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AddCategoryController;
 
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
 
 use App\Http\Controllers\AuthController;
 use Laravel\Socialite\Facades\Socialite;
@@ -45,6 +46,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/categories/create', [AddCategoryController::class, 'create'])->name('admin.categories.create');
     Route::post('/categories', [AddCategoryController::class, 'store'])->name('admin.categories.store');
 
+    });
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 // Danh sách voucher
@@ -60,6 +62,9 @@ Route::post('voucher/update', [CRUD_VoucherController::class, 'updatePostvoucher
 // Xóa voucher
 Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher'])->name('voucher.delete');
 
+Route::get('/product/{id}/review', [ReviewController::class, 'create'])->name('review.create');
+Route::post('/product/{id}/review', [ReviewController::class, 'store'])->name('review.store');
+Route::get('/product/{id}/reviews', [ReviewController::class, 'showReviews'])->name('review.show');
 // Route fallback cho mọi GET không hợp lệ
 Route::fallback(function () {
     abort(404);
@@ -77,4 +82,3 @@ Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::
 // Facebook OAuth
 Route::get('auth/facebook', [FacebookController::class, 'redirect'])->name('facebook.redirect');
 Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->name('facebook.callback');
->>>>>>> loc/login
