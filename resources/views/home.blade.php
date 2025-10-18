@@ -31,6 +31,7 @@
                             <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
                             <a class="dropdown-item" href="#">Quản lý danh mục</a>
                             <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
+                            <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lys voucher</a>
                         </div>
                     </li>
                 </ul>
