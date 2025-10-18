@@ -44,7 +44,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
     Route::get('/categories/create', [AddCategoryController::class, 'create'])->name('admin.categories.create');
     Route::post('/categories', [AddCategoryController::class, 'store'])->name('admin.categories.store');
-
+});
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 // Danh sách voucher
@@ -77,4 +77,9 @@ Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::
 // Facebook OAuth
 Route::get('auth/facebook', [FacebookController::class, 'redirect'])->name('facebook.redirect');
 Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->name('facebook.callback');
->>>>>>> loc/login
+
+//logout
+Route::post('/logout', function () {
+    Auth::logout();
+    return redirect()->route('home');
+})->name('logout');

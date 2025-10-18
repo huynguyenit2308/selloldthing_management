@@ -38,14 +38,37 @@
                                 <ul class="top_nav_menu">
                                     <li class="account">
                                         <a href="#">
-                                            Tài khoản của tôi
+                                            @auth
+                                                {{ Auth::user()->name }}
+                                            @else
+                                                Tài khoản của tôi
+                                            @endauth
                                             <i class="fa fa-angle-down"></i>
                                         </a>
                                         <ul class="account_selection">
-                                            <li><a href="#"><i class="fa fa-sign-in" aria-hidden="true"></i>Đăng
-                                                    nhập</a></li>
-                                            <li><a href="#"><i class="fa fa-user-plus" aria-hidden="true"></i>Đăng
-                                                    ký</a></li>
+                                            @guest
+                                                <li>
+                                                    <a href="{{ route('login') }}">
+                                                        <i class="fa fa-sign-in" aria-hidden="true"></i> Đăng nhập
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('register') }}">
+                                                        <i class="fa fa-user-plus" aria-hidden="true"></i> Đăng ký
+                                                    </a>
+                                                </li>
+                                            @else
+                                                <li>
+                                                    <a href="{{ route('logout') }}"
+                                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                                        <i class="fa fa-sign-out" aria-hidden="true"></i> Đăng xuất
+                                                    </a>
+                                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                                        style="display: none;">
+                                                        @csrf
+                                                    </form>
+                                                </li>
+                                            @endguest
                                         </ul>
                                     </li>
                                 </ul>
@@ -70,14 +93,14 @@
                                     <li><a href="#">Danh mục</a></li>
                                     <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
                                     <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown"
-                                            role="button" data-toggle="dropdown" aria-haspopup="true"
-                                            aria-expanded="false">
+                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             Admin
                                         </a>
                                         <div class="dropdown-menu" aria-labelledby="adminDropdown">
                                             <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
-                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản lý danh mục</a>
+                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản
+                                                lý danh mục</a>
                                             <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
                                             <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý
                                                 voucher</a>
@@ -86,7 +109,19 @@
                                 </ul>
                                 <ul class="navbar_user">
                                     <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-user" aria-hidden="true"></i></a></li>
+
+                                    <!-- Dropdown User -->
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-user" aria-hidden="true"></i>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                                            <a class="dropdown-item" href="#">Thông Tin Tài Khoản</a>
+                                            <a class="dropdown-item" href="#">Thông Tin Cá Nhân</a>
+                                            <a class="dropdown-item" href="#">Xem Lịch Sử Mua Hàng</a>
+                                        </div>
+                                    </li>
                                     <li class="checkout">
                                         <a href="#">
                                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
