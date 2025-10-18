@@ -113,7 +113,7 @@
                                     </div>
 
                                     <div class="product-card-body">
-                                        <a href="#" class="product-name">{{ $product->name }}</a>
+                                        <a href="{{ route('products.show', $product) }}" class="product-name">{{ $product->name }}</a>
                                         <div class="product-price">
                                             <span class="product-price-current">{{ number_format($product->price, 0, ',', '.') }}
                                                 VND</span>
