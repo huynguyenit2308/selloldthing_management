@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Voucher;
+use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -31,10 +32,10 @@ class VoucherSeeder extends Seeder
 
         Voucher::create([
             'code' => 'FREESHIP200',
-            'discount' => 200,
             'type' => 'fixed',
-            'start_date' => now(),
-            'end_date' => now()->addMonth(),
+            'discount' => 200000,
+            'start_date' => Carbon::createFromFormat('d/m/Y', '11/10/2025'),
+            'end_date' => Carbon::createFromFormat('d/m/Y', '12/10/2025'),
         ]);
 
         Voucher::create([
