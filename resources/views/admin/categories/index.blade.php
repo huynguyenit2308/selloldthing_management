@@ -43,14 +43,39 @@
         color: #fff;
         border-color: #dc2626;
     }
+
+    /* căn giữa phân trang */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 24px;
+    }
+
+    /* chỉnh kích thước nút trang */
+    .pagination .page-link {
+        border-radius: 8px !important;
+        margin: 0 3px;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+        background-color: #f8f9fa;
+    }
 </style>
+
 <div class="category-admin">
 <main class="py-5">
     <div class="container">
         <div class="card shadow-sm mb-4">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <h5 class="mb-0 font-weight-bold">QUẢN LÝ DANH MỤC</h5>
-                <a href="#" class="btn btn-primary">
+                <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
                     <span class="mr-1">&#x2795;</span> Thêm mới
                 </a>
             </div>
@@ -76,25 +101,15 @@
             </div>
         </form>
 
-        @php
-            // Simulate possible errors based on query params for demo
-            $error = request('error');
-        @endphp
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
-        @if($error === 'NETWORK_ERROR')
-            <div class="alert alert-warning d-flex align-items-center justify-content-between" role="alert">
-                <div>
-                    Không thể kết nối đến server
-                </div>
-                <a href="{{ route('admin.categories.index') }}" class="btn btn-sm btn-outline-secondary">Thử lại</a>
-            </div>
-        @elseif($error === 'PERMISSION_DENIED')
-            <div class="alert alert-danger" role="alert">Bạn không có quyền xem danh sách danh mục</div>
-        @elseif($categories->total() === 0)
+        @if($categories->total() === 0)
             <div class="card shadow-sm">
                 <div class="card-body text-center">
                     <p class="mb-3">Không có danh mục nào</p>
-                    <a href="#" class="btn btn-primary">Thêm mới</a>
+                    <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">Thêm mới</a>
                 </div>
             </div>
         @else
@@ -105,7 +120,7 @@
                             <tr>
                                 <th class="text-center" style="width:7%">STT</th>
                                 <th class="text-center" style="width:8%">ID</th>
-                                <th style="width:12%">Hình ảnh danh mục</th>
+                                <th style="width:12%">Hình ảnh</th>
                                 <th style="width:25%">Tên danh mục</th>
                                 <th style="width:30%">Mô tả</th>
                                 <th class="text-center" style="width:10%">Trạng thái</th>
@@ -118,30 +133,26 @@
                                     <td class="text-center">{{ ($categories->currentPage() - 1) * $categories->perPage() + $index + 1 }}</td>
                                     <td class="text-center">{{ $cat->id }}</td>
                                     <td>
-                                        <div class="d-flex align-items-center">
+                                        <div style="width:56px;height:56px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #e5e7eb;">
                                             @php
-                                                $imagePath = $cat->image;
-                                                if ($imagePath) {
-                                                    $imageUrl = filter_var($imagePath, FILTER_VALIDATE_URL)
-                                                        ? $imagePath
-                                                        : asset('storage/' . ltrim($imagePath, '/'));
-                                                } else {
-                                                    $imageUrl = asset('images/product_1.png');
+                                                $imageUrl = asset('images/product_1.png');
+                                                if (!empty($cat->image)) {
+                                                    if (filter_var($cat->image, FILTER_VALIDATE_URL)) {
+                                                        $imageUrl = $cat->image;
+                                                    } elseif (Storage::disk('public')->exists($cat->image)) {
+                                                        $imageUrl = Storage::url($cat->image);
+                                                    } elseif (file_exists(public_path($cat->image))) {
+                                                        $imageUrl = asset($cat->image);
+                                                    }
                                                 }
                                             @endphp
-                                            <div style="width:48px;height:48px;border-radius:8px;background:#eef2ff;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #e5e7eb;">
-                                                <img src="{{ $imageUrl }}" alt="thumb" style="width:100%;height:100%;object-fit:cover;">
-                                            </div>
+                                            <img src="{{ $imageUrl }}" alt="thumb" style="width:100%;height:100%;object-fit:cover;">
                                         </div>
                                     </td>
-                                    <td>
-                                        <div class="text-truncate" style="max-width: 220px">{{ $cat->name ?? 'N/A' }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="text-truncate" style="max-width: 320px" title="{{ $cat->description ?? 'N/A' }}">{{ $cat->description ?? 'N/A' }}</div>
-                                    </td>
+                                    <td><div class="text-truncate" style="max-width: 220px">{{ $cat->name ?? 'N/A' }}</div></td>
+                                    <td><div class="text-truncate" style="max-width: 320px" title="{{ $cat->description ?? 'N/A' }}">{{ $cat->description ?? 'N/A' }}</div></td>
                                     <td class="text-center">
-                                        @if($cat->status === 'active')
+                                        @if(in_array($cat->status, [1, '1', true, 'active'], true))
                                             <span class="badge badge-success">Đang hoạt động</span>
                                         @else
                                             <span class="badge badge-secondary">Ngừng hoạt động</span>
@@ -162,9 +173,12 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-                    <div class="small text-muted">Tổng: {{ $categories->total() }}</div>
-                    {{ $categories->onEachSide(1)->links() }}
+
+                {{-- Phân trang Bootstrap --}}
+                <div class="card-footer bg-white">
+                    <div class="pagination-wrapper">
+                        {{ $categories->links('pagination::bootstrap-4') }}
+                    </div>
                 </div>
             </div>
         @endif
