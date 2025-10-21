@@ -20,23 +20,23 @@ class ReviewController extends Controller
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'required|string|max:1000',
         ]);
-    
+
         $review = Review::create([
             'product_id' => $id,
             'user_id' => auth()->id(),
             'rating' => $request->rating,
             'comment' => $request->comment,
         ]);
-    
+
         // Load quan hệ user để lấy tên user luôn
         $review->load('user');
-    
+
         return response()->json([
             'success' => true,
             'review' => $review,
         ]);
     }
-    
+
     public function showReviews($id)
     {
         $product = Product::with(['reviews.user', 'images', 'category'])->findOrFail($id);
@@ -91,6 +91,21 @@ class ReviewController extends Controller
         return response()->json([
             'success' => true,
             'review' => $review,
+        ]);
+    }
+    public function destroy($id)
+    {
+        $review = Review::findOrFail($id);
+
+        if ($review->user_id !== auth()->id()) {
+            abort(403, 'Bạn không có quyền xóa đánh giá này.');
+        }
+
+        $review->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa đánh giá thành công.'
         ]);
     }
 }
