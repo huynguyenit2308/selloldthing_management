@@ -163,10 +163,14 @@
                                             <i class="fa fa-pencil"></i>
                                             <span class="d-none d-sm-inline">Sửa</span>
                                         </a>
-                                        <button type="button" class="action-btn delete" title="Xóa">
-                                            <i class="fa fa-trash"></i>
-                                            <span class="d-none d-sm-inline">Xóa</span>
-                                        </button>
+                                        <form action="{{ route('admin.categories.destroy', $cat->id) }}" method="POST" class="d-inline delete-category-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="action-btn delete" title="Xóa">
+                                                <i class="fa fa-trash"></i>
+                                                <span class="d-none d-sm-inline">Xóa</span>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach
@@ -185,4 +189,15 @@
     </div>
 </main>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.delete-category-form').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
+                    event.preventDefault();
+                }
+            });
+        });
+    });
+</script>
 @endsection

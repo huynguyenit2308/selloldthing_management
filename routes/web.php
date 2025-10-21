@@ -18,6 +18,7 @@ Route::prefix('admin')->group(function () {
 
     Route::get('/categories/{category}/edit', [UpdateCategoryController::class, 'edit'])->name('admin.categories.edit');
     Route::put('/categories/{category}', [UpdateCategoryController::class, 'update'])->name('admin.categories.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
 
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');

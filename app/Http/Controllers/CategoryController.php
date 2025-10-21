@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -35,5 +39,26 @@ class CategoryController extends Controller
             'q' => $q,
             'status' => $status,
         ]);
+    }
+
+    public function destroy(Category $category): RedirectResponse
+    {
+        try {
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+
+            $category->delete();
+        } catch (Exception $e) {
+            Log::error('CATEGORY_DELETE_FAILED: ' . $e->getMessage());
+
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => 'CATEGORY_DELETE_FAILED: Không thể xóa danh mục, vui lòng thử lại sau']);
+        }
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Danh mục đã được xóa thành công');
     }
 }
