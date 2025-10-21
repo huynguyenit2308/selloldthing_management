@@ -198,7 +198,7 @@
                                 <div class="card-body">
                                     <h5>Đánh giá: {{ $review->rating }} sao</h5>
                                     <p>{{ $review->comment }}</p>
-                                    <small>Người đánh giá: User ID {{ $review->user_id }}</small>
+                                    <small>Người đánh giá: {{ $review->user->name ?? 'Không rõ' }}</small>
                                 </div>
                             </div>
                             @endforeach
@@ -343,7 +343,7 @@
                     <div class="card-body">
                         <h5>Đánh giá: ${data.review.rating} sao</h5>
                         <p>${data.review.comment}</p>
-                        <small>Người đánh giá: User ID ${data.review.user_id}</small>
+                        <small>Người đánh giá: ${data.review.user.name}</small>
                     </div>
                 </div>`;
                         reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
