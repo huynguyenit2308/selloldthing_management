@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\FacebookController;   
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\AccountController;
 
 // Trang chủ
 Route::get('/', function () {
@@ -61,4 +62,17 @@ Route::prefix('password')->group(function () {
 
     Route::get('/reset', [ForgotPasswordController::class, 'showResetForm'])->name('password.resetForm');
     Route::post('/reset', [ForgotPasswordController::class, 'resetPassword'])->name('password.reset');
+});
+
+//thong tin tai khoan
+Route::middleware(['auth'])->group(function () {
+    // Thông tin tài khoản
+    Route::get('/account/info', [AccountController::class, 'info'])->name('account.info');
+
+    // Đổi mật khẩu
+    Route::get('/account/change-password', [AccountController::class, 'showChangePassword'])->name('account.change');
+    Route::post('/account/change-password', [AccountController::class, 'updatePassword'])->name('account.updatePassword');
+    Route::post('/account/confirm-logout', [AccountController::class, 'confirmLogoutAfterChange'])->name('account.confirmLogout');
+    // Xóa tài khoản
+    Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
 });

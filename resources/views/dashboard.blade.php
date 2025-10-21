@@ -58,7 +58,7 @@
                                                 </li>
                                             @else
                                                 <li>
-                                                    <a class="dropdown-item" href="#">
+                                                    <a class="dropdown-item" href="{{ route(name: 'account.info') }}">
                                                         <i class="fa fa-id-card" aria-hidden="true"></i> Thông Tin Tài Khoản
                                                     </a>
                                                 </li>
