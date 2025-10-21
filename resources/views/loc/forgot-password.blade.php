@@ -13,7 +13,7 @@
         @if(session('error')) 
             <p style="color:red">{{ session('error') }}</p> 
         @endif
-        @if(session('success')) 
+        @if(session('success'))     
             <p style="color:green">{{ session('success') }}</p> 
         @endif
 
@@ -26,6 +26,11 @@
 
             <button type="submit" class="btn btn-primary w-100 mt-2">Gửi mã xác nhận</button>
         </form>
+
+        <!-- ✅ Nút quay về đăng nhập -->
+        <div class="text-center mt-3">
+            <a href="{{ route('login.form') }}" class="text-decoration-none">← Quay về đăng nhập</a>
+        </div>
     </div>
 </body>
 </html>
