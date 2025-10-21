@@ -6,7 +6,12 @@
 <link rel="stylesheet" href="{{ asset('styles/product-detail.css') }}">
 <link rel="stylesheet" href="{{ asset('styles/review.css') }}">
 @endpush
-
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<!-- Font Awesome (cho ngôi sao, icon) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 @section('content')
 <div class="product-detail-wrapper">
     <div class="container">
@@ -167,7 +172,7 @@
                 <div class="product-tab-section" id="tab-reviews" data-tab-panel role="tabpanel" aria-labelledby="tab-button-reviews" hidden>
                     <div class="container mt-5">
                         <h2>Đánh giá sản phẩm: {{ $product->name }}</h2>
-                        <form id="review-form" action="{{ route('review.store', $product->id) }}" method="POST">
+                        <form id="review-form" action="{{ route('reviews.store', $product->id) }}" method="POST">
                             @csrf
                             <div class="form-group">
                                 <label for="rating">Số sao (1-5):</label>
@@ -194,14 +199,50 @@
                         <div id="review-list">
                             @if($product->reviews->count() > 0)
                             @foreach($product->reviews as $review)
-                            <div class="card mb-3">
+                            <div class="card mb-3 position-relative" id="review-{{ $review->id }}">
                                 <div class="card-body">
-                                    <h5>Đánh giá: {{ $review->rating }} sao</h5>
-                                    <p>{{ $review->comment }}</p>
-                                    <small>Người đánh giá: {{ $review->user->name ?? 'Không rõ' }}</small>
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h5>Đánh giá: <span class="review-rating">{{ $review->rating }}</span> sao</h5>
+                                            <p class="review-comment">{{ $review->comment }}</p>
+                                            <small>Người đánh giá: {{ $review->user->name ?? 'Không rõ' }}</small>
+
+                                            <!-- Form sửa ẩn -->
+                                            <div class="edit-form d-none mt-2">
+                                                <div class="mb-2">
+                                                    <label>Số sao:</label>
+                                                    <select class="form-control edit-rating">
+                                                        @for($i = 1; $i <= 5; $i++) <option value="{{ $i }}" {{ $i == $review->rating ? 'selected' : '' }}>{{ $i }}</option>
+                                                            @endfor
+                                                    </select>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <textarea class="form-control edit-comment">{{ $review->comment }}</textarea>
+                                                </div>
+                                                <button class="btn btn-sm btn-primary" onclick="saveEdit({{ $review->id }})">💾 Lưu</button>
+                                                <button class="btn btn-sm btn-secondary" onclick="cancelEdit({{ $review->id }})">❌ Hủy</button>
+                                            </div>
+                                        </div>
+
+                                        @if(auth()->check() && auth()->id() === $review->user_id)
+                                        <!-- Dropdown -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <button class="dropdown-item" onclick="editReview({{ $review->id }}, {{ $review->rating }}, '{{ addslashes($review->comment) }}')">
+                                                    ✏️ Sửa
+                                                </button>
+                                            </ul>
+                                        </div>
+                                        @endif
+
+                                    </div>
                                 </div>
                             </div>
                             @endforeach
+
                             @else
                             <p>Chưa có đánh giá nào cho sản phẩm này.</p>
                             @endif
@@ -265,6 +306,9 @@
         </section>
     </div>
 </div>
+<!-- Bootstrap 5 JS Bundle (có PopperJS để dropdown hoạt động) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 @endsection
 
 @push('scripts')
@@ -355,5 +399,103 @@
                 .catch(err => console.error(err));
         });
     });
+
+    function editReview(id, rating, comment) {
+        const reviewDiv = document.getElementById(`review-${id}`);
+
+        // Lưu HTML gốc để có thể khôi phục nếu hủy
+        reviewDiv.dataset.original = reviewDiv.innerHTML;
+
+        // Hiển thị form sửa tại chỗ
+        reviewDiv.innerHTML = `
+        <form onsubmit="return saveReview(${id})">
+            <div class="rating-stars mb-2">
+                ${[1,2,3,4,5].map(i => `
+                    <i class="${i <= rating ? 'fas' : 'far'} fa-star text-warning" 
+                    data-value="${i}" 
+                    style="cursor:pointer; font-size:20px;" 
+                    onclick="setStar(${id}, ${i})"></i>
+                `).join('')}
+                <input type="hidden" id="edit-rating-${id}" value="${rating}">
+            </div>
+            <textarea id="edit-comment-${id}" class="form-control mb-2">${comment}</textarea>
+            <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${id})">❌ Hủy</button>
+        </form>
+    `;
+    }
+
+    // Chọn sao
+    function setStar(id, value) {
+        const container = document.querySelector(`#review-${id} .rating-stars`);
+        const stars = container.querySelectorAll('.fa-star');
+        document.getElementById(`edit-rating-${id}`).value = value;
+
+        stars.forEach((star, i) => {
+            if (i < value) {
+                star.classList.remove('far');
+                star.classList.add('fas', 'text-warning');
+            } else {
+                star.classList.remove('fas', 'text-warning');
+                star.classList.add('far');
+            }
+        });
+    }
+
+    // Hủy sửa
+    function cancelEdit(id) {
+        const reviewDiv = document.getElementById(`review-${id}`);
+        reviewDiv.innerHTML = reviewDiv.dataset.original;
+    }
+
+    // Lưu sửa
+    function saveReview(id) {
+        const rating = document.getElementById(`edit-rating-${id}`).value;
+        const comment = document.getElementById(`edit-comment-${id}`).value;
+
+        fetch(`/reviews/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    rating,
+                    comment
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const reviewDiv = document.getElementById(`review-${id}`);
+                    reviewDiv.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5>Đánh giá: <span class="review-rating">${rating}</span> sao</h5>
+                            <p class="review-comment">${comment}</p>
+                            <small>Người đánh giá: ${data.review.user?.name || 'Không rõ'}</small>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <button class="dropdown-item" onclick="editReview(${id}, ${rating}, '${comment.replace(/'/g, "\\'")}')">
+                                    ✏️ Sửa
+                                </button>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+                } else {
+                    alert('❌ Lưu thất bại!');
+                }
+            })
+            .catch(() => alert('⚠️ Có lỗi khi gửi dữ liệu lên server.'));
+
+        return false;
+    }
 </script>
 @endpush
