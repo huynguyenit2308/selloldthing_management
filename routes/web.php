@@ -6,6 +6,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\FacebookController;   
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 // Trang chủ
 Route::get('/', function () {
@@ -46,5 +47,18 @@ Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->n
 //logout
 Route::post('/logout', function () {
     Auth::logout();
-    return redirect()->route('login');
+    return redirect()->route('home');
 })->name('logout');
+
+
+// Password Reset Routes
+Route::prefix('password')->group(function () {
+    Route::get('/forgot', [ForgotPasswordController::class, 'showForgotForm'])->name('password.forgot');
+    Route::post('/forgot', [ForgotPasswordController::class, 'sendResetCode'])->name('password.sendCode');
+
+    Route::get('/verify', [ForgotPasswordController::class, 'showVerifyForm'])->name('password.verifyForm');
+    Route::post('/verify', [ForgotPasswordController::class, 'verifyCode'])->name('password.verify');
+
+    Route::get('/reset', [ForgotPasswordController::class, 'showResetForm'])->name('password.resetForm');
+    Route::post('/reset', [ForgotPasswordController::class, 'resetPassword'])->name('password.reset');
+});

@@ -58,7 +58,25 @@
                                                 </li>
                                             @else
                                                 <li>
-                                                    <a href="{{ route('logout') }}"
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fa fa-id-card" aria-hidden="true"></i> Thông Tin Tài Khoản
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fa fa-user" aria-hidden="true"></i> Thông Tin Cá Nhân
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fa fa-history" aria-hidden="true"></i> Xem Lịch Sử Mua
+                                                        Hàng
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <div class="dropdown-divider"></div> <!-- ngăn cách -->
+                                                    <a class="dropdown-item text-danger" href="{{ route('logout') }}"
                                                         onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                                         <i class="fa fa-sign-out" aria-hidden="true"></i> Đăng xuất
                                                     </a>
@@ -69,6 +87,7 @@
                                                 </li>
                                             @endguest
                                         </ul>
+
                                     </li>
                                 </ul>
                             </div>
@@ -98,14 +117,19 @@
                                         </a>
                                         <div class="dropdown-menu" aria-labelledby="adminDropdown">
                                             <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
-                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản lý danh mục</a>
+                                            <a class="dropdown-item" href="#">Quản lý danh mục</a>
                                             <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
                                         </div>
                                     </li>
                                 </ul>
                                 <ul class="navbar_user">
                                     <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-user" aria-hidden="true"></i></a></li>
+                                    <li class="notification">
+                                        <a href="#">
+                                            <i class="fa fa-bell" aria-hidden="true"></i>
+                                            <span class="notification_count">3</span>
+                                        </a>
+                                    </li>
                                     <li class="checkout">
                                         <a href="#">
                                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>

@@ -1684,3 +1684,80 @@ section
 {
 	color: #fe4c50;
 }
+
+/* === FIX CHO MENU TÀI KHOẢN NGƯỜI DÙNG === */
+
+.account .account_selection {
+    background-color: #fff !important; /* Nền trắng rõ ràng */
+    border-radius: 8px;                /* Bo góc nhẹ */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15); /* Đổ bóng nhẹ */
+    padding: 10px 0;
+    border: 1px solid #e0e0e0;
+    min-width: 220px;
+    text-align: left;
+}
+
+/* Mỗi mục trong dropdown */
+.account .account_selection li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    font-size: 14px;
+    color: #333;
+    background-color: transparent;
+    transition: all 0.2s ease;
+}
+
+/* Hover có nền xám nhẹ */
+.account .account_selection li a:hover {
+    background-color: #f5f5f5;
+    color: #fe4c50; /* Màu chủ đạo đỏ */
+}
+
+/* Tách biệt Đăng xuất */
+.account .account_selection li .dropdown-item.text-danger {
+    color: #d9534f !important;
+    font-weight: 600;
+}
+
+/* Divider rõ ràng */
+.account .account_selection .dropdown-divider {
+    border-top: 1px solid #ddd;
+    margin: 6px 0;
+}
+
+/* Icon căn đều */
+.account .account_selection i {
+    width: 20px;
+    text-align: center;
+}
+
+/* === CHUÔNG THÔNG BÁO === */
+.navbar_user .notification {
+    position: relative;
+}
+
+.navbar_user .notification a {
+    color: #1e1e27;
+    transition: color 0.2s ease;
+}
+
+.navbar_user .notification a:hover {
+    color: #fe4c50; /* Màu đỏ chủ đạo */
+}
+
+.notification_count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background-color: #fe4c50;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 50%;
+    padding: 2px 5px;
+    line-height: 1;
+    min-width: 16px;
+    text-align: center;
+}
