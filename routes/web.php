@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AddCategoryController;
 
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
 
 use App\Http\Controllers\AuthController;
 use Laravel\Socialite\Facades\Socialite;
@@ -45,6 +46,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/categories/create', [AddCategoryController::class, 'create'])->name('admin.categories.create');
     Route::post('/categories', [AddCategoryController::class, 'store'])->name('admin.categories.store');
 
+    });
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 // Danh sách voucher
@@ -59,6 +61,7 @@ Route::get('voucher/update', [CRUD_VoucherController::class, 'updatevoucher'])->
 Route::post('voucher/update', [CRUD_VoucherController::class, 'updatePostvoucher'])->name('voucher.update');
 // Xóa voucher
 Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher'])->name('voucher.delete');
+
 
 // Route fallback cho mọi GET không hợp lệ
 Route::fallback(function () {
@@ -77,4 +80,18 @@ Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::
 // Facebook OAuth
 Route::get('auth/facebook', [FacebookController::class, 'redirect'])->name('facebook.redirect');
 Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->name('facebook.callback');
->>>>>>> loc/login
+
+// Hiển thị chi tiết sản phẩm + danh sách đánh giá
+Route::get('/product/{id}', [ReviewController::class, 'showReviews'])->name('product.show');
+
+// Thêm đánh giá mới (AJAX)
+Route::post('/product/{id}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+// Lấy dữ liệu để sửa đánh giá (AJAX)
+Route::get('/reviews/{id}/edit', [ReviewController::class, 'edit'])->name('reviews.edit');
+
+// Cập nhật đánh giá
+Route::put('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
+
+//Xoa danh gia
+Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
