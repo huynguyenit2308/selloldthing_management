@@ -46,7 +46,11 @@ class GoogleController extends Controller
             'name' => $googleUser->getName(),
             'email' => $googleUser->getEmail(),
             'password' => bcrypt(str()->random(16)),
+            'avatar' => $googleUser->getAvatar(),
+            
         ]);
+        session(['is_new_user' => true]);
+
     }
 
     Auth::login($user);
