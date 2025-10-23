@@ -203,10 +203,43 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
-                                            <h5>Đánh giá: <span class="review-rating">{{ $review->rating }}</span> sao</h5>
-                                            <p class="review-comment">{{ $review->comment }}</p>
-                                            <small>Người đánh giá: {{ $review->user->name ?? 'Không rõ' }}</small>
+                                            <h6 class="mb-1 fw-bold">{{ $review->user->name ?? 'Người dùng ẩn danh' }}</h6>
 
+                                            <!-- Hiển thị số sao -->
+                                            <div class="review-stars mb-1">
+                                                @for ($i = 1; $i <= 5; $i++) @if ($i <=$review->rating)
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                    @else
+                                                    <i class="bi bi-star text-secondary"></i>
+                                                    @endif
+                                                    @endfor
+                                            </div>
+
+                                            <!-- Nội dung bình luận -->
+                                            <p class="mb-0">{{ $review->comment }}</p>
+
+                                            <!-- Thời gian -->
+                                            <small class="text-muted">{{ $review->created_at->diffForHumans() }}</small>
+                                            <!-- Form phan hoi ẩn -->
+                                            @auth
+                                            <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-{{ $review->id }}')">💬 Phản hồi</button>
+
+                                            <form id="reply-form-review-{{ $review->id }}" class="reply-form d-none mt-2" action="{{ route('reviews.comment', $review->id) }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="parent_id" value="">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
+                                                    <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                                </div>
+                                            </form>
+                                            @endauth
+
+                                            {{-- 🟦 Hiển thị phản hồi của đánh giá này --}}
+                                            @if($review->comments?->count())
+                                            <div class="mt-3 ms-2">
+                                                @include('phanhoi.phanhoi', ['comments' => $review->comments])
+                                            </div>
+                                            @endif
                                             <!-- Form sửa ẩn -->
                                             <div class="edit-form d-none mt-2">
                                                 <div class="mb-2">
@@ -556,5 +589,76 @@
             })
             .catch(err => console.error(err));
     }
+
+    function toggleReplyForm(id) {
+        const form = document.getElementById(`reply-form-${id}`);
+        form.classList.toggle('d-none');
+    }
+
+
+    // ================= COMMENT REPLY (AJAX) =================
+    window.toggleReplyForm = function(id) {
+        const form = document.getElementById(`reply-form-${id}`);
+        if (form) form.classList.toggle('d-none');
+    };
+
+    document.querySelectorAll('.reply-form').forEach(form => {
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const action = form.getAttribute('action');
+        const res = await fetch(action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            const newComment = document.createElement('div');
+            newComment.classList.add('comment-item', 'mb-2', 'ms-4');
+            newComment.innerHTML = `
+                <div class="card bg-light">
+                    <div class="card-body p-2">
+                        <small><strong>${data.user}:</strong> ${data.content}</small>
+                    </div>
+                </div>
+                <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
+                <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" action="/comments/${data.id}/reply" method="POST">
+                    <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                    <input type="hidden" name="parent_id" value="${data.id}">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
+                        <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                    </div>
+                </form>
+            `;
+
+            // 🟢 Cập nhật hiển thị ngay
+            const parent = form.closest('.comment-item') || form.closest('.card'); // fallback nếu form nằm trong review gốc
+            if (parent) {
+                let container = parent.querySelector('.replies');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.classList.add('replies', 'ms-4', 'mt-2');
+                    parent.appendChild(container);
+                }
+                container.appendChild(newComment);
+            } else {
+                // fallback cuối cùng - append thẳng vào danh sách review
+                document.getElementById('review-list').appendChild(newComment);
+            }
+
+            // Reset form
+            form.reset();
+            form.classList.add('d-none');
+        }
+    });
+});
+
 </script>
 @endpush
