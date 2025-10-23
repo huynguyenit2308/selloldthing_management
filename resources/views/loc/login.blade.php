@@ -172,7 +172,7 @@
                 <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
             </div>
 
-            <a href="{{ route('password.forgot') }}" class="forgot-password">Quên mật khẩu</a>
+            <a href="#" class="forgot-password">Quên mật khẩu</a>
 
             <div class="btn-row">
                 <button type="button" class="btn-register" onclick="window.location.href='{{ route('register') }}'">Đăng
