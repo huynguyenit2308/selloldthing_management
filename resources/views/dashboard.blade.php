@@ -112,6 +112,7 @@
 
                                 </li>
                             </ul>
+
                         </div>
                     </div>
                 </div>
@@ -126,43 +127,46 @@
                     <div class="col-lg-12 text-right">
                         <div class="logo_container">
                             <a href="#">Cửa hàng<span> đồ cũ</span></a>
-                        </div>
-                        <nav class="navbar">
-                            <ul class="navbar_menu">
-                                <li><a href="#">Trang chủ</a></li>
-                                <li><a href="#">Danh mục</a></li>
-                                <li><a href="#">Sản phẩm</a></li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Admin
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="adminDropdown">
-                                        <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
-                                        <a class="dropdown-item" href="#">Quản lý danh mục</a>
-                                        <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
-                                    </div>
-                                </li>
-                            </ul>
-                            <ul class="navbar_user">
-                                <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
-                                <li class="notification">
-                                    <a href="#">
-                                        <i class="fa fa-bell" aria-hidden="true"></i>
-                                        <span class="notification_count">3</span>
-                                    </a>
-                                </li>
-                                <li class="checkout">
-                                    <a href="#">
-                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-                                        <span id="checkout_items" class="checkout_items">2</span>
-                                    </a>
-                                </li>
-                            </ul>
-                            <div class="hamburger_container">
-                                <i class="fa fa-bars" aria-hidden="true"></i>
                             </div>
-                        </nav>
+                            <nav class="navbar">
+                                <ul class="navbar_menu">
+                                    <li><a href="#">Trang chủ</a></li>
+                                    <li><a href="#">Danh mục</a></li>
+                                    <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Admin
+                                        </a>
+                                        <div class="dropdown-menu" aria-labelledby="adminDropdown">
+                                            <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
+                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản lý danh mục</a>
+                                            <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
+                                            <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý
+                                                voucher</a>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <ul class="navbar_user">
+                                    <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
+                                    <li class="notification">
+                                        <a href="#">
+                                            <i class="fa fa-bell" aria-hidden="true"></i>
+                                            <span class="notification_count">3</span>
+                                        </a>
+                                    </li>
+                                    <li class="checkout">
+                                        <a href="#">
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                                            <span id="checkout_items" class="checkout_items">2</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="hamburger_container">
+                                    <i class="fa fa-bars" aria-hidden="true"></i>
+                                </div>
+                            </nav>
+                      
                     </div>
                 </div>
             </div>
