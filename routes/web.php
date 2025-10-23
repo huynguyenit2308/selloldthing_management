@@ -19,6 +19,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SocialController;
 use App\Http\Controllers\DashboardController;
 
+
 // Trang chủ
 
 Route::get('/', function () {

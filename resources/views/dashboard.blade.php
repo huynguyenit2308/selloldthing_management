@@ -162,9 +162,8 @@
                                     <li><a href="#">Danh mục</a></li>
                                     <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
                                     <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown"
-                                            role="button" data-toggle="dropdown" aria-haspopup="true"
-                                            aria-expanded="false">
+                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             Admin
                                         </a>
                                         <div class="dropdown-menu" aria-labelledby="adminDropdown">
@@ -178,7 +177,12 @@
                                 </ul>
                                 <ul class="navbar_user">
                                     <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-user" aria-hidden="true"></i></a></li>
+                                    <li class="notification">
+                                        <a href="#">
+                                            <i class="fa fa-bell" aria-hidden="true"></i>
+                                            <span class="notification_count">3</span>
+                                        </a>
+                                    </li>
                                     <li class="checkout">
                                         <a href="#">
                                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
