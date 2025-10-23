@@ -103,19 +103,13 @@ class CRUD_VoucherController extends Controller
             'code' => 'Mã voucher',
         ]);
 
-        $voucher = Voucher::create([
-            'code' => $request->code,
-            'type' => $request->type,
-            'discount' => $request->discount,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-        ]);
+        $voucher = Voucher::createVoucher($request->all());
 
         return redirect()->route('voucher.list')->with('success', 'Thêm voucher "' . $voucher->code . '" thành công!');
     }
 
     /**
-     * Thêm voucher
+     * Sửa voucher
      **/
     public function updateVoucher(Request $request)
     {
@@ -161,6 +155,7 @@ class CRUD_VoucherController extends Controller
         ], [
             'code' => 'Mã voucher',
         ]);
+
         $encodeId = $request->get('id');
         $id = IdEncoder::decodeId($encodeId);
         $voucher = Voucher::find($id);
@@ -169,19 +164,13 @@ class CRUD_VoucherController extends Controller
             return redirect()->route('voucher.list')->with('error', 'Voucher không tồn tại!');
         }
 
+        // Kiểm tra xung đột dữ liệu
         $formUpdatedAt = $request->input('updated_at');
         if ($voucher->updated_at->toDateTimeString() !== $formUpdatedAt) {
             return back()->withInput()->with('error', 'Dữ liệu đã bị thay đổi bởi người khác. Vui lòng tải lại trang và thử lại.');
         }
 
-        $voucher->update([
-            'code' => $request->code,
-            'type' => $request->type,
-            'discount' => $request->discount,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date
-        ]);
-
+        $voucher = Voucher::updateVoucher($encodeId, $request->all());
         $encodeId = IdEncoder::encodeId($voucher->id);
 
         return redirect()->route('voucher.detail', ['id' => $encodeId])->with('success', 'Cập nhật voucher "' . $voucher->code . '" thành công!');
@@ -193,20 +182,14 @@ class CRUD_VoucherController extends Controller
     public function deleteVoucher(Request $request)
     {
         $encodedId = $request->input('id');
-        $id = IdEncoder::decodeId($encodedId);
+        $voucherName = Voucher::deleteVoucher($encodedId);
 
-        if (!$id) {
-            return redirect()->route('voucher.list')->with('error', 'ID không hợp lệ!');
+        if (!$voucherName) {
+            return redirect()->route('voucher.list')
+                ->with('error', 'Voucher đã bị xóa hoặc không tồn tại!');
         }
 
-        $voucher = Voucher::find($id);
-        if (!$voucher) {
-            return redirect()->route('voucher.list')->with('error', 'Voucher đã bị xóa hoặc không tồn tại!');
-        }
-
-        $voucherName = $voucher->code;
-        $voucher->delete();
-
-        return redirect()->route('voucher.list')->with('success', 'Xóa voucher "' . $voucherName . '" thành công!');
+        return redirect()->route('voucher.list')
+            ->with('success', 'Xóa voucher "' . $voucherName . '" thành công!');
     }
 }
