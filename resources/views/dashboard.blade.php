@@ -14,9 +14,7 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('plugins/OwlCarousel2-2.2.1/animate.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('styles/main_styles.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('styles/responsive.css') }}">
-    @stack('styles')
 </head>
-
 
 <body>
     @if (session('is_new_user'))
@@ -64,27 +62,6 @@
                                         @auth
                                             {{ Auth::user()->name }}
                                         @else
-<body class="@yield('body-class')">
-
-    <div class="super_container">
-
-        <!-- Header -->
-
-        <header class="header trans_300">
-
-            <!-- Top Navigation -->
-
-            <div class="top_nav">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="top_nav_left">Chuyên đề phát triển web 1 - 2</div>
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <div class="top_nav_right">
-                                <ul class="top_nav_menu">
-                                    <li class="account">
-                                        <a href="#">
                                             Tài khoản của tôi
                                         @endauth
                                         <i class="fa fa-angle-down"></i>
@@ -149,47 +126,6 @@
                     <div class="col-lg-12 text-right">
                         <div class="logo_container">
                             <a href="#">Cửa hàng<span> đồ cũ</span></a>
-            <div class="main_nav_container">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-12 text-right">
-                            <div class="logo_container">
-                                <a href="#">Cửa hàng<span> đồ cũ</span></a>
-                            </div>
-                            <nav class="navbar">
-                                <ul class="navbar_menu">
-                                    <li><a href="#">Trang chủ</a></li>
-                                    <li><a href="#">Danh mục</a></li>
-                                    <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
-                                    <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown"
-                                            role="button" data-toggle="dropdown" aria-haspopup="true"
-                                            aria-expanded="false">
-                                            Admin
-                                        </a>
-                                        <div class="dropdown-menu" aria-labelledby="adminDropdown">
-                                            <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
-                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản lý danh mục</a>
-                                            <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
-                                            <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý
-                                                voucher</a>
-                                        </div>
-                                    </li>
-                                </ul>
-                                <ul class="navbar_user">
-                                    <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-user" aria-hidden="true"></i></a></li>
-                                    <li class="checkout">
-                                        <a href="#">
-                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-                                            <span id="checkout_items" class="checkout_items">2</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                                <div class="hamburger_container">
-                                    <i class="fa fa-bars" aria-hidden="true"></i>
-                                </div>
-                            </nav>
                         </div>
                         <nav class="navbar">
                             <ul class="navbar_menu">
@@ -284,7 +220,6 @@
     <script src="{{ asset('plugins/easing/easing.js') }}"></script>
     <script src="{{ asset('js/custom.js') }}"></script>
 
-    @stack('scripts')
 </body>
 
 </html>

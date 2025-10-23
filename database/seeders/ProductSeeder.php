@@ -29,7 +29,7 @@ class ProductSeeder extends Seeder
 
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'url' => 'images/product_' . $i . '.png',
+                    'url' => 'product_' . $i . '.jpg',
                     'description' => 'Ảnh mô tả sản phẩm ' . $i,
                 ]);
             }
