@@ -231,10 +231,18 @@
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                <button class="dropdown-item" onclick="editReview({{ $review->id }}, {{ $review->rating }}, '{{ addslashes($review->comment) }}')">
-                                                    ✏️ Sửa
-                                                </button>
+                                                <li>
+                                                    <button class="dropdown-item" onclick="editReview({{ $review->id }}, {{ $review->rating }}, '{{ addslashes($review->comment) }}')">
+                                                        ✏️ Sửa
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item text-danger" onclick="deleteReview({{ $review->id }})">
+                                                        🗑️ Xóa
+                                                    </button>
+                                                </li>
                                             </ul>
+
                                         </div>
                                         @endif
 
@@ -382,21 +390,50 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        const review = data.review;
+                        const userName = review.user?.name || 'Không rõ';
+
                         const reviewHtml = `
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5>Đánh giá: ${data.review.rating} sao</h5>
-                        <p>${data.review.comment}</p>
-                        <small>Người đánh giá: ${data.review.user.name}</small>
-                    </div>
-                </div>`;
+                    <div class="card mb-3 position-relative" id="review-${review.id}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5>Đánh giá: <span class="review-rating">${review.rating}</span> sao</h5>
+                                    <p class="review-comment">${review.comment}</p>
+                                    <small>Người đánh giá: ${userName}</small>
+                                </div>
+
+                                <div class="dropdown">
+                                    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
+                                                ✏️ Sửa
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
+                                                🗑️ Xóa
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
                         reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
                         reviewForm.reset();
                     } else {
-                        alert('Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại'));
+                        alert('❌ Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại.'));
                     }
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    console.error('Lỗi:', err);
+                    alert('⚠️ Gửi đánh giá thất bại, thử lại sau.');
+                });
         });
     });
 
@@ -496,6 +533,28 @@
             .catch(() => alert('⚠️ Có lỗi khi gửi dữ liệu lên server.'));
 
         return false;
+    }
+
+    function deleteReview(id) {
+        if (!confirm('Bạn có chắc muốn xóa đánh giá này không?')) return;
+
+        fetch(`/reviews/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const reviewDiv = document.getElementById(`review-${id}`);
+                    if (reviewDiv) reviewDiv.remove();
+                    alert('✅ Đã xóa đánh giá thành công!');
+                } else {
+                    alert('❌ Có lỗi xảy ra khi xóa.');
+                }
+            })
+            .catch(err => console.error(err));
     }
 </script>
 @endpush

@@ -112,14 +112,26 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
 });
 
+
 // Hiển thị chi tiết sản phẩm + danh sách đánh giá
 Route::get('/product/{id}', [ReviewController::class, 'showReviews'])->name('product.show');
 
 // Thêm đánh giá mới (AJAX)
 Route::post('/product/{id}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
+// Lấy dữ liệu để sửa đánh giá (AJAX)
+Route::get('/reviews/{id}/edit', [ReviewController::class, 'edit'])->name('reviews.edit');
+
+// Cập nhật đánh giá
+Route::put('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
+
+//Xoa danh gia
+Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+
 
 
 Route::fallback(function () {
     abort(404);
 });
+
+
