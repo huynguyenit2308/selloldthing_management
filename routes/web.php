@@ -62,9 +62,7 @@ Route::post('voucher/update', [CRUD_VoucherController::class, 'updatePostvoucher
 // Xóa voucher
 Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher'])->name('voucher.delete');
 
-Route::get('/product/{id}/review', [ReviewController::class, 'create'])->name('review.create');
-Route::post('/product/{id}/review', [ReviewController::class, 'store'])->name('review.store');
-Route::get('/product/{id}/reviews', [ReviewController::class, 'showReviews'])->name('review.show');
+
 // Route fallback cho mọi GET không hợp lệ
 Route::fallback(function () {
     abort(404);
@@ -82,3 +80,11 @@ Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::
 // Facebook OAuth
 Route::get('auth/facebook', [FacebookController::class, 'redirect'])->name('facebook.redirect');
 Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->name('facebook.callback');
+
+// Hiển thị chi tiết sản phẩm + danh sách đánh giá
+Route::get('/product/{id}', [ReviewController::class, 'showReviews'])->name('product.show');
+
+// Thêm đánh giá mới (AJAX)
+Route::post('/product/{id}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+
