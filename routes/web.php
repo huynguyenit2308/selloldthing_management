@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AddCategoryController;
 
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
 
 use App\Http\Controllers\AuthController;
 use Laravel\Socialite\Facades\Socialite;
@@ -62,10 +63,8 @@ Route::post('voucher/update', [CRUD_VoucherController::class, 'updatePostvoucher
 // Xóa voucher
 Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher'])->name('voucher.delete');
 
+
 // Route fallback cho mọi GET không hợp lệ
-Route::fallback(function () {
-    abort(404);
-});
 
 Route::get('auth/google/callback', function () {
     $user = Socialite::driver('google')->user();
@@ -79,6 +78,7 @@ Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::
 // Facebook OAuth
 Route::get('auth/facebook', [FacebookController::class, 'redirect'])->name('facebook.redirect');
 Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->name('facebook.callback');
+
 
 //logout
 Route::post('/logout', function () {
@@ -110,4 +110,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/confirm-logout', [AccountController::class, 'confirmLogoutAfterChange'])->name('account.confirmLogout');
     // Xóa tài khoản
     Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
+});
+
+// Hiển thị chi tiết sản phẩm + danh sách đánh giá
+Route::get('/product/{id}', [ReviewController::class, 'showReviews'])->name('product.show');
+
+// Thêm đánh giá mới (AJAX)
+Route::post('/product/{id}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+
+
+Route::fallback(function () {
+    abort(404);
 });
