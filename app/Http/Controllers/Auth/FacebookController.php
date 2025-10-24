@@ -30,11 +30,8 @@ class FacebookController extends Controller
                     'name'        => $facebookUser->getName(),
                     'email'       => $facebookUser->getEmail(),
                     'facebook_id' => $facebookUser->getId(),
-                    'avatar' => $facebookUser->getAvatar(),
                     'password'    => bcrypt('12345678'), // tạm
-                    
                 ]);
-                session(['is_new_user' => true]);
             } else {
                 // Nếu có user rồi nhưng chưa lưu facebook_id thì update
                 if (!$user->facebook_id) {
