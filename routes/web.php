@@ -13,14 +13,15 @@ use App\Http\Controllers\AuthController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Auth\FacebookController;   
+use App\Http\Controllers\Auth\FacebookController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\CRUD_OrderController;
 
 // Trang chủ
 
 Route::get('/', function () {
-    return view('home'); 
+    return view('home');
 })->name('home');
 
 // ===== AUTH =====
@@ -62,6 +63,9 @@ Route::get('voucher/update', [CRUD_VoucherController::class, 'updatevoucher'])->
 Route::post('voucher/update', [CRUD_VoucherController::class, 'updatePostvoucher'])->name('voucher.update');
 // Xóa voucher
 Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher'])->name('voucher.delete');
+Route::middleware('auth')->group(function () {
+    Route::get('order/list', [CRUD_OrderController::class, 'listOrder'])->name('orders.list');
+});
 
 
 // Route fallback cho mọi GET không hợp lệ
