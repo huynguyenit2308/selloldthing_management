@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->tinyInteger('rating')->default(0);
             $table->text('comment')->nullable();
-            $table->string('media')->nullable();
+            $table->string('media',100)->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });

@@ -7,19 +7,21 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AddCategoryController;
 
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
 
 use App\Http\Controllers\AuthController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Auth\FacebookController;   
+use App\Http\Controllers\Auth\FacebookController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\CRUD_OrderController;
 
 // Trang chủ
 
 Route::get('/', function () {
-    return view('home'); 
+    return view('home');
 })->name('home');
 
 // ===== AUTH =====
@@ -61,11 +63,12 @@ Route::get('voucher/update', [CRUD_VoucherController::class, 'updatevoucher'])->
 Route::post('voucher/update', [CRUD_VoucherController::class, 'updatePostvoucher'])->name('voucher.update');
 // Xóa voucher
 Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher'])->name('voucher.delete');
+Route::middleware('auth')->group(function () {
+    Route::get('order/list', [CRUD_OrderController::class, 'listOrder'])->name('orders.list');
+});
+
 
 // Route fallback cho mọi GET không hợp lệ
-Route::fallback(function () {
-    abort(404);
-});
 
 Route::get('auth/google/callback', function () {
     $user = Socialite::driver('google')->user();
@@ -79,6 +82,7 @@ Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::
 // Facebook OAuth
 Route::get('auth/facebook', [FacebookController::class, 'redirect'])->name('facebook.redirect');
 Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->name('facebook.callback');
+
 
 //logout
 Route::post('/logout', function () {
@@ -111,3 +115,27 @@ Route::middleware(['auth'])->group(function () {
     // Xóa tài khoản
     Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
 });
+
+
+// Hiển thị chi tiết sản phẩm + danh sách đánh giá
+Route::get('/product/{id}', [ReviewController::class, 'showReviews'])->name('product.show');
+
+// Thêm đánh giá mới (AJAX)
+Route::post('/product/{id}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+// Lấy dữ liệu để sửa đánh giá (AJAX)
+Route::get('/reviews/{id}/edit', [ReviewController::class, 'edit'])->name('reviews.edit');
+
+// Cập nhật đánh giá
+Route::put('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
+
+//Xoa danh gia
+Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+
+
+Route::fallback(function () {
+    abort(404);
+});
+
+
