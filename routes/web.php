@@ -51,6 +51,7 @@ Route::prefix('admin')->group(function () {
 });
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/my-products', [ProductController::class, 'manage'])->name('products.manage');
 // Danh sách voucher
 Route::get('voucher/list', [CRUD_VoucherController::class, 'listvoucher'])->name('voucher.list');
 // Chi tiết voucher

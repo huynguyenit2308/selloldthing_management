@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -91,4 +93,66 @@ class ProductController extends Controller
         ]);
     }
 
+    public function manage(Request $request): View
+    {
+        $user = $request->user();
+
+        if (!$user instanceof User) {
+            $user = User::query()->first();
+        }
+
+        abort_if(!$user, 404, 'User not found');
+
+        $statusFilter = $request->input('status', 'all');
+        $sortOption = $request->input('sort', 'newest');
+
+        $baseQuery = Product::with(['images' => function ($q) {
+            $q->orderBy('created_at');
+        }, 'category'])
+            ->where('user_id', $user->id);
+
+        $statusOptions = ['all', 'published', 'pending', 'hidden', 'sold'];
+
+        if (in_array($statusFilter, array_diff($statusOptions, ['all']), true)) {
+            $baseQuery->where('status', $statusFilter);
+        }
+
+        $sortMappings = [
+            'newest' => ['created_at', 'desc'],
+            'oldest' => ['created_at', 'asc'],
+            'price_asc' => ['price', 'asc'],
+            'price_desc' => ['price', 'desc'],
+            'views_desc' => ['view_count', 'desc'],
+            'views_asc' => ['view_count', 'asc'],
+        ];
+
+        [$sortColumn, $sortDirection] = $sortMappings[$sortOption] ?? $sortMappings['newest'];
+
+        $products = $baseQuery
+            ->orderBy($sortColumn, $sortDirection)
+            ->paginate(10)
+            ->withQueryString();
+
+        $statusCounts = Product::select('status', DB::raw('COUNT(*) as total'))
+            ->where('user_id', $user->id)
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $statistics = [
+            'total' => Product::where('user_id', $user->id)->count(),
+            'published' => (int) ($statusCounts['published'] ?? 0),
+            'pending' => (int) ($statusCounts['pending'] ?? 0),
+            'hidden' => (int) ($statusCounts['hidden'] ?? 0),
+            'sold' => (int) ($statusCounts['sold'] ?? 0),
+        ];
+
+        return view('product.manage', [
+            'user' => $user,
+            'products' => $products,
+            'statistics' => $statistics,
+            'statusFilter' => $statusFilter,
+            'statusOptions' => $statusOptions,
+            'sortOption' => $sortOption,
+        ]);
+    }
 }
