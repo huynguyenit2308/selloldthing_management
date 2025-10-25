@@ -112,13 +112,15 @@
                                     <li><a href="#">Danh mục</a></li>
                                     <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
                                     <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown"
+                                            role="button" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false">
                                             Admin
                                         </a>
                                         <div class="dropdown-menu" aria-labelledby="adminDropdown">
                                             <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
-                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản lý danh mục</a>
+                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản
+                                                lý danh mục</a>
                                             <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
                                             <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý
                                                 voucher</a>
@@ -134,7 +136,7 @@
                                         </a>
                                     </li>
                                     <li class="checkout">
-                                        <a href="#">
+                                        <a href="{{ route('orders.list') }}">
                                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                                             <span id="checkout_items" class="checkout_items">2</span>
                                         </a>
