@@ -9,7 +9,7 @@ class Payment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['order_id', 'user_id', 'amount', 'payment_method', 'payment_status'];
+    protected $fillable = ['order_id', 'user_id', 'voucher_id', 'amount', 'payment_method', 'payment_status'];
 
     public function order()
     {
@@ -19,5 +19,10 @@ class Payment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class);
     }
 }

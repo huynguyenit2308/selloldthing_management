@@ -17,6 +17,7 @@ use App\Http\Controllers\Auth\FacebookController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\CRUD_OrderController;
+use App\Http\Controllers\PaymentController;
 
 // Trang chủ
 
@@ -66,10 +67,15 @@ Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher']
 Route::middleware('auth')->group(function () {
     Route::get('order/list', [CRUD_OrderController::class, 'listOrder'])->name('orders.list');
 });
-
+// Thanh toán
+Route::get('payment', [PaymentController::class, 'showPayment'])->name('order.payment');
+Route::post('payment/precess', [PaymentController::class, 'paymentCashAndOnline'])->name('payment.cash.online');
+// Thanh toán momo
+Route::get('momo/callback', [PaymentController::class, 'momoCallback'])->name('momo.callback');
+// Thanh toán vnpay
+Route::get('vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('vnpay.callback');
 
 // Route fallback cho mọi GET không hợp lệ
-
 Route::get('auth/google/callback', function () {
     $user = Socialite::driver('google')->user();
     dd($user); // test tạm, sau này bạn save vào DB
