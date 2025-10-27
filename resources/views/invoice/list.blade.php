@@ -76,7 +76,7 @@
                                 </div>
 
                                 <div class="card-footer bg-white text-center">
-                                    <a href="#" class="btn btn-outline-info btn-sm mr-2">
+                                    <a href="{{ route('invoice.detail', ['id' => $payment->encode_id]) }}" class="btn btn-outline-info btn-sm mr-2">
                                         <i class="fa fa-eye"></i> Xem
                                     </a>
                                 </div>
