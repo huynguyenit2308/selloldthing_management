@@ -9,6 +9,22 @@
 @section('content')
     <div class="products-wrapper">
         <div class="container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show text-center" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
             <div class="products-breadcrumb">
                 <span><a href="{{ url('/') }}">Trang chủ</a></span>
                 <span> &gt; </span>
@@ -39,13 +55,11 @@
                             <div class="filter-price-row">
                                 <div class="filter-option">
                                     <input type="number" name="price_min" placeholder="Từ"
-                                        min="{{ $priceBounds->min_price ?? 0 }}"
-                                        value="{{ $filters['price_min'] }}">
+                                        min="{{ $priceBounds->min_price ?? 0 }}" value="{{ $filters['price_min'] }}">
                                 </div>
                                 <div class="filter-option">
                                     <input type="number" name="price_max" placeholder="Đến"
-                                        max="{{ $priceBounds->max_price ?? '' }}"
-                                        value="{{ $filters['price_max'] }}">
+                                        max="{{ $priceBounds->max_price ?? '' }}" value="{{ $filters['price_max'] }}">
                                 </div>
                             </div>
                             <button type="submit" class="filter-apply-button">Áp dụng</button>
@@ -62,8 +76,7 @@
                                     </label>
                                 @endforeach
                                 <label class="filter-option">
-                                    <input type="radio" name="condition" value=""
-                                        @checked(!$filters['condition'])>
+                                    <input type="radio" name="condition" value="" @checked(!$filters['condition'])>
                                     <span>Tất cả</span>
                                 </label>
                             </div>
@@ -113,12 +126,15 @@
                                     </div>
 
                                     <div class="product-card-body">
-                                        <a href="{{ route('products.show', $product) }}" class="product-name">{{ $product->name }}</a>
+                                        <a href="{{ route('products.show', $product) }}"
+                                            class="product-name">{{ $product->name }}</a>
                                         <div class="product-price">
-                                            <span class="product-price-current">{{ number_format($product->price, 0, ',', '.') }}
+                                            <span
+                                                class="product-price-current">{{ number_format($product->price, 0, ',', '.') }}
                                                 VND</span>
                                             @if ($product->original_price && $product->original_price > $product->price)
-                                                <span class="product-price-original">{{ number_format($product->original_price, 0, ',', '.') }}
+                                                <span
+                                                    class="product-price-original">{{ number_format($product->original_price, 0, ',', '.') }}
                                                     VND</span>
                                             @endif
                                         </div>
@@ -128,13 +144,20 @@
                                             <span>Tình trạng:
                                                 {{ $product->condition ? ucfirst($product->condition) : 'Đang cập nhật' }}</span>
                                             <span>Địa điểm: {{ $product->location ?? 'Đang cập nhật' }}</span>
-                                            <span>Tình trạng kho: {{ $product->quantity > 0 ? 'Còn hàng' : 'Hết hàng' }}</span>
+                                            <span>Tình trạng kho:
+                                                {{ $product->quantity > 0 ? 'Còn hàng' : 'Hết hàng' }}</span>
                                         </div>
                                         <div class="product-actions">
-                                            <button type="button" class="product-action-button product-action-primary"
-                                                aria-label="Thêm vào giỏ hàng">
-                                                <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-                                            </button>
+                                            <form method="POST" action="{{ route('cart.add') }}">
+                                                @csrf
+                                                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                                <input type="hidden" name="quantity" value="1">
+                                                <button type="submit" class="product-action-button product-action-primary"
+                                                    aria-label="Thêm vào giỏ hàng">
+                                                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+
                                             <button type="button" class="product-action-button product-action-secondary"
                                                 aria-label="Yêu thích">
                                                 <i class="fa fa-heart" aria-hidden="true"></i>

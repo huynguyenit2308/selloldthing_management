@@ -25,8 +25,6 @@ class OrderSeeder extends Seeder
                 'user_id' => $user->id,
                 'total_price' => rand(1000000, 5000000),
                 'status' => 'completed',
-                'payment_method' => 'cash',
-                'voucher_id' => $voucher?->id,
             ]);
 
             $products = Product::inRandomOrder()->take(3)->get();
