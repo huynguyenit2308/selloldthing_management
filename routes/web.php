@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\FacebookController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\CRUD_InvoiceController;
 use App\Http\Controllers\CRUD_OrderController;
 use App\Http\Controllers\PaymentController;
 
@@ -76,6 +77,8 @@ Route::get('momo/callback', [PaymentController::class, 'momoCallback'])->name('m
 Route::get('vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('vnpay.callback');
 // Thêm vào giỏ hàng
 Route::post('/cart/add', [CRUD_OrderController::class, 'addToCart'])->name('cart.add');
+// Danh sách hóa đơn
+Route::get('invoice/list', [CRUD_InvoiceController::class, 'listInvoice'])->name('invoice.list');
 
 // Route fallback cho mọi GET không hợp lệ
 Route::get('auth/google/callback', function () {
