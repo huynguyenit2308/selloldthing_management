@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('voucher_id')->nullable()->constrained('vouchers')->onDelete('set null');
             $table->decimal('amount', 10, 2);
             $table->enum('payment_method', ['cash', 'momo', 'vnpay']);
             $table->enum('payment_status', ['pending', 'completed', 'failed'])->default('pending');
