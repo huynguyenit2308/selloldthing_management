@@ -12,7 +12,7 @@
             </h2>
 
             @if ($orders->count() > 0)
-                <form action="#" method="GET" id="paymentForm">
+                <form action="{{ route('order.payment') }}" method="GET" id="paymentForm">
                     @csrf
 
                     {{-- Thông báo --}}
@@ -87,10 +87,10 @@
                                         </button>
 
                                         {{-- Checkbox đẹp hơn --}}
-                                        <input class="form-check-input" type="checkbox" id="order{{ $order->id }}"
-                                            name="order_ids[]" value="{{ $order->id }}"
+                                        <input class="form-check-input" type="checkbox" id="item{{ $item->id }}"
+                                            name="item_ids[]" value="{{ $item->id }}"
                                             data-price="{{ $product->price * $item->quantity }}">
-                                        <label class="form-check-label" for="order{{ $order->id }}"></label>
+                                        <label class="form-check-label" for="item{{ $item->id }}"></label>
                                     </div>
                                 </div>
                             @endforeach
@@ -104,9 +104,9 @@
                         <a href="{{ route('home') }}" class="btn btn-outline-info btn-sm mr-2">
                             <i class="fa fa-arrow-left"></i> Quay lại
                         </a>
-                        <a href="#" class="btn btn-outline-warning btn-sm mr-2">
+                        <button type="submit" class="btn btn-outline-warning btn-sm mr-2">
                             <i class="fa fa-credit-card"></i> Thanh toán
-                        </a>
+                        </button>
                     </div>
                 </form>
 
@@ -144,7 +144,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const selectAll = document.getElementById('selectAll');
-            const itemCheckboxes = document.querySelectorAll('input[name="order_ids[]"]');
+            const itemCheckboxes = document.querySelectorAll('input[name="item_ids[]"]');
             const summaryDiv = document.getElementById('selectedSummary');
 
             function formatCurrency(amount) {
@@ -185,7 +185,7 @@
                 checkbox.addEventListener('change', function() {
                     if (!this.checked) {
                         if (selectAll) selectAll.checked = false;
-                    } else if (document.querySelectorAll('input[name="order_ids[]"]:checked')
+                    } else if (document.querySelectorAll('input[name="item_ids[]"]:checked')
                         .length === itemCheckboxes.length) {
                         if (selectAll) selectAll.checked = true;
                     }
