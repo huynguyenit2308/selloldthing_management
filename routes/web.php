@@ -74,6 +74,8 @@ Route::post('payment/precess', [PaymentController::class, 'paymentCashAndOnline'
 Route::get('momo/callback', [PaymentController::class, 'momoCallback'])->name('momo.callback');
 // Thanh toán vnpay
 Route::get('vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('vnpay.callback');
+// Thêm vào giỏ hàng
+Route::post('/cart/add', [CRUD_OrderController::class, 'addToCart'])->name('cart.add');
 
 // Route fallback cho mọi GET không hợp lệ
 Route::get('auth/google/callback', function () {
