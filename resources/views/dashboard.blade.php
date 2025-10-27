@@ -125,6 +125,8 @@
                                             <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
                                             <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý
                                                 voucher</a>
+                                            <a class="dropdown-item" href="{{ route('invoice.list') }}">Quản lý
+                                                hóa đơn</a>
                                         </div>
                                     </li>
                                 </ul>
