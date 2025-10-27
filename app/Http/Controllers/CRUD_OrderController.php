@@ -9,13 +9,17 @@ class CRUD_OrderController extends Controller
 {
     public function listOrder()
     {
-        // Lấy danh sách đơn hàng chưa thanh toán của người dùng đang đăng nhập
+        // Lấy danh sách đơn hàng của user hiện tại
         $orders = Order::where('user_id', Auth::id())
-            ->where('status', 'pending')
+            ->whereHas('items', function ($query) {
+                $query->where('status', 'pending'); 
+            })
+            ->with(['items' => function ($query) {
+                $query->where('status', 'pending')->with('product');
+            }])
             ->orderBy('id', 'desc')
             ->get();
 
-        // Trả về view hiển thị danh sách đơn hàng
         return view('order.list_order', compact('orders'));
     }
 }
