@@ -70,8 +70,11 @@ Route::middleware('auth')->group(function () {
 // Thanh toán
 Route::get('payment', [PaymentController::class, 'showPayment'])->name('order.payment');
 Route::post('payment/precess', [PaymentController::class, 'paymentCashAndOnline'])->name('payment.cash.online');
-// Thanh toán online
-Route::get('momo-callback', [PaymentController::class, 'momoCallback'])->name('momo.callback');
+// Thanh toán momo
+Route::get('momo/callback', [PaymentController::class, 'momoCallback'])->name('momo.callback');
+// Thanh toán vnpay
+Route::get('vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('vnpay.callback');
+
 // Route fallback cho mọi GET không hợp lệ
 Route::get('auth/google/callback', function () {
     $user = Socialite::driver('google')->user();

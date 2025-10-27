@@ -290,6 +290,13 @@ class PaymentController extends Controller
                     // Nếu có lỗi -> quay lại
                     return redirect()->back()->with('error', 'Không thể tạo giao dịch MoMo: ' . ($jsonResult['message'] ?? 'Không xác định'));
                 }
+                // Tài khoản test momo:
+                // 9704 0000 0000 0018
+                // NGUYEN VAN A
+                // 03/07
+                // OTP
+            } else {
+                return redirect()->back()->with('error', 'Phương thức thanh toán không hợp lệ.');
             }
         }
     }
@@ -304,17 +311,23 @@ class PaymentController extends Controller
                 $data = json_decode(base64_decode($request->extraData), true);
 
                 if (is_array($data) && isset($data['item_ids'])) {
+                    $firstOrderId = null;
                     foreach ($data['item_ids'] as $itemId) {
                         $item = \App\Models\OrderItem::find($itemId);
                         if ($item) {
                             $item->status = 'completed';
                             $item->save();
+
+                            // Lưu lại order_id đầu tiên
+                            if (!$firstOrderId) {
+                                $firstOrderId = $item->order_id;
+                            }
                         }
                     }
 
                     // Tạo bản ghi thanh toán
                     \App\Models\Payment::create([
-                        'order_id' => $data['order_id'] ?? 1, // nếu bạn có ID đơn hàng riêng
+                        'order_id' => $firstOrderId,
                         'user_id' => $data['user_id'] ?? Auth::id(),
                         'voucher_id' => $data['voucher_id'] ?? null,
                         'amount' => $request->amount,
@@ -334,7 +347,7 @@ class PaymentController extends Controller
             }
         }
 
-        // ❌ Nếu thất bại
+        //  Nếu thất bại
         if ($request->isMethod('post')) {
             return response()->json(['message' => 'Payment failed'], 400);
         } else {
