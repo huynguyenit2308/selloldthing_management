@@ -81,6 +81,8 @@ Route::post('/cart/add', [CRUD_OrderController::class, 'addToCart'])->name('cart
 Route::get('invoice/list', [CRUD_InvoiceController::class, 'listInvoice'])->name('invoice.list');
 // Chi tiết hóa đơn
 Route::get('invoice/detail', [CRUD_InvoiceController::class, 'detailInvoice'])->name('invoice.detail');
+// Hủy đơn hàng
+Route::post('order/cancel/{encodeId}', [CRUD_OrderController::class, 'cancelOrder'])->name('order.cancel')->middleware('auth');
 
 // Route fallback cho mọi GET không hợp lệ
 Route::get('auth/google/callback', function () {
@@ -150,5 +152,3 @@ Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('revi
 Route::fallback(function () {
     abort(404);
 });
-
-
