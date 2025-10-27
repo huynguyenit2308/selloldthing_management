@@ -79,6 +79,8 @@ Route::get('vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name(
 Route::post('/cart/add', [CRUD_OrderController::class, 'addToCart'])->name('cart.add');
 // Danh sách hóa đơn
 Route::get('invoice/list', [CRUD_InvoiceController::class, 'listInvoice'])->name('invoice.list');
+// Chi tiết hóa đơn
+Route::get('invoice/detail', [CRUD_InvoiceController::class, 'detailInvoice'])->name('invoice.detail');
 
 // Route fallback cho mọi GET không hợp lệ
 Route::get('auth/google/callback', function () {
