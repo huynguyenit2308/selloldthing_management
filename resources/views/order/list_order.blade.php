@@ -81,7 +81,7 @@
                                         {{-- Nút Hủy --}}
                                         <button type="button"
                                             class="btn btn-outline-danger d-flex align-items-center justify-content-center px-3 py-2 font-weight-bold rounded mr-3"
-                                            data-toggle="modal" data-target="#cancelModal{{ $order->id }}"
+                                            data-toggle="modal" data-target="#cancelModal{{ $item->id }}"
                                             style="border-width: 2px; min-width: 90px; transition: all 0.2s ease-in-out;">
                                             <i class="bi bi-trash-fill mr-1"></i> Hủy
                                         </button>
@@ -112,29 +112,39 @@
 
                 {{-- Modal xác nhận hủy --}}
                 @foreach ($orders as $order)
-                    <div class="modal fade" id="cancelModal{{ $order->id }}" tabindex="-1" role="dialog"
-                        aria-labelledby="cancelModalLabel{{ $order->id }}" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered" role="document">
-                            <div class="modal-content rounded">
-                                <div class="modal-header bg-danger text-white">
-                                    <h5 class="modal-title">Xác nhận.</h5>
-                                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    Bạn có chắc chắn muốn hủy đơn hàng này không?
-                                </div>
-                                <div class="modal-footer">
-                                    <form action="#" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn btn-danger">Xác nhận</button>
-                                    </form>
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    @foreach ($order->items as $item)
+                        @php
+                            $encodeId = IdEncoder::encodeId($item->id);
+                        @endphp
+
+                        <!-- Modal xác nhận hủy sản phẩm -->
+                        <div class="modal fade" id="cancelModal{{ $item->id }}" tabindex="-1" role="dialog"
+                            aria-labelledby="cancelModalLabel{{ $item->id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content rounded">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Xác nhận hủy sản phẩm</h5>
+                                        <button type="button" class="close text-white" data-dismiss="modal"
+                                            aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Bạn có chắc chắn muốn hủy sản phẩm <strong>{{ $item->product->name }}</strong>
+                                        không?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form action="{{ route('order.cancel', ['encodeId' => $encodeId]) }}"
+                                            method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-danger">Xác nhận</button>
+                                        </form>
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    @endforeach
                 @endforeach
             @else
                 <p class="text-center mt-5">Bạn chưa có hóa đơn nào đang chờ thanh toán.</p>
