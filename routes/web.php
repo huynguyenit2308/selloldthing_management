@@ -8,7 +8,7 @@ use App\Http\Controllers\AddCategoryController;
 
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
-
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\AuthController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
@@ -77,9 +77,28 @@ Route::get('auth/google', [App\Http\Controllers\Auth\GoogleController::class, 'r
 Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'callback']);
 // ===== END AUTH =====
 
+
+
 // Facebook OAuth
 Route::get('auth/facebook', [FacebookController::class, 'redirect'])->name('facebook.redirect');
 Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->name('facebook.callback');
+
+
+
+
+// 🟦 Lưu bình luận cho review
+Route::post('/reviews/{reviewId}/comments', [CommentController::class, 'store'])
+    ->name('comments.store');
+
+// 🟨 Lưu phản hồi cho comment
+Route::post('/comments/{comment}/reply', [CommentController::class, 'reply'])
+    ->name('comments.reply');
+
+// 🟩 Hiển thị chi tiết review + toàn bộ comment (nếu cần)
+Route::get('/reviews/{reviewId}/comments', [CommentController::class, 'show'])
+    ->name('comments.show');
+
+
 
 // Hiển thị chi tiết sản phẩm + danh sách đánh giá
 Route::get('/product/{id}', [ReviewController::class, 'showReviews'])->name('product.show');
