@@ -1,0 +1,38 @@
+
+    .rating-stars {
+        direction: rtl;
+        unicode-bidi: bidi-override;
+        display: inline-flex;
+    }
+    .rating-stars input[type="radio"] {
+        display: none;
+    }
+    .rating-stars label {
+        font-size: 2rem;
+        color: #ddd;
+        cursor: pointer;
+        padding: 0 5px;
+    }
+    .rating-stars input[type="radio"]:checked ~ label {
+        color: #f39c12;
+    }
+    .rating-stars label:hover,
+    .rating-stars label:hover ~ label {
+        color: #f1c40f;
+    }
+    .fa-star {
+        font-size: 22px;
+        cursor: pointer;
+        color: #ccc;
+      }
+      .fa-star.fas {
+        color: #ffc107;
+      }
+      .fa-star:hover {
+        transform: scale(1.1);
+      }
+      .rating-stars i {
+        cursor: pointer;
+        font-size: 20px;
+    }
+    

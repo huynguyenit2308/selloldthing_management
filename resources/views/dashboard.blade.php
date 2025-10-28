@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('styles/main_styles.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('styles/responsive.css') }}">
     @stack('styles')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body class="@yield('body-class')">
@@ -38,15 +39,57 @@
                                 <ul class="top_nav_menu">
                                     <li class="account">
                                         <a href="#">
-                                            Tài khoản của tôi
+                                            @auth
+                                                {{ Auth::user()->name }}
+                                            @else
+                                                Tài khoản của tôi
+                                            @endauth
                                             <i class="fa fa-angle-down"></i>
                                         </a>
                                         <ul class="account_selection">
-                                            <li><a href="#"><i class="fa fa-sign-in" aria-hidden="true"></i>Đăng
-                                                    nhập</a></li>
-                                            <li><a href="#"><i class="fa fa-user-plus" aria-hidden="true"></i>Đăng
-                                                    ký</a></li>
+                                            @guest
+                                                <li>
+                                                    <a href="{{ route('login') }}">
+                                                        <i class="fa fa-sign-in" aria-hidden="true"></i> Đăng nhập
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('register') }}">
+                                                        <i class="fa fa-user-plus" aria-hidden="true"></i> Đăng ký
+                                                    </a>
+                                                </li>
+                                            @else
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ route(name: 'account.info') }}">
+                                                        <i class="fa fa-id-card" aria-hidden="true"></i> Thông Tin Tài Khoản
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fa fa-user" aria-hidden="true"></i> Thông Tin Cá Nhân
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fa fa-history" aria-hidden="true"></i> Xem Lịch Sử Mua
+                                                        Hàng
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <div class="dropdown-divider"></div> <!-- ngăn cách -->
+                                                    <a class="dropdown-item text-danger" href="{{ route('logout') }}"
+                                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                                        <i class="fa fa-sign-out" aria-hidden="true"></i> Đăng xuất
+                                                    </a>
+                                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                                        style="display: none;">
+                                                        @csrf
+                                                    </form>
+                                                </li>
+                                            @endguest
                                         </ul>
+
                                     </li>
                                 </ul>
                             </div>
@@ -77,18 +120,26 @@
                                         </a>
                                         <div class="dropdown-menu" aria-labelledby="adminDropdown">
                                             <a class="dropdown-item" href="#">Quản lý sản phẩm</a>
-                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản lý danh mục</a>
+                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản
+                                                lý danh mục</a>
                                             <a class="dropdown-item" href="#">Quản lý hóa đơn</a>
                                             <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý
                                                 voucher</a>
+                                            <a class="dropdown-item" href="{{ route('invoice.list') }}">Quản lý
+                                                hóa đơn</a>
                                         </div>
                                     </li>
                                 </ul>
                                 <ul class="navbar_user">
                                     <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-user" aria-hidden="true"></i></a></li>
-                                    <li class="checkout">
+                                    <li class="notification">
                                         <a href="#">
+                                            <i class="fa fa-bell" aria-hidden="true"></i>
+                                            <span class="notification_count">3</span>
+                                        </a>
+                                    </li>
+                                    <li class="checkout">
+                                        <a href="{{ route('orders.list') }}">
                                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                                             <span id="checkout_items" class="checkout_items">2</span>
                                         </a>

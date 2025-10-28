@@ -4,12 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductImage extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'url', 'description'];
+    protected $fillable = ['product_id', 'url', 'description', 'sort_order'];
+
+    protected $casts = [
+        'sort_order' => 'integer',
+    ];
 
     protected $appends = ['image_url'];
 
@@ -20,36 +26,80 @@ class ProductImage extends Model
 
     public function getImageUrlAttribute(): string
     {
-        $path = $this->attributes['url'] ?? '';
+        $path = trim((string) ($this->attributes['url'] ?? ''));
 
-        if (!$path) {
+        if ($path === '') {
             return asset('images/product_1.png');
         }
 
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-            return $path;
-        }
+        $normalized = str_replace('\\', '/', $path);
 
-        $relativePath = ltrim($path, '/');
+        $appUrl = (string) config('app.url');
+        $appHost = parse_url($appUrl, PHP_URL_HOST);
+        $localHosts = array_filter([$appHost, 'localhost', '127.0.0.1']);
 
-        if (!str_starts_with($relativePath, 'images/')) {
-            $relativePath = 'images/' . $relativePath;
-        }
+        if (Str::startsWith($normalized, ['http://', 'https://'])) {
+            $parsedUrl = parse_url($normalized);
+            $host = $parsedUrl['host'] ?? null;
 
-        $fullPath = public_path($relativePath);
+            $isLocalHost = $host === null || in_array($host, $localHosts, true);
 
-        if (!file_exists($fullPath)) {
-            $pngRelativePath = preg_replace('/\.[^.]+$/', '.png', $relativePath);
-
-            if ($pngRelativePath && file_exists(public_path($pngRelativePath))) {
-                $relativePath = $pngRelativePath;
+            if ($isLocalHost) {
+                $normalized = ltrim($parsedUrl['path'] ?? '', '/');
+            } else {
+                return $normalized;
             }
         }
 
-        if (!file_exists(public_path($relativePath))) {
-            return asset('images/product_1.png');
+        $normalized = ltrim($normalized, '/');
+
+        $diskCandidates = [$normalized];
+
+        if (Str::startsWith($normalized, 'storage/')) {
+            $diskCandidates[] = Str::after($normalized, 'storage/');
         }
 
-        return asset($relativePath);
+        if (Str::startsWith($normalized, 'public/')) {
+            $diskCandidates[] = Str::after($normalized, 'public/');
+        }
+
+        $diskCandidates = array_unique(array_filter(array_map(static fn ($candidate) => ltrim((string) $candidate, '/'), $diskCandidates)));
+
+        foreach ($diskCandidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+
+            if (Storage::disk('public')->exists($candidate)) {
+                return '/' . ltrim('storage/' . $candidate, '/');
+            }
+        }
+
+        $publicCandidates = [
+            $normalized,
+            'storage/' . ltrim($normalized, '/'),
+        ];
+
+        if (Str::startsWith($normalized, 'storage/')) {
+            $publicCandidates[] = Str::after($normalized, 'storage/');
+        }
+
+        if (!Str::startsWith($normalized, 'images/')) {
+            $publicCandidates[] = 'images/' . ltrim($normalized, '/');
+        }
+
+        $publicCandidates = array_unique(array_filter(array_map(static fn ($candidate) => ltrim((string) $candidate, '/'), $publicCandidates)));
+
+        foreach ($publicCandidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+
+            if (file_exists(public_path($candidate))) {
+                return '/' . ltrim($candidate, '/');
+            }
+        }
+
+        return asset('images/product_1.png');
     }
 }

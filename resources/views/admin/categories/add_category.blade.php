@@ -14,20 +14,32 @@
             </div>
         </div>
 
-        <form id="categoryCreateForm" class="card shadow-sm" action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data" novalidate>
+        {{-- Thông báo lỗi backend --}}
+        @if(session('error_code'))
+            <div class="alert alert-danger">
+                <strong>Lỗi {{ session('error_code') }}:</strong> {{ session('error_message') }}
+            </div>
+        @endif
+
+        <form id="categoryCreateForm" class="card shadow-sm" 
+              action="{{ route('admin.categories.store') }}" 
+              method="POST" enctype="multipart/form-data" novalidate>
             @csrf
             <div class="card-body">
                 {{-- Tên danh mục --}}
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="name" class="font-weight-semibold">Tên danh mục</label>
-                    <input id="name" type="text" name="name" class="form-control" value="{{ old('name') }}" required maxlength="255" autocomplete="off" placeholder="Nhập tên danh mục">
+                    <input id="name" type="text" name="name" class="form-control" 
+                           value="{{ old('name') }}" required maxlength="255" autocomplete="off" 
+                           placeholder="Nhập tên danh mục">
+                    <div class="invalid-feedback" id="nameError"></div>
                     @error('name')
                         <div class="mt-1 text-danger">{{ $message }}</div>
                     @enderror
                 </div>
 
                 {{-- Hình ảnh danh mục --}}
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="image" class="font-weight-semibold">Hình ảnh danh mục</label>
                     <div class="border rounded text-center" id="imageDropZone"
                          style="position: relative; overflow: hidden; min-height: 240px;
@@ -49,6 +61,7 @@
                         </div>
                         <input id="image" name="image" type="file" class="d-none" accept="image/*">
                     </div>
+                    <div class="invalid-feedback d-block" id="imageError"></div>
                     @error('image')
                         <div class="mt-1 text-danger">{{ $message }}</div>
                     @enderror
@@ -85,10 +98,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const imagePlaceholder = document.getElementById('imagePlaceholder');
     const imageOverlay = document.getElementById('imageOverlay');
     const changeImageButton = document.getElementById('changeImageButton');
+    const nameError = document.getElementById('nameError');
+    const imageError = document.getElementById('imageError');
 
     let previewUrl = null;
 
-    // --- Reset preview
+    // Regex cho ký tự hợp lệ (chữ, số, khoảng trắng, dấu tiếng Việt, gạch ngang)
+    const validNameRegex = /^[\p{L}\p{N}\s\-]+$/u;
+
     function resetPreview() {
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
@@ -100,41 +117,64 @@ document.addEventListener('DOMContentLoaded', function () {
         imageOverlay.style.pointerEvents = 'none';
     }
 
-    // --- Hiển thị ảnh xem trước
     function showPreview(file) {
         previewUrl = URL.createObjectURL(file);
         dropZone.style.backgroundImage = `url('${previewUrl}')`;
         imagePlaceholder.classList.add('d-none');
     }
 
-    // --- Mở chọn file ảnh
     function openFilePicker(e) {
-        e.stopPropagation(); // chặn click lan ra
+        e.stopPropagation();
         imageInput.click();
     }
 
-    // --- Chỉ gán 1 listener duy nhất để tránh mở 2 lần
     imagePicker.addEventListener('click', openFilePicker);
     changeImageButton.addEventListener('click', openFilePicker);
     dropZone.addEventListener('click', function(e) {
-        // nếu click vào nút bên trong, không mở thêm
         if (e.target.id === 'imagePicker' || e.target.id === 'changeImageButton') return;
         imageInput.click();
     });
 
-    // --- Khi chọn ảnh
+    // --- Validate tên danh mục ---
+    nameInput.addEventListener('input', function () {
+        const name = nameInput.value.trim();
+        let errorMsg = '';
+        nameInput.classList.remove('is-invalid');
+
+        if (!name) {
+            errorMsg = 'Tên danh mục không được để trống (CATEGORY_NAME_REQUIRED)';
+        } else if (name.length > 255) {
+            errorMsg = 'Tên danh mục không được vượt quá 255 ký tự (CATEGORY_NAME_TOO_LONG)';
+        } else if (!validNameRegex.test(name)) {
+            errorMsg = 'Tên danh mục chứa ký tự không hợp lệ (CATEGORY_NAME_INVALID)';
+        }
+
+        if (errorMsg) {
+            nameError.textContent = errorMsg;
+            nameInput.classList.add('is-invalid');
+            submitBtn.disabled = true;
+        } else {
+            nameError.textContent = '';
+            nameInput.classList.remove('is-invalid');
+            submitBtn.disabled = !imageInput.files.length;
+        }
+    });
+
+    // --- Validate hình ảnh ---
     imageInput.addEventListener('change', function () {
         const file = imageInput.files[0];
+        imageError.textContent = '';
+
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            alert('Chỉ được chọn file hình ảnh!');
+            imageError.textContent = 'Định dạng file không được hỗ trợ (IMAGE_FORMAT_INVALID)';
             imageInput.value = '';
             return;
         }
 
         if (file.size > 2 * 1024 * 1024) {
-            alert('Kích thước ảnh không được vượt quá 2MB!');
+            imageError.textContent = 'Kích thước file không được vượt quá 2MB (IMAGE_SIZE_EXCEEDED)';
             imageInput.value = '';
             return;
         }
@@ -143,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.disabled = nameInput.value.trim() === '';
     });
 
-    // --- Hover overlay
+    // --- Hover overlay ---
     dropZone.addEventListener('mouseenter', function () {
         if (dropZone.style.backgroundImage) {
             imageOverlay.style.opacity = '1';
@@ -155,10 +195,6 @@ document.addEventListener('DOMContentLoaded', function () {
         imageOverlay.style.pointerEvents = 'none';
     });
 
-    // --- Bật nút submit khi có tên
-    nameInput.addEventListener('input', function () {
-        submitBtn.disabled = nameInput.value.trim() === '';
-    });
 });
 </script>
 @endsection
