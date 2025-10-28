@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Models\Review; // ✅ Thêm dòng này để tránh lỗi Review not found
 use App\Services\CommentService;
 use Illuminate\Http\Request;
 
@@ -31,11 +32,12 @@ class CommentController extends Controller
 
         if ($request->ajax()) {
             return response()->json([
-                'success' => true,
-                'user' => auth()->user()->email,
-                'content' => $comment->content,
-                'id' => $comment->id,
-                'created_at' => $comment->created_at->diffForHumans(),
+                'success'   => true,
+                'user'      => auth()->user()->email,
+                'content'   => $comment->content,
+                'id'        => $comment->id,
+                'parent_id' => $comment->parent_id,
+                'created_at'=> $comment->created_at->diffForHumans(),
             ]);
         }
 
@@ -49,17 +51,39 @@ class CommentController extends Controller
             'content' => 'required|string|max:1000',
         ]);
 
-        $reply = $this->commentService->createReply($comment, $request->content);
+        $reply = Comment::create([
+            'review_id' => $comment->review_id,
+            'user_id'   => auth()->id(),
+            'content'   => $request->content,
+            'parent_id' => $comment->id,
+        ]);
 
         if ($request->ajax()) {
             return response()->json([
-                'success' => true,
-                'user' => auth()->user()->name ?? auth()->user()->email,
-                'content' => $reply->content,
-                'created_at' => $reply->created_at->diffForHumans(),
+                'success'   => true,
+                'id'        => $reply->id,
+                'user'      => auth()->user()->name ?? 'Người dùng',
+                'content'   => $reply->content,
+                'parent_id' => $reply->parent_id,
+                'created_at'=> $reply->created_at->diffForHumans(),
             ]);
         }
 
         return back();
+    }
+
+    // 🟩 Hiển thị chi tiết review + toàn bộ comment (phân cấp)
+    public function show($reviewId)
+    {
+        // 🚀 Lấy review cùng các bình luận (đã load đệ quy replies)
+        $review = Review::with([
+            // ✅ Lấy comment cấp 1
+            'comments' => function ($query) {
+                $query->whereNull('parent_id')
+                      ->with(['user', 'repliesRecursive.user']);
+            },
+            'user'
+        ])->findOrFail($reviewId);
+        return view('product.show', compact('review'));
     }
 }

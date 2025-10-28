@@ -1,664 +1,725 @@
-@extends('dashboard')
+    @extends('dashboard')
 
-@section('body-class', 'product-detail-page')
+    @section('body-class', 'product-detail-page')
 
-@push('styles')
-<link rel="stylesheet" href="{{ asset('styles/product-detail.css') }}">
-<link rel="stylesheet" href="{{ asset('styles/review.css') }}">
-@endpush
-<!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- Bootstrap Icons -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-<!-- Font Awesome (cho ngôi sao, icon) -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-@section('content')
-<div class="product-detail-wrapper">
-    <div class="container">
-        <div class="product-detail-breadcrumb">
-            <span><a href="{{ url('/') }}">Trang chủ</a></span>
-            <span>&gt;</span>
-            <span><a href="{{ route('products.index') }}">Sản phẩm</a></span>
-            <span>&gt;</span>
-            <span>{{ $product->name }}</span>
-        </div>
+    @push('styles')
+    <link rel="stylesheet" href="{{ asset('styles/product-detail.css') }}">
+    <link rel="stylesheet" href="{{ asset('styles/review.css') }}">
+    @endpush
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome (cho ngôi sao, icon) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    @section('content')
+    <div class="product-detail-wrapper">
+        <div class="container">
+            <div class="product-detail-breadcrumb">
+                <span><a href="{{ url('/') }}">Trang chủ</a></span>
+                <span>&gt;</span>
+                <span><a href="{{ route('products.index') }}">Sản phẩm</a></span>
+                <span>&gt;</span>
+                <span>{{ $product->name }}</span>
+            </div>
 
-        <div class="product-detail-content">
-            <section class="product-gallery">
-                @php
-                $galleryImages = $product->images->take(4);
-                if ($galleryImages->isEmpty()) {
-                $galleryImages = collect([null]);
-                }
-                $primaryImageUrl = optional($galleryImages->first())->image_url ?? asset('images/product_1.png');
-                @endphp
-                <div class="product-gallery-preview">
-                    <img src="{{ $primaryImageUrl }}" alt="{{ $product->name }}" data-active-image>
-                </div>
-
-                <div class="product-gallery-thumbnails">
-                    @foreach ($galleryImages as $index => $image)
+            <div class="product-detail-content">
+                <section class="product-gallery">
                     @php
-                    $imageUrl = $image ? $image->image_url : asset('images/product_1.png');
-                    $isActive = $index === 0;
+                    $galleryImages = $product->images->take(4);
+                    if ($galleryImages->isEmpty()) {
+                    $galleryImages = collect([null]);
+                    }
+                    $primaryImageUrl = optional($galleryImages->first())->image_url ?? asset('images/product_1.png');
                     @endphp
-                    <button type="button" class="product-gallery-thumb {{ $isActive ? 'active' : '' }}" data-image="{{ $imageUrl }}" aria-label="Ảnh phụ {{ $index + 1 }} của {{ $product->name }}" aria-pressed="{{ $isActive ? 'true' : 'false' }}">
-                        <img src="{{ $imageUrl }}" alt="{{ $product->name }} thumbnail {{ $index + 1 }}">
-                    </button>
-                    @endforeach
+                    <div class="product-gallery-preview">
+                        <img src="{{ $primaryImageUrl }}" alt="{{ $product->name }}" data-active-image>
+                    </div>
 
-                    @for ($i = $galleryImages->count(); $i < 4; $i++) <button type="button" class="product-gallery-thumb placeholder" aria-hidden="true" data-image="{{ asset('images/product_1.png') }}" disabled>
-                        <img src="{{ asset('images/product_1.png') }}" alt="Ảnh sản phẩm dự phòng">
+                    <div class="product-gallery-thumbnails">
+                        @foreach ($galleryImages as $index => $image)
+                        @php
+                        $imageUrl = $image ? $image->image_url : asset('images/product_1.png');
+                        $isActive = $index === 0;
+                        @endphp
+                        <button type="button" class="product-gallery-thumb {{ $isActive ? 'active' : '' }}" data-image="{{ $imageUrl }}" aria-label="Ảnh phụ {{ $index + 1 }} của {{ $product->name }}" aria-pressed="{{ $isActive ? 'true' : 'false' }}">
+                            <img src="{{ $imageUrl }}" alt="{{ $product->name }} thumbnail {{ $index + 1 }}">
                         </button>
-                        @endfor
-                </div>
-            </section>
+                        @endforeach
 
-            <section class="product-summary">
-                <header class="product-summary-header">
-                    <h1 class="product-title">{{ $product->name }}</h1>
-                    <div class="product-price-group">
-                        <span class="product-price-current">{{ number_format($product->price, 0, ',', '.') }} VND</span>
-                        <span class="product-price-original">
-                            {{ $product->original_price ? number_format($product->original_price, 0, ',', '.') . ' VND' : 'Giá gốc: Đang cập nhật' }}
-                        </span>
+                        @for ($i = $galleryImages->count(); $i < 4; $i++) <button type="button" class="product-gallery-thumb placeholder" aria-hidden="true" data-image="{{ asset('images/product_1.png') }}" disabled>
+                            <img src="{{ asset('images/product_1.png') }}" alt="Ảnh sản phẩm dự phòng">
+                            </button>
+                            @endfor
                     </div>
-                    <div class="product-meta-grid">
-                        <div>
-                            <span class="product-meta-label">Địa chỉ</span>
-                            <span class="product-meta-value">{{ $product->location ?? 'Đang cập nhật' }}</span>
-                        </div>
-                        <div>
-                            <span class="product-meta-label">Thời gian đăng</span>
-                            <span class="product-meta-value">{{ optional($product->created_at)->format('d/m/Y') }}</span>
-                        </div>
-                        <div>
-                            <span class="product-meta-label">Tình trạng</span>
-                            <span class="product-meta-value">{{ $product->condition ? ucfirst($product->condition) : 'Đang cập nhật' }}</span>
-                        </div>
-                        <div>
-                            <span class="product-meta-label">Kho hàng</span>
-                            <span class="product-meta-value">{{ $product->quantity > 0 ? 'Còn ' . $product->quantity . ' sản phẩm' : 'Hết hàng' }}</span>
-                        </div>
-                    </div>
-                    <p class="product-summary-description">{{ $product->short_description ?? \Illuminate\Support\Str::limit($product->description, 180) ?? 'Chưa có mô tả.' }}</p>
-                </header>
+                </section>
 
-                <div class="product-summary-actions">
-                    <button type="button" class="btn-primary btn-icon-only" aria-label="Thêm vào giỏ hàng">
-                        <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-                    </button>
-                    <button type="button" class="btn-outline btn-icon-only" aria-label="Yêu thích">
-                        <i class="fa fa-heart" aria-hidden="true"></i>
-                    </button>
-                </div>
-
-                <div class="product-summary-rating">
-                    <div class="rating-total">
-                        <strong>{{ $averageRating > 0 ? $averageRating : 'Chưa có' }}</strong>
-                        <span>/ 5</span>
-                    </div>
-                    <div>
-                        <span>{{ $reviewsCount }} đánh giá</span>
-                    </div>
-                </div>
-            </section>
-
-            <aside class="product-seller-card">
-                <div class="product-seller-avatar" aria-hidden="true">Ảnh</div>
-                <div class="product-seller-info">
-                    <div class="product-seller-name">Tên người bán: {{ data_get($product, 'seller_name', 'Đang cập nhật') }}</div>
-                    <div class="product-seller-meta">Số sao đánh giá: {{ $averageRating > 0 ? $averageRating : 'Chưa có' }}</div>
-                    <div class="product-seller-meta">Ngày gia nhập: {{ optional($product->created_at)->format('d/m/Y') }}</div>
-                </div>
-                <div class="product-seller-actions">
-                    <button type="button" class="btn-outline btn-with-icon">
-                        <i class="fa fa-phone" aria-hidden="true"></i>
-                        <span>Gọi điện</span>
-                    </button>
-                    <button type="button" class="btn-outline btn-with-icon">
-                        <i class="fa fa-comments" aria-hidden="true"></i>
-                        <span>Nhắn tin</span>
-                    </button>
-                </div>
-            </aside>
-        </div>
-
-        <section class="product-tabs">
-            <div class="product-tabs-header" role="tablist">
-                <button type="button" class="product-tab active" id="tab-button-description" data-tab-target="tab-description" role="tab" aria-selected="true">Mô tả chi tiết</button>
-                <button type="button" class="product-tab" id="tab-button-specs" data-tab-target="tab-specs" role="tab" aria-selected="false">Thông số kỹ thuật</button>
-                <button type="button" class="product-tab" id="tab-button-reviews" data-tab-target="tab-reviews" role="tab" aria-selected="false">Đánh giá ({{ $reviewsCount }})</button>
-                <button type="button" class="product-tab" id="tab-button-shipping" data-tab-target="tab-shipping" role="tab" aria-selected="false">Vận chuyển &amp; Thanh toán</button>
-            </div>
-
-            <div class="product-tabs-body">
-                <div class="product-tab-section is-active" id="tab-description" data-tab-panel role="tabpanel" aria-labelledby="tab-button-description">
-                    <h2>Mô tả sản phẩm</h2>
-                    <p>{{ $product->description ?? 'Thông tin sản phẩm đang được cập nhật.' }}</p>
-                    <h3>Đặc điểm nổi bật</h3>
-                    <ul>
-                        <li>Thông tin chi tiết sẽ được bổ sung sau.</li>
-                        <li>Liên hệ người bán để biết thêm chi tiết.</li>
-                    </ul>
-                    <h3>Tình trạng sản phẩm</h3>
-                    <p>{{ $product->condition ? ucfirst($product->condition) : 'Đang cập nhật' }}</p>
-                    <h3>Phụ kiện đi kèm</h3>
-                    <p>{{ $product->attachments ?? 'Đang cập nhật' }}</p>
-                </div>
-
-                <div class="product-tab-section" id="tab-specs" data-tab-panel role="tabpanel" aria-labelledby="tab-button-specs" hidden>
-                    <h2>Thông số kỹ thuật</h2>
-                    <dl class="product-spec-list">
-                        <div>
-                            <dt>Danh mục</dt>
-                            <dd>{{ optional($product->category)->name ?? 'Đang cập nhật' }}</dd>
-                        </div>
-                        <div>
-                            <dt>SKU</dt>
-                            <dd>{{ $product->sku ?? 'Chưa có' }}</dd>
-                        </div>
-                        <div>
-                            <dt>Xuất xứ</dt>
-                            <dd>{{ $product->origin ?? 'Đang cập nhật' }}</dd>
-                        </div>
-                        <div>
-                            <dt>Bảo hành</dt>
-                            <dd>{{ $product->warranty ?? 'Đang cập nhật' }}</dd>
-                        </div>
-                    </dl>
-                </div>
-
-                <div class="product-tab-section" id="tab-reviews" data-tab-panel role="tabpanel" aria-labelledby="tab-button-reviews" hidden>
-                    <div class="container mt-5">
-                        <h2>Đánh giá sản phẩm: {{ $product->name }}</h2>
-                        <form id="review-form" action="{{ route('reviews.store', $product->id) }}" method="POST">
-                            @csrf
-                            <div class="form-group">
-                                <label for="rating">Số sao (1-5):</label>
-                                <div class="form-group">
-                                    <label for="rating">Số sao:</label>
-                                    <div class="rating-stars">
-                                        @for($i = 5; $i >= 1; $i--)
-                                        <input type="radio" id="star{{ $i }}" name="rating" value="{{ $i }}" />
-                                        <label for="star{{ $i }}" title="{{ $i }} sao">&#9733;</label>
-                                        @endfor
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div class="form-group">
-                                <label for="comment">Nhận xét:</label>
-                                <textarea name="comment" id="comment" class="form-control" rows="4" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
-                        </form>
-                        <hr>
-
-                        <h3>Danh sách đánh giá</h3>
-                        <div id="review-list">
-                            @if($product->reviews->count() > 0)
-                            @foreach($product->reviews as $review)
-                            <div class="card mb-3 position-relative" id="review-{{ $review->id }}">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1 fw-bold">{{ $review->user->name ?? 'Người dùng ẩn danh' }}</h6>
-
-                                            <!-- Hiển thị số sao -->
-                                            <div class="review-stars mb-1">
-                                                @for ($i = 1; $i <= 5; $i++) @if ($i <=$review->rating)
-                                                    <i class="bi bi-star-fill text-warning"></i>
-                                                    @else
-                                                    <i class="bi bi-star text-secondary"></i>
-                                                    @endif
-                                                    @endfor
-                                            </div>
-
-                                            <!-- Nội dung bình luận -->
-                                            <p class="mb-0">{{ $review->comment }}</p>
-
-                                            <!-- Thời gian -->
-                                            <small class="text-muted">{{ $review->created_at->diffForHumans() }}</small>
-                                            <!-- Form phan hoi ẩn -->
-                                            @auth
-                                            <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-{{ $review->id }}')">💬 Phản hồi</button>
-
-                                            <form id="reply-form-review-{{ $review->id }}" class="reply-form d-none mt-2" action="{{ route('reviews.comment', $review->id) }}" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="parent_id" value="">
-                                                <div class="input-group input-group-sm">
-                                                    <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
-                                                    <button class="btn btn-outline-primary" type="submit">Gửi</button>
-                                                </div>
-                                            </form>
-                                            @endauth
-
-                                            {{-- 🟦 Hiển thị phản hồi của đánh giá này --}}
-                                            @if($review->comments?->count())
-                                            <div class="mt-3 ms-2">
-                                                @include('phanhoi.phanhoi', ['comments' => $review->comments])
-                                            </div>
-                                            @endif
-                                            <!-- Form sửa ẩn -->
-                                            <div class="edit-form d-none mt-2">
-                                                <div class="mb-2">
-                                                    <label>Số sao:</label>
-                                                    <select class="form-control edit-rating">
-                                                        @for($i = 1; $i <= 5; $i++) <option value="{{ $i }}" {{ $i == $review->rating ? 'selected' : '' }}>{{ $i }}</option>
-                                                            @endfor
-                                                    </select>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <textarea class="form-control edit-comment">{{ $review->comment }}</textarea>
-                                                </div>
-                                                <button class="btn btn-sm btn-primary" onclick="saveEdit({{ $review->id }})">💾 Lưu</button>
-                                                <button class="btn btn-sm btn-secondary" onclick="cancelEdit({{ $review->id }})">❌ Hủy</button>
-                                            </div>
-                                        </div>
-
-                                        @if(auth()->check() && auth()->id() === $review->user_id)
-                                        <!-- Dropdown -->
-                                        <div class="dropdown">
-                                            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="bi bi-three-dots-vertical"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <button class="dropdown-item" onclick="editReview({{ $review->id }}, {{ $review->rating }}, '{{ addslashes($review->comment) }}')">
-                                                        ✏️ Sửa
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button class="dropdown-item text-danger" onclick="deleteReview({{ $review->id }})">
-                                                        🗑️ Xóa
-                                                    </button>
-                                                </li>
-                                            </ul>
-
-                                        </div>
-                                        @endif
-
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-
-                            @else
-                            <p>Chưa có đánh giá nào cho sản phẩm này.</p>
-                            @endif
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="product-tab-section" id="tab-shipping" data-tab-panel role="tabpanel" aria-labelledby="tab-button-shipping" hidden>
-                    <h2>Vận chuyển &amp; Thanh toán</h2>
-                    <p>Hỗ trợ giao hàng toàn quốc. Vui lòng liên hệ người bán để thống nhất phí vận chuyển.</p>
-                    <p>Phương thức thanh toán linh hoạt: tiền mặt, chuyển khoản hoặc ví điện tử (nếu người bán hỗ trợ).</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="product-similar">
-            <header class="product-similar-header">
-                <h2>Sản phẩm tương tự</h2>
-            </header>
-
-            <div class="product-similar-grid">
-                @forelse ($similarProducts as $similar)
-                @php
-                $similarImage = $similar->images->first();
-                @endphp
-                <article class="product-similar-card">
-                    <div class="product-similar-image">
-                        @if ($similarImage)
-                        <img src="{{ $similarImage->image_url }}" alt="{{ $similar->name }}">
-                        @else
-                        <img src="{{ asset('images/product_1.png') }}" alt="{{ $similar->name }}">
-                        @endif
-                    </div>
-                    <div class="product-similar-body">
-                        <h3><a href="{{ route('products.show', $similar) }}">{{ $similar->name }}</a></h3>
-                        <div class="product-similar-prices">
-                            <span class="current">{{ number_format($similar->price, 0, ',', '.') }} VND</span>
-                            <span class="original">
-                                {{ $similar->original_price ? number_format($similar->original_price, 0, ',', '.') . ' VND' : '' }}
+                <section class="product-summary">
+                    <header class="product-summary-header">
+                        <h1 class="product-title">{{ $product->name }}</h1>
+                        <div class="product-price-group">
+                            <span class="product-price-current">{{ number_format($product->price, 0, ',', '.') }} VND</span>
+                            <span class="product-price-original">
+                                {{ $product->original_price ? number_format($product->original_price, 0, ',', '.') . ' VND' : 'Giá gốc: Đang cập nhật' }}
                             </span>
                         </div>
-                        <div class="product-similar-meta">
-                            <span>{{ $similar->condition ? ucfirst($similar->condition) : 'Tình trạng: cập nhật' }}</span>
-                            <span>{{ $similar->location ?? 'Địa điểm: cập nhật' }}</span>
+                        <div class="product-meta-grid">
+                            <div>
+                                <span class="product-meta-label">Địa chỉ</span>
+                                <span class="product-meta-value">{{ $product->location ?? 'Đang cập nhật' }}</span>
+                            </div>
+                            <div>
+                                <span class="product-meta-label">Thời gian đăng</span>
+                                <span class="product-meta-value">{{ optional($product->created_at)->format('d/m/Y') }}</span>
+                            </div>
+                            <div>
+                                <span class="product-meta-label">Tình trạng</span>
+                                <span class="product-meta-value">{{ $product->condition ? ucfirst($product->condition) : 'Đang cập nhật' }}</span>
+                            </div>
+                            <div>
+                                <span class="product-meta-label">Kho hàng</span>
+                                <span class="product-meta-value">{{ $product->quantity > 0 ? 'Còn ' . $product->quantity . ' sản phẩm' : 'Hết hàng' }}</span>
+                            </div>
                         </div>
-                        <div class="product-similar-actions">
-                            <a class="btn-primary btn-icon-only" href="{{ route('products.show', $similar) }}" aria-label="Thêm vào giỏ hàng">
-                                <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-                            </a>
-                            <button type="button" class="btn-outline btn-icon-only" aria-label="Yêu thích">
-                                <i class="fa fa-heart" aria-hidden="true"></i>
-                            </button>
+                        <p class="product-summary-description">{{ $product->short_description ?? \Illuminate\Support\Str::limit($product->description, 180) ?? 'Chưa có mô tả.' }}</p>
+                    </header>
+
+                    <div class="product-summary-actions">
+                        <button type="button" class="btn-primary btn-icon-only" aria-label="Thêm vào giỏ hàng">
+                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn-outline btn-icon-only" aria-label="Yêu thích">
+                            <i class="fa fa-heart" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="product-summary-rating">
+                        <div class="rating-total">
+                            <strong>{{ $averageRating > 0 ? $averageRating : 'Chưa có' }}</strong>
+                            <span>/ 5</span>
+                        </div>
+                        <div>
+                            <span>{{ $reviewsCount }} đánh giá</span>
                         </div>
                     </div>
-                </article>
-                @empty
-                <p>Chưa có sản phẩm tương tự để gợi ý.</p>
-                @endforelse
+                </section>
+
+                <aside class="product-seller-card">
+                    <div class="product-seller-avatar" aria-hidden="true">Ảnh</div>
+                    <div class="product-seller-info">
+                        <div class="product-seller-name">Tên người bán: {{ data_get($product, 'seller_name', 'Đang cập nhật') }}</div>
+                        <div class="product-seller-meta">Số sao đánh giá: {{ $averageRating > 0 ? $averageRating : 'Chưa có' }}</div>
+                        <div class="product-seller-meta">Ngày gia nhập: {{ optional($product->created_at)->format('d/m/Y') }}</div>
+                    </div>
+                    <div class="product-seller-actions">
+                        <button type="button" class="btn-outline btn-with-icon">
+                            <i class="fa fa-phone" aria-hidden="true"></i>
+                            <span>Gọi điện</span>
+                        </button>
+                        <button type="button" class="btn-outline btn-with-icon">
+                            <i class="fa fa-comments" aria-hidden="true"></i>
+                            <span>Nhắn tin</span>
+                        </button>
+                    </div>
+                </aside>
             </div>
-        </section>
+
+            <section class="product-tabs">
+                <div class="product-tabs-header" role="tablist">
+                    <button type="button" class="product-tab active" id="tab-button-description" data-tab-target="tab-description" role="tab" aria-selected="true">Mô tả chi tiết</button>
+                    <button type="button" class="product-tab" id="tab-button-specs" data-tab-target="tab-specs" role="tab" aria-selected="false">Thông số kỹ thuật</button>
+                    <button type="button" class="product-tab" id="tab-button-reviews" data-tab-target="tab-reviews" role="tab" aria-selected="false">Đánh giá ({{ $reviewsCount }})</button>
+                    <button type="button" class="product-tab" id="tab-button-shipping" data-tab-target="tab-shipping" role="tab" aria-selected="false">Vận chuyển &amp; Thanh toán</button>
+                </div>
+
+                <div class="product-tabs-body">
+                    <div class="product-tab-section is-active" id="tab-description" data-tab-panel role="tabpanel" aria-labelledby="tab-button-description">
+                        <h2>Mô tả sản phẩm</h2>
+                        <p>{{ $product->description ?? 'Thông tin sản phẩm đang được cập nhật.' }}</p>
+                        <h3>Đặc điểm nổi bật</h3>
+                        <ul>
+                            <li>Thông tin chi tiết sẽ được bổ sung sau.</li>
+                            <li>Liên hệ người bán để biết thêm chi tiết.</li>
+                        </ul>
+                        <h3>Tình trạng sản phẩm</h3>
+                        <p>{{ $product->condition ? ucfirst($product->condition) : 'Đang cập nhật' }}</p>
+                        <h3>Phụ kiện đi kèm</h3>
+                        <p>{{ $product->attachments ?? 'Đang cập nhật' }}</p>
+                    </div>
+
+                    <div class="product-tab-section" id="tab-specs" data-tab-panel role="tabpanel" aria-labelledby="tab-button-specs" hidden>
+                        <h2>Thông số kỹ thuật</h2>
+                        <dl class="product-spec-list">
+                            <div>
+                                <dt>Danh mục</dt>
+                                <dd>{{ optional($product->category)->name ?? 'Đang cập nhật' }}</dd>
+                            </div>
+                            <div>
+                                <dt>SKU</dt>
+                                <dd>{{ $product->sku ?? 'Chưa có' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Xuất xứ</dt>
+                                <dd>{{ $product->origin ?? 'Đang cập nhật' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Bảo hành</dt>
+                                <dd>{{ $product->warranty ?? 'Đang cập nhật' }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div class="product-tab-section" id="tab-reviews" data-tab-panel role="tabpanel" aria-labelledby="tab-button-reviews" hidden>
+                        <div class="container mt-5">
+                            <h2>Đánh giá sản phẩm: {{ $product->name }}</h2>
+                            <form id="review-form" action="{{ route('reviews.store', $product->id) }}" method="POST">
+                                @csrf
+                                <div class="form-group">
+                                    <label for="rating">Số sao (1-5):</label>
+                                    <div class="form-group">
+                                        <label for="rating">Số sao:</label>
+                                        <div class="rating-stars">
+                                            @for($i = 5; $i >= 1; $i--)
+                                            <input type="radio" id="star{{ $i }}" name="rating" value="{{ $i }}" />
+                                            <label for="star{{ $i }}" title="{{ $i }} sao">&#9733;</label>
+                                            @endfor
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="comment">Nhận xét:</label>
+                                    <textarea name="comment" id="comment" class="form-control" rows="4" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                            </form>
+                            <hr>
+
+                            <h3>Danh sách đánh giá</h3>
+                            <div id="review-list">
+                                @if($product->reviews->count() > 0)
+                                @foreach($product->reviews as $review)
+                                <div class="card mb-3 position-relative" id="review-{{ $review->id }}">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1 fw-bold">{{ $review->user->name ?? 'Người dùng ẩn danh' }}</h6>
+
+                                                <!-- Hiển thị số sao -->
+                                                <div class="review-stars mb-1">
+                                                    @for ($i = 1; $i <= 5; $i++) @if ($i <=$review->rating)
+                                                        <i class="bi bi-star-fill text-warning"></i>
+                                                        @else
+                                                        <i class="bi bi-star text-secondary"></i>
+                                                        @endif
+                                                        @endfor
+                                                </div>
+
+                                                <!-- Nội dung bình luận -->
+                                                <p class="mb-0">{{ $review->comment }}</p>
+
+                                                <!-- Thời gian -->
+                                                <small class="text-muted">{{ $review->created_at->diffForHumans() }}</small>
+                                                <!-- Form phan hoi ẩn -->
+                                                @auth
+                                                <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-{{ $review->id }}')">💬 Phản hồi</button>
+
+
+                                                {{-- Form Phản hồi cho Review (có thể dùng route('comments.store', $review->id)) --}}
+                                                <form id="reply-form-review-{{ $review->id }}" class="reply-form d-none mt-2" action="{{ route('comments.store', $review->id) }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="parent_id" value=""> {{-- parent_id sẽ được điền bằng JS khi reply từ nút 'Phản hồi' --}}
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
+                                                        <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                                    </div>
+                                                </form>
+                                                @endauth
+
+                                                {{-- **BƯỚC QUAN TRỌNG NHẤT:** Tạo container .replies --}}
+                                                <div id="review-list" class="replies-root mt-4">
+                                                    @include('phanhoi.phanhoi', [
+                                                    'comments' => $review->comments, // đã lọc trong model Review rồi
+                                                    'level' => 1
+                                                    ])
+                                                </div>
+
+                                                <!-- Form sửa ẩn -->
+                                                <div class="edit-form d-none mt-2">
+                                                    <div class="mb-2">
+                                                        <label>Số sao:</label>
+                                                        <select class="form-control edit-rating">
+                                                            @for($i = 1; $i <= 5; $i++) <option value="{{ $i }}" {{ $i == $review->rating ? 'selected' : '' }}>{{ $i }}</option>
+                                                                @endfor
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <textarea class="form-control edit-comment">{{ $review->comment }}</textarea>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-primary" onclick="saveEdit({{ $review->id }})">💾 Lưu</button>
+                                                    <button class="btn btn-sm btn-secondary" onclick="cancelEdit({{ $review->id }})">❌ Hủy</button>
+                                                </div>
+                                            </div>
+
+                                            @if(auth()->check() && auth()->id() === $review->user_id)
+                                            <!-- Dropdown -->
+                                            <div class="dropdown">
+                                                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <button class="dropdown-item" onclick="editReview({{ $review->id }}, {{ $review->rating }}, '{{ addslashes($review->comment) }}')">
+                                                            ✏️ Sửa
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="dropdown-item text-danger" onclick="deleteReview({{ $review->id }})">
+                                                            🗑️ Xóa
+                                                        </button>
+                                                    </li>
+                                                </ul>
+
+                                            </div>
+                                            @endif
+
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+
+                                @else
+                                <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+                                @endif
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="product-tab-section" id="tab-shipping" data-tab-panel role="tabpanel" aria-labelledby="tab-button-shipping" hidden>
+                        <h2>Vận chuyển &amp; Thanh toán</h2>
+                        <p>Hỗ trợ giao hàng toàn quốc. Vui lòng liên hệ người bán để thống nhất phí vận chuyển.</p>
+                        <p>Phương thức thanh toán linh hoạt: tiền mặt, chuyển khoản hoặc ví điện tử (nếu người bán hỗ trợ).</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="product-similar">
+                <header class="product-similar-header">
+                    <h2>Sản phẩm tương tự</h2>
+                </header>
+
+                <div class="product-similar-grid">
+                    @forelse ($similarProducts as $similar)
+                    @php
+                    $similarImage = $similar->images->first();
+                    @endphp
+                    <article class="product-similar-card">
+                        <div class="product-similar-image">
+                            @if ($similarImage)
+                            <img src="{{ $similarImage->image_url }}" alt="{{ $similar->name }}">
+                            @else
+                            <img src="{{ asset('images/product_1.png') }}" alt="{{ $similar->name }}">
+                            @endif
+                        </div>
+                        <div class="product-similar-body">
+                            <h3><a href="{{ route('products.show', $similar) }}">{{ $similar->name }}</a></h3>
+                            <div class="product-similar-prices">
+                                <span class="current">{{ number_format($similar->price, 0, ',', '.') }} VND</span>
+                                <span class="original">
+                                    {{ $similar->original_price ? number_format($similar->original_price, 0, ',', '.') . ' VND' : '' }}
+                                </span>
+                            </div>
+                            <div class="product-similar-meta">
+                                <span>{{ $similar->condition ? ucfirst($similar->condition) : 'Tình trạng: cập nhật' }}</span>
+                                <span>{{ $similar->location ?? 'Địa điểm: cập nhật' }}</span>
+                            </div>
+                            <div class="product-similar-actions">
+                                <a class="btn-primary btn-icon-only" href="{{ route('products.show', $similar) }}" aria-label="Thêm vào giỏ hàng">
+                                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                                </a>
+                                <button type="button" class="btn-outline btn-icon-only" aria-label="Yêu thích">
+                                    <i class="fa fa-heart" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                    @empty
+                    <p>Chưa có sản phẩm tương tự để gợi ý.</p>
+                    @endforelse
+                </div>
+            </section>
+        </div>
     </div>
-</div>
-<!-- Bootstrap 5 JS Bundle (có PopperJS để dropdown hoạt động) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap 5 JS Bundle (có PopperJS để dropdown hoạt động) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-@endsection
+    @endsection
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var tabButtons = document.querySelectorAll('.product-tab[data-tab-target]');
-        var tabPanels = document.querySelectorAll('.product-tab-section[data-tab-panel]');
-        var previewImage = document.querySelector('.product-gallery-preview img[data-active-image]');
-        var galleryButtons = document.querySelectorAll('.product-gallery-thumb[data-image]');
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var tabButtons = document.querySelectorAll('.product-tab[data-tab-target]');
+            var tabPanels = document.querySelectorAll('.product-tab-section[data-tab-panel]');
+            var previewImage = document.querySelector('.product-gallery-preview img[data-active-image]');
+            var galleryButtons = document.querySelectorAll('.product-gallery-thumb[data-image]');
 
 
-        tabButtons.forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                //e.preventDefault(); // Ngăn reload trang
-                e.preventDefault();
-                var targetId = button.getAttribute('data-tab-target');
-                if (!targetId) return;
+            tabButtons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    //e.preventDefault(); // Ngăn reload trang
+                    e.preventDefault();
+                    var targetId = button.getAttribute('data-tab-target');
+                    if (!targetId) return;
 
-                tabButtons.forEach(function(btn) {
-                    btn.classList.toggle('active', btn === button);
-                    btn.setAttribute('aria-selected', btn === button ? 'true' : 'false');
-                });
+                    tabButtons.forEach(function(btn) {
+                        btn.classList.toggle('active', btn === button);
+                        btn.setAttribute('aria-selected', btn === button ? 'true' : 'false');
+                    });
 
-                tabPanels.forEach(function(panel) {
-                    var isActive = panel.id === targetId;
-                    panel.classList.toggle('is-active', isActive);
-                    panel.toggleAttribute('hidden', !isActive);
+                    tabPanels.forEach(function(panel) {
+                        var isActive = panel.id === targetId;
+                        panel.classList.toggle('is-active', isActive);
+                        panel.toggleAttribute('hidden', !isActive);
+                    });
                 });
             });
-        });
 
-        galleryButtons.forEach(function(button) {
-            if (button.disabled) {
-                return;
-            }
-
-            button.addEventListener('click', function() {
-                var imageSrc = button.getAttribute('data-image');
-                if (!imageSrc || !previewImage) {
+            galleryButtons.forEach(function(button) {
+                if (button.disabled) {
                     return;
                 }
 
-                previewImage.src = imageSrc;
+                button.addEventListener('click', function() {
+                    var imageSrc = button.getAttribute('data-image');
+                    if (!imageSrc || !previewImage) {
+                        return;
+                    }
 
-                galleryButtons.forEach(function(btn) {
-                    var isActive = btn === button;
-                    btn.classList.toggle('active', isActive);
-                    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    previewImage.src = imageSrc;
+
+                    galleryButtons.forEach(function(btn) {
+                        var isActive = btn === button;
+                        btn.classList.toggle('active', isActive);
+                        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    });
                 });
             });
         });
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        const reviewForm = document.getElementById('review-form');
-        const reviewList = document.getElementById('review-list');
+        document.addEventListener('DOMContentLoaded', function() {
+            const reviewForm = document.getElementById('review-form');
+            const reviewList = document.getElementById('review-list');
 
-        reviewForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Ngăn reload trang
+            reviewForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Ngăn reload trang
 
-            const formData = new FormData(reviewForm);
-            const actionUrl = reviewForm.getAttribute('action');
+                const formData = new FormData(reviewForm);
+                const actionUrl = reviewForm.getAttribute('action');
 
-            fetch(actionUrl, {
-                    method: 'POST',
+                fetch(actionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': formData.get('_token'),
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const review = data.review;
+                            const userName = review.user?.name || 'Không rõ';
+
+                            const reviewHtml = `
+                        <div class="card mb-3 position-relative" id="review-${review.id}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5>Đánh giá: <span class="review-rating">${review.rating}</span> sao</h5>
+                                        <p class="review-comment">${review.comment}</p>
+                                        <small>Người đánh giá: ${userName}</small>
+                                    </div>
+
+                                    <div class="dropdown">
+                                        <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
+                                                    ✏️ Sửa
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
+                                                    🗑️ Xóa
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+
+                            reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
+                            reviewForm.reset();
+                        } else {
+                            alert('❌ Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại.'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Lỗi:', err);
+                        alert('⚠️ Gửi đánh giá thất bại, thử lại sau.');
+                    });
+            });
+        });
+
+        function editReview(id, rating, comment) {
+            const reviewDiv = document.getElementById(`review-${id}`);
+
+            // Lưu HTML gốc để có thể khôi phục nếu hủy
+            reviewDiv.dataset.original = reviewDiv.innerHTML;
+
+            // Hiển thị form sửa tại chỗ
+            reviewDiv.innerHTML = `
+            <form onsubmit="return saveReview(${id})">
+                <div class="rating-stars mb-2">
+                    ${[1,2,3,4,5].map(i => `
+                        <i class="${i <= rating ? 'fas' : 'far'} fa-star text-warning" 
+                        data-value="${i}" 
+                        style="cursor:pointer; font-size:20px;" 
+                        onclick="setStar(${id}, ${i})"></i>
+                    `).join('')}
+                    <input type="hidden" id="edit-rating-${id}" value="${rating}">
+                </div>
+                <textarea id="edit-comment-${id}" class="form-control mb-2">${comment}</textarea>
+                <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${id})">❌ Hủy</button>
+            </form>
+        `;
+        }
+
+        // Chọn sao
+        function setStar(id, value) {
+            const container = document.querySelector(`#review-${id} .rating-stars`);
+            const stars = container.querySelectorAll('.fa-star');
+            document.getElementById(`edit-rating-${id}`).value = value;
+
+            stars.forEach((star, i) => {
+                if (i < value) {
+                    star.classList.remove('far');
+                    star.classList.add('fas', 'text-warning');
+                } else {
+                    star.classList.remove('fas', 'text-warning');
+                    star.classList.add('far');
+                }
+            });
+        }
+
+        // Hủy sửa
+        function cancelEdit(id) {
+            const reviewDiv = document.getElementById(`review-${id}`);
+            reviewDiv.innerHTML = reviewDiv.dataset.original;
+        }
+
+        // Lưu sửa
+        function saveReview(id) {
+            const rating = document.getElementById(`edit-rating-${id}`).value;
+            const comment = document.getElementById(`edit-comment-${id}`).value;
+
+            fetch(`/reviews/${id}`, {
+                    method: 'PUT',
                     headers: {
-                        'X-CSRF-TOKEN': formData.get('_token'),
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: formData
+                    body: JSON.stringify({
+                        rating,
+                        comment
+                    })
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        const review = data.review;
-                        const userName = review.user?.name || 'Không rõ';
-
-                        const reviewHtml = `
-                    <div class="card mb-3 position-relative" id="review-${review.id}">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h5>Đánh giá: <span class="review-rating">${review.rating}</span> sao</h5>
-                                    <p class="review-comment">${review.comment}</p>
-                                    <small>Người đánh giá: ${userName}</small>
-                                </div>
-
-                                <div class="dropdown">
-                                    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
+                        const reviewDiv = document.getElementById(`review-${id}`);
+                        reviewDiv.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5>Đánh giá: <span class="review-rating">${rating}</span> sao</h5>
+                                <p class="review-comment">${comment}</p>
+                                <small>Người đánh giá: ${data.review.user?.name || 'Không rõ'}</small>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <button class="dropdown-item" onclick="editReview(${id}, ${rating}, '${comment.replace(/'/g, "\\'")}')">
+                                        ✏️ Sửa
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li>
-                                            <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
-                                                ✏️ Sửa
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
-                                                🗑️ Xóa
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
+                                </ul>
                             </div>
                         </div>
-                    </div>`;
-
-                        reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
-                        reviewForm.reset();
+                    </div>
+                `;
                     } else {
-                        alert('❌ Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại.'));
+                        alert('❌ Lưu thất bại!');
                     }
                 })
-                .catch(err => {
-                    console.error('Lỗi:', err);
-                    alert('⚠️ Gửi đánh giá thất bại, thử lại sau.');
-                });
-        });
-    });
+                .catch(() => alert('⚠️ Có lỗi khi gửi dữ liệu lên server.'));
 
-    function editReview(id, rating, comment) {
-        const reviewDiv = document.getElementById(`review-${id}`);
-
-        // Lưu HTML gốc để có thể khôi phục nếu hủy
-        reviewDiv.dataset.original = reviewDiv.innerHTML;
-
-        // Hiển thị form sửa tại chỗ
-        reviewDiv.innerHTML = `
-        <form onsubmit="return saveReview(${id})">
-            <div class="rating-stars mb-2">
-                ${[1,2,3,4,5].map(i => `
-                    <i class="${i <= rating ? 'fas' : 'far'} fa-star text-warning" 
-                    data-value="${i}" 
-                    style="cursor:pointer; font-size:20px;" 
-                    onclick="setStar(${id}, ${i})"></i>
-                `).join('')}
-                <input type="hidden" id="edit-rating-${id}" value="${rating}">
-            </div>
-            <textarea id="edit-comment-${id}" class="form-control mb-2">${comment}</textarea>
-            <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${id})">❌ Hủy</button>
-        </form>
-    `;
-    }
-
-    // Chọn sao
-    function setStar(id, value) {
-        const container = document.querySelector(`#review-${id} .rating-stars`);
-        const stars = container.querySelectorAll('.fa-star');
-        document.getElementById(`edit-rating-${id}`).value = value;
-
-        stars.forEach((star, i) => {
-            if (i < value) {
-                star.classList.remove('far');
-                star.classList.add('fas', 'text-warning');
-            } else {
-                star.classList.remove('fas', 'text-warning');
-                star.classList.add('far');
-            }
-        });
-    }
-
-    // Hủy sửa
-    function cancelEdit(id) {
-        const reviewDiv = document.getElementById(`review-${id}`);
-        reviewDiv.innerHTML = reviewDiv.dataset.original;
-    }
-
-    // Lưu sửa
-    function saveReview(id) {
-        const rating = document.getElementById(`edit-rating-${id}`).value;
-        const comment = document.getElementById(`edit-comment-${id}`).value;
-
-        fetch(`/reviews/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    rating,
-                    comment
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const reviewDiv = document.getElementById(`review-${id}`);
-                    reviewDiv.innerHTML = `
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h5>Đánh giá: <span class="review-rating">${rating}</span> sao</h5>
-                            <p class="review-comment">${comment}</p>
-                            <small>Người đánh giá: ${data.review.user?.name || 'Không rõ'}</small>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-three-dots-vertical"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <button class="dropdown-item" onclick="editReview(${id}, ${rating}, '${comment.replace(/'/g, "\\'")}')">
-                                    ✏️ Sửa
-                                </button>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            `;
-                } else {
-                    alert('❌ Lưu thất bại!');
-                }
-            })
-            .catch(() => alert('⚠️ Có lỗi khi gửi dữ liệu lên server.'));
-
-        return false;
-    }
-
-    function deleteReview(id) {
-        if (!confirm('Bạn có chắc muốn xóa đánh giá này không?')) return;
-
-        fetch(`/reviews/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const reviewDiv = document.getElementById(`review-${id}`);
-                    if (reviewDiv) reviewDiv.remove();
-                    alert('✅ Đã xóa đánh giá thành công!');
-                } else {
-                    alert('❌ Có lỗi xảy ra khi xóa.');
-                }
-            })
-            .catch(err => console.error(err));
-    }
-
-    function toggleReplyForm(id) {
-        const form = document.getElementById(`reply-form-${id}`);
-        form.classList.toggle('d-none');
-    }
-
-
-    // ================= COMMENT REPLY (AJAX) =================
-    window.toggleReplyForm = function(id) {
-        const form = document.getElementById(`reply-form-${id}`);
-        if (form) form.classList.toggle('d-none');
-    };
-
-    document.querySelectorAll('.reply-form').forEach(form => {
-    form.addEventListener('submit', async e => {
-        e.preventDefault();
-
-        const formData = new FormData(form);
-        const action = form.getAttribute('action');
-        const res = await fetch(action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        });
-
-        const data = await res.json();
-        if (data.success) {
-            const newComment = document.createElement('div');
-            newComment.classList.add('comment-item', 'mb-2', 'ms-4');
-            newComment.innerHTML = `
-                <div class="card bg-light">
-                    <div class="card-body p-2">
-                        <small><strong>${data.user}:</strong> ${data.content}</small>
-                    </div>
-                </div>
-                <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
-                <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" action="/comments/${data.id}/reply" method="POST">
-                    <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
-                    <input type="hidden" name="parent_id" value="${data.id}">
-                    <div class="input-group input-group-sm">
-                        <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
-                        <button class="btn btn-outline-primary" type="submit">Gửi</button>
-                    </div>
-                </form>
-            `;
-
-            // 🟢 Cập nhật hiển thị ngay
-            const parent = form.closest('.comment-item') || form.closest('.card'); // fallback nếu form nằm trong review gốc
-            if (parent) {
-                let container = parent.querySelector('.replies');
-                if (!container) {
-                    container = document.createElement('div');
-                    container.classList.add('replies', 'ms-4', 'mt-2');
-                    parent.appendChild(container);
-                }
-                container.appendChild(newComment);
-            } else {
-                // fallback cuối cùng - append thẳng vào danh sách review
-                document.getElementById('review-list').appendChild(newComment);
-            }
-
-            // Reset form
-            form.reset();
-            form.classList.add('d-none');
+            return false;
         }
-    });
-});
 
-</script>
-@endpush
+        function deleteReview(id) {
+            if (!confirm('Bạn có chắc muốn xóa đánh giá này không?')) return;
+
+            fetch(`/reviews/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const reviewDiv = document.getElementById(`review-${id}`);
+                        if (reviewDiv) reviewDiv.remove();
+                        alert('✅ Đã xóa đánh giá thành công!');
+                    } else {
+                        alert('❌ Có lỗi xảy ra khi xóa.');
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function toggleReplyForm(id) {
+            const form = document.getElementById(`reply-form-${id}`);
+            form.classList.toggle('d-none');
+        }
+
+
+        // ================= COMMENT REPLY (AJAX) =================
+        // Toggle form reply
+        window.toggleReplyForm = function(id) {
+            const form = document.getElementById(`reply-form-${id}`);
+            if (form) form.classList.toggle('d-none');
+        };
+
+        // Tìm container gốc của comment
+        // ... (Hàm toggleReplyForm giữ nguyên) ...
+
+        // Tìm container gốc của comment
+        function getRootContainer(parentId) {
+            if (!parentId) {
+                // Khi phản hồi review gốc
+                return document.querySelector('.replies-root');
+            }
+
+            const parent = document.getElementById(`comment-${parentId}`);
+            if (parent) {
+                const repliesContainer = parent.querySelector('.replies');
+                if (repliesContainer) return repliesContainer;
+            }
+
+            return document.querySelector('.replies-root');
+        }
+
+
+        // ✅ Hàm tính toán cấp độ mới (Đảm bảo Phản hồi cấp 1 có margin 20px)
+        function calculateNewLevel(parentId) {
+            if (!parentId) {
+                // Phản hồi review gốc (comment cấp 2)
+                return 40;
+            }
+
+            const parent = document.getElementById(`comment-${parentId}`);
+            if (parent) {
+                const currentMargin = parseInt(parent.style.marginLeft) || 40;
+                // Cấp con kế tiếp thụt sâu thêm 20px
+                return currentMargin + 20;
+            }
+
+            return 40;
+        }
+
+        // Hàm tạo và chèn COMMENT (PHẢN HỒI) mới
+        function insertNewComment(data) {
+            const parentId = data.parent_id;
+            const newMarginLeft = calculateNewLevel(data.parent_id);
+
+            // *** KHÔNG CẦN KIỂM TRA isRootComment & ratingHtml nữa ***
+            // *** Vì hàm này chỉ tạo ra Phản hồi (comment) ***
+
+            const newComment = document.createElement('div');
+            newComment.classList.add('comment-item', 'mb-2');
+            newComment.id = `comment-${data.id}`;
+            newComment.dataset.parentId = data.parent_id;
+            newComment.style.marginLeft = `${newMarginLeft}px`;
+
+            // HTML chỉ dành cho Phản hồi (Comment)
+            newComment.innerHTML = `
+            <div class="d-flex align-items-start">
+                <div>
+                    <strong>${data.user}:</strong>
+                    <p class="mb-1">${data.content}</p>
+                    <small class="text-muted">
+                        Vừa xong 
+                        · <button class="btn btn-link btn-sm text-decoration-none p-0" 
+                            onclick="toggleReplyForm('comment-${data.id}')">Phản hồi</button>
+                    </small>
+
+                    <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" 
+                        action="/comments/${data.id}/reply" method="POST">
+                        <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                        <input type="hidden" name="parent_id" value="${data.id}">
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
+                            <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                        </div>
+                    </form>
+                    
+                    <div class="replies mt-2"></div> 
+                </div>
+            </div>
+        `;
+
+            const container = getRootContainer(data.parent_id);
+            container.appendChild(newComment);
+        }
+
+
+        // Xử lý sự kiện Submit Form (AJAX)
+        document.addEventListener('submit', async function(e) {
+            const form = e.target.closest('.reply-form');
+            // Cũng có thể xử lý form chính #comment-form ở đây nếu cần, nhưng hiện tại chỉ xử lý .reply-form
+            if (!form) return;
+
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const action = form.getAttribute('action');
+
+            const res = await fetch(action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                // Chèn comment mới vào DOM
+                insertNewComment(data);
+
+                // Dọn dẹp
+                form.reset();
+                form.classList.add('d-none');
+            }
+        });
+    </script>
+    @endpush
