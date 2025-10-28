@@ -9,7 +9,34 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'category_id', 'price', 'description', 'quantity'];
+    protected $fillable = [
+        'user_id',
+        'name',
+        'category_id',
+        'price',
+        'original_price',
+        'description',
+        'short_description',
+        'condition',
+        'location',
+        'seller_name',
+        'contact_phone',
+        'contact_email',
+        'contact_method',
+        'sku',
+        'origin',
+        'warranty',
+        'attachments',
+        'additional_info',
+        'status',
+        'view_count',
+        'quantity',
+    ];
+
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
 
     public function category()
     {
@@ -19,6 +46,11 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function favorites()
