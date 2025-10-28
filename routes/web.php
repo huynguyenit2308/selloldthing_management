@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AddCategoryController;
-
+use App\Http\Controllers\UpdateCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 
