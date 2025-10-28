@@ -33,6 +33,11 @@ class Product extends Model
         'quantity',
     ];
 
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);

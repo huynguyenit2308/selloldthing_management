@@ -51,7 +51,18 @@ Route::prefix('admin')->group(function () {
 });
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/my-products', [ProductController::class, 'manage'])->name('products.manage');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/my-products', [ProductController::class, 'manage'])->name('products.manage');
+    Route::get('/my-products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('/my-products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/my-products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/my-products/{product}', [ProductController::class, 'update'])->name('products.update');
+    Route::post('/my-products/{product}/autosave', [ProductController::class, 'autosave'])->name('products.autosave');
+    Route::patch('/my-products/{product}/toggle', [ProductController::class, 'toggleVisibility'])->name('products.toggle');
+    Route::delete('/my-products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::post('/my-products/bulk', [ProductController::class, 'bulkAction'])->name('products.bulk');
+});
 // Danh sách voucher
 Route::get('voucher/list', [CRUD_VoucherController::class, 'listvoucher'])->name('voucher.list');
 // Chi tiết voucher
@@ -120,7 +131,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Hiển thị chi tiết sản phẩm + danh sách đánh giá
 Route::get('/product/{id}', [ReviewController::class, 'showReviews'])->name('product.show');
-
+Route::get('/manage', [ReviewController::class, 'showReviews'])->name('product.show');
 // Thêm đánh giá mới (AJAX)
 Route::post('/product/{id}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
