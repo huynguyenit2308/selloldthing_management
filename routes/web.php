@@ -44,12 +44,16 @@ Route::get('auth/google', function () {
     return Socialite::driver('google')->redirect();
 });
 
-
-// Admin routes
+// Admin routes danh mục
 Route::prefix('admin')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
     Route::get('/categories/create', [AddCategoryController::class, 'create'])->name('admin.categories.create');
     Route::post('/categories', [AddCategoryController::class, 'store'])->name('admin.categories.store');
+    //sửa danh mục
+    Route::get('/categories/{category}/edit', [UpdateCategoryController::class, 'edit'])->name('admin.categories.edit');
+    Route::put('/categories/{category}', [UpdateCategoryController::class, 'update'])->name('admin.categories.update');
+    //xóa danh mục
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
 });
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -165,4 +169,26 @@ Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('revi
 
 Route::fallback(function () {
     abort(404);
+
+  
+
+    Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    // Danh sách voucher
+    Route::get('voucher/list', [CRUD_VoucherController::class, 'listvoucher'])->name('voucher.list');
+    // Chi tiết voucher
+    Route::get('voucher/detail', [CRUD_VoucherController::class, 'detailVoucher'])->name('voucher.detail');
+    // Thêm voucher
+    Route::get('voucher/add', [CRUD_VoucherController::class, 'addvoucher'])->name('voucher.add');
+    Route::post('voucher/add', [CRUD_VoucherController::class, 'postAddvoucher'])->name('voucher.store');
+    // Sửa voucher
+    Route::get('voucher/update', [CRUD_VoucherController::class, 'updatevoucher'])->name('voucher.edit');
+    Route::post('voucher/update', [CRUD_VoucherController::class, 'updatePostvoucher'])->name('voucher.update');
+    // Xóa voucher
+    Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher'])->name('voucher.delete');
+
+    Route::fallback(function () {
+        abort(404);
+    });
+
 });
