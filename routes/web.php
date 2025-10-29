@@ -19,6 +19,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\CRUD_InvoiceController;
 use App\Http\Controllers\CRUD_OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\FavoriteController;
 
 // Trang chủ
 
@@ -143,6 +144,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/confirm-logout', [AccountController::class, 'confirmLogoutAfterChange'])->name('account.confirmLogout');
     // Xóa tài khoản
     Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
+    
+    // Favorites routes
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('/favorites', [FavoriteController::class, 'store'])->name('favorites.store');
+    Route::delete('/favorites/{product}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
+    Route::delete('/favorites', [FavoriteController::class, 'clear'])->name('favorites.clear');
+    Route::post('/favorites/add-all-to-cart', [FavoriteController::class, 'addAllToCart'])->name('favorites.addAllToCart');
+    Route::get('/favorites/check/{product}', [FavoriteController::class, 'check'])->name('favorites.check');
 });
 
 

@@ -75,6 +75,11 @@
                                                         Hàng
                                                     </a>
                                                 </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ route('favorites.index') }}">
+                                                        <i class="fa fa-heart" aria-hidden="true"></i> Sản Phẩm Yêu Thích
+                                                    </a>
+                                                </li>
 
                                                 <li>
                                                     <div class="dropdown-divider"></div> <!-- ngăn cách -->
