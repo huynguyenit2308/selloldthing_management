@@ -307,6 +307,7 @@ class ProductController extends Controller
                 'condition' => $validated['condition'],
                 'price' => $validated['price'],
                 'original_price' => $validated['original_price'] ?? null,
+                'quantity' => $validated['quantity'],
                 'location' => $validated['location_city'].' - '.$validated['location_district'],
                 'contact_method' => implode(',', $validated['contact_methods']),
             ]);
@@ -376,6 +377,7 @@ class ProductController extends Controller
             'condition',
             'price',
             'original_price',
+            'quantity',
             'location_city',
             'location_district',
             'contact_methods',
@@ -418,6 +420,7 @@ class ProductController extends Controller
                 'condition' => $validated['condition'],
                 'price' => $validated['price'],
                 'original_price' => $validated['original_price'] ?? null,
+                'quantity' => $validated['quantity'],
                 'location' => $validated['location_city'].' - '.$validated['location_district'],
                 'contact_method' => implode(',', $validated['contact_methods']),
                 'status' => 'pending',
@@ -463,6 +466,7 @@ class ProductController extends Controller
             'condition' => ['required', Rule::in(['new', 'like_new', 'good', 'fair', 'needs_repair'])],
             'price' => ['required', 'integer', 'min:1000', 'max:999999999'],
             'original_price' => ['nullable', 'integer', 'min:1000', 'max:999999999'],
+            'quantity' => ['required', 'integer', 'min:0', 'max:999999'],
             'location_city' => ['required', 'string', 'between:2,100'],
             'location_district' => ['required', 'string', 'between:2,100'],
             'contact_methods' => ['required', 'array', 'min:1'],
@@ -513,6 +517,7 @@ class ProductController extends Controller
             'condition' => ['required', Rule::in(array_keys($this->conditionOptions()))],
             'price' => ['required', 'integer', 'min:1000', 'max:999999999'],
             'original_price' => ['nullable', 'integer', 'min:1000', 'max:999999999'],
+            'quantity' => ['required', 'integer', 'min:0', 'max:999999'],
             'location_city' => ['required', 'string', 'between:2,100'],
             'location_district' => ['required', 'string', 'between:2,100'],
             'contact_methods' => ['required', 'array', 'min:1'],
@@ -875,31 +880,241 @@ class ProductController extends Controller
         }
     }
 
-    public function destroy(Request $request, Product $product): RedirectResponse
+    public function checkDeleteConditions(Request $request, Product $product): JsonResponse
     {
         $user = $request->user();
 
         abort_if(!$user instanceof User, 403);
         abort_if($product->user_id !== $user->id, 403);
 
+        $errors = [];
+        $warnings = [];
+
+        // Check hard blocks (cannot delete)
         if (session('account_restricted', false)) {
-            return back()->with('product_action_blocked', 'Tài khoản của bạn đang bị hạn chế tính năng đăng bán');
+            $errors[] = 'Tài khoản của bạn đang bị hạn chế tính năng đăng bán';
         }
 
-        if ($product->orderItems()->exists()) {
-            return back()
-                ->with('product_delete_error', 'Không thể xóa sản phẩm. Vui lòng thử lại')
-                ->with('product_delete_reason', 'Sản phẩm đang có đơn hàng nên không thể xóa');
+        // Check for pending orders
+        $pendingOrders = $product->orderItems()
+            ->whereHas('order', function ($query) {
+                $query->whereIn('status', ['pending', 'processing', 'confirmed']);
+            })->count();
+
+        if ($pendingOrders > 0) {
+            $errors[] = 'Sản phẩm này đang có đơn hàng chờ xử lý, không thể xóa';
+        }
+
+        // Check for paid orders
+        $paidOrders = $product->orderItems()
+            ->whereHas('order', function ($query) {
+                $query->whereIn('status', ['paid', 'shipped', 'delivered']);
+            })->count();
+
+        if ($paidOrders > 0) {
+            $errors[] = 'Sản phẩm đã được thanh toán, không thể xóa';
+        }
+
+        // Check for promotion/voucher usage (if applicable)
+        // This would need to be implemented based on your voucher system
+
+        // Check for soft warnings
+        if ($product->view_count > 100) {
+            $warnings[] = "Sản phẩm này đang được nhiều người quan tâm ({$product->view_count} lượt xem)";
+        }
+
+        // Check if product is in favorites/cart
+        $favoritesCount = $product->favorites()->count();
+        if ($favoritesCount > 0) {
+            $warnings[] = "Sản phẩm đang được {$favoritesCount} người dùng lưu trong danh sách yêu thích";
+        }
+
+        // Check if product is newly posted (less than 24 hours)
+        if ($product->created_at->diffInHours(now()) < 24) {
+            $hoursAgo = $product->created_at->diffInHours(now());
+            $warnings[] = "Sản phẩm mới đăng trong {$hoursAgo} giờ qua";
+        }
+
+        // Check daily delete limit (business rule)
+        $dailyDeleteCount = Cache::get("user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 0);
+        $maxDailyDeletes = 10; // Configure this as needed
+        
+        if ($dailyDeleteCount >= $maxDailyDeletes) {
+            $errors[] = 'Bạn đã vượt quá số lần xóa cho phép trong ngày';
+        }
+
+        return response()->json([
+            'canDelete' => empty($errors),
+            'errors' => $errors,
+            'warnings' => $warnings,
+        ]);
+    }
+
+    public function destroy(Request $request, Product $product)
+    {
+        $user = $request->user();
+
+        abort_if(!$user instanceof User, 403);
+        abort_if($product->user_id !== $user->id, 403);
+
+        $respond = function (bool $success, string $message, ?array $undoData = null) use ($request) {
+            if ($request->wantsJson()) {
+                $payload = ['success' => $success, 'message' => $message];
+                if ($undoData) {
+                    $payload['undoData'] = $undoData;
+                }
+                return response()->json($payload, $success ? 200 : 422);
+            }
+
+            $flashKey = $success ? 'product_delete_success' : 'product_delete_error';
+            return back()->with($flashKey, $message);
+        };
+
+        if (session('account_restricted', false)) {
+            return $respond(false, 'Tài khoản của bạn đang bị hạn chế tính năng đăng bán');
+        }
+
+        // Re-check delete conditions
+        $pendingOrders = $product->orderItems()
+            ->whereHas('order', function ($query) {
+                $query->whereIn('status', ['pending', 'processing', 'confirmed']);
+            })->count();
+
+        if ($pendingOrders > 0) {
+            return $respond(false, 'Sản phẩm đang có đơn hàng chờ xử lý, không thể xóa');
+        }
+
+        $paidOrders = $product->orderItems()
+            ->whereHas('order', function ($query) {
+                $query->whereIn('status', ['paid', 'shipped', 'delivered']);
+            })->count();
+
+        if ($paidOrders > 0) {
+            return $respond(false, 'Sản phẩm đã được thanh toán, không thể xóa');
+        }
+
+        // Check daily delete limit
+        $dailyDeleteCount = Cache::get("user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 0);
+        $maxDailyDeletes = 10;
+        
+        if ($dailyDeleteCount >= $maxDailyDeletes) {
+            return $respond(false, 'Bạn đã vượt quá số lần xóa cho phép trong ngày');
         }
 
         try {
+            DB::beginTransaction();
+
+            // Store product data for undo functionality
+            $undoData = [
+                'product_id' => $product->id,
+                'user_id' => $user->id,
+                'product_data' => $product->toArray(),
+                'images_data' => $product->images->toArray(),
+                'timestamp' => now()->timestamp,
+            ];
+
+            // Store undo data in cache for 10 minutes
+            Cache::put("undo_delete_{$product->id}_{$user->id}", $undoData, now()->addMinutes(10));
+
+            // Soft delete or hard delete based on business rules
             $product->delete();
 
-            return back()->with('product_delete_success', 'Sản phẩm đã được xóa');
+            // Increment daily delete count
+            Cache::put(
+                "user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 
+                $dailyDeleteCount + 1, 
+                now()->endOfDay()
+            );
+
+            DB::commit();
+
+            return $respond(true, 'Sản phẩm đã được xóa thành công', $undoData);
         } catch (\Throwable $exception) {
+            DB::rollBack();
             report($exception);
 
-            return back()->with('product_delete_error', 'Không thể xóa sản phẩm. Vui lòng thử lại');
+            return $respond(false, 'Không thể xóa sản phẩm. Vui lòng thử lại');
+        }
+    }
+
+    public function undoDelete(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        abort_if(!$user instanceof User, 403);
+
+        $validated = $request->validate([
+            'product_id' => 'required|integer',
+            'user_id' => 'required|integer',
+            'timestamp' => 'required|integer',
+        ]);
+
+        if ($validated['user_id'] !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không có quyền thực hiện thao tác này',
+            ], 403);
+        }
+
+        $cacheKey = "undo_delete_{$validated['product_id']}_{$user->id}";
+        $undoData = Cache::get($cacheKey);
+
+        if (!$undoData || $undoData['timestamp'] !== $validated['timestamp']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể hoàn tác. Thời gian hoàn tác đã hết hoặc dữ liệu không hợp lệ',
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Restore the product
+            $product = Product::withTrashed()->find($validated['product_id']);
+            
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy sản phẩm để khôi phục',
+                ]);
+            }
+
+            $product->restore();
+
+            // Restore images if they were deleted
+            foreach ($undoData['images_data'] as $imageData) {
+                ProductImage::withTrashed()
+                    ->where('id', $imageData['id'])
+                    ->restore();
+            }
+
+            // Remove undo data from cache
+            Cache::forget($cacheKey);
+
+            // Decrement daily delete count
+            $dailyDeleteCount = Cache::get("user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 0);
+            if ($dailyDeleteCount > 0) {
+                Cache::put(
+                    "user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 
+                    $dailyDeleteCount - 1, 
+                    now()->endOfDay()
+                );
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sản phẩm đã được khôi phục thành công',
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể khôi phục sản phẩm. Vui lòng thử lại',
+            ]);
         }
     }
 
