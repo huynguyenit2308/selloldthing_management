@@ -18,7 +18,13 @@ body.favorites-page {
 }
 
 .favorites-page-wrapper {
-    padding: 140px 0 64px;
+    padding: 180px 0 64px;
+}
+
+@media (max-width: 991.98px) {
+    .favorites-page-wrapper {
+        padding-top: 140px;
+    }
 }
 
 .favorites-breadcrumb {

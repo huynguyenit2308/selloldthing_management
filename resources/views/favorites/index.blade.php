@@ -70,7 +70,12 @@
                 <section class="favorites-main">
                     <header class="favorites-header">
                         <h1>Sản phẩm yêu thích</h1>
-                        <span class="favorites-count"><span class="favorites-count-number">{{ $favorites->total() }}</span> sản phẩm</span>
+                        @php
+                            $favoritesCount = $favorites instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
+                                ? $favorites->total()
+                                : $favorites->count();
+                        @endphp
+                        <span class="favorites-count"><span class="favorites-count-number">{{ $favoritesCount }}</span> sản phẩm</span>
                     </header>
 
                     <div class="favorites-controls">
