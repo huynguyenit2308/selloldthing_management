@@ -1,2 +1,4 @@
 *
 !.gitignore
+!product_uploads/
+!product_uploads/.gitkeep

@@ -406,7 +406,11 @@ class ProductController extends Controller
 
         abort_if(!$user instanceof User, 403);
 
+        \Log::info('Bắt đầu tạo sản phẩm', ['user_id' => $user->id]);
+
         $validated = $this->validateProduct($request, $user);
+
+        \Log::info('Validation thành công', ['images_count' => count($request->file('images', []))]);
 
         DB::beginTransaction();
 
@@ -426,7 +430,11 @@ class ProductController extends Controller
                 'status' => 'pending',
             ]);
 
+            \Log::info('Sản phẩm đã tạo', ['product_id' => $product->id]);
+
             $this->storeProductImages($product, $request->file('images', []));
+
+            \Log::info('Ảnh đã lưu thành công');
 
             DB::commit();
 
@@ -435,10 +443,14 @@ class ProductController extends Controller
                 ->with('product_status_success', 'Sản phẩm đã được gửi để duyệt.');
         } catch (\Throwable $exception) {
             DB::rollBack();
+            \Log::error('Lỗi khi tạo sản phẩm', [
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString()
+            ]);
             report($exception);
 
             return back()->withInput()->withErrors([
-                'general' => 'Không thể đăng sản phẩm. Vui lòng thử lại',
+                'general' => 'Không thể đăng sản phẩm. Vui lòng thử lại: ' . $exception->getMessage(),
             ]);
         }
     }
@@ -606,18 +618,23 @@ class ProductController extends Controller
         
         foreach (array_filter($files) as $file) {
             try {
-                $image = $this->storeImageFile($file);
+                $imagePath = $this->storeImageFile($file);
 
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'url' => $image,
+                    'url' => $imagePath,
                     'sort_order' => $sortOrder++,
                 ]);
             } catch (\Throwable $exception) {
+                \Log::error('Lỗi khi lưu ảnh sản phẩm', [
+                    'error' => $exception->getMessage(),
+                    'file' => $exception->getFile(),
+                    'line' => $exception->getLine(),
+                ]);
                 report($exception);
 
                 throw ValidationException::withMessages([
-                    'images' => 'Không thể tải ảnh lên. Vui lòng thử lại với ảnh khác.',
+                    'images' => 'Không thể tải ảnh lên: ' . $exception->getMessage(),
                 ]);
             }
         }
@@ -625,23 +642,36 @@ class ProductController extends Controller
 
     protected function storeImageFile(UploadedFile $file): string
     {
-        $imageInfo = getimagesize($file->getPathname());
+        \Log::info('Bắt đầu lưu file', [
+            'original_name' => $file->getClientOriginalName(),
+            'size' => $file->getSize(),
+            'mime' => $file->getMimeType(),
+        ]);
 
-        if (!$imageInfo || $imageInfo[0] < 300 || $imageInfo[1] < 300) {
-            throw ValidationException::withMessages([
-                'images' => 'Ảnh có kích thước quá nhỏ (tối thiểu 300x300px)',
-            ]);
-        }
+        // Bỏ giới hạn kích thước tối thiểu
+        // $imageInfo = getimagesize($file->getPathname());
+        // if (!$imageInfo || $imageInfo[0] < 300 || $imageInfo[1] < 300) {
+        //     \Log::warning('Ảnh quá nhỏ', ['size' => $imageInfo ? $imageInfo[0] . 'x' . $imageInfo[1] : 'unknown']);
+        //     throw ValidationException::withMessages([
+        //         'images' => 'Ảnh có kích thước quá nhỏ (tối thiểu 300x300px)',
+        //     ]);
+        // }
 
-        $path = $file->store('product_uploads/'.date('Y/m'), ['disk' => 'public']);
+        $targetPath = 'product_uploads/'.date('Y/m');
+        \Log::info('Đang lưu vào', ['path' => $targetPath]);
+
+        $path = $file->store($targetPath, ['disk' => 'public']);
+
+        \Log::info('Kết quả lưu file', ['path' => $path, 'success' => (bool)$path]);
 
         if (!$path) {
+            \Log::error('Không thể lưu file vào storage');
             throw ValidationException::withMessages([
                 'images' => 'Không thể lưu ảnh. Vui lòng thử lại sau.',
             ]);
         }
 
-        return Storage::disk('public')->url($path);
+        return $path;
     }
 
     protected function syncProductImages(Product $product, array $newFiles, array $existingOrder, array $removeIds): void
@@ -723,22 +753,40 @@ class ProductController extends Controller
             return;
         }
 
-        $publicPrefix = Storage::disk('public')->url('');
+        $normalized = str_replace('\\', '/', trim($url));
 
-        if (Str::startsWith($url, $publicPrefix)) {
-            $relativePath = ltrim(Str::after($url, $publicPrefix), '/');
-            if ($relativePath !== '') {
-                Storage::disk('public')->delete($relativePath);
-            }
+        if ($normalized === '') {
             return;
         }
 
-        if (Str::startsWith($url, ['/storage/', 'storage/'])) {
-            $relativePath = ltrim(Str::after($url, '/storage/'), '/');
-            if ($relativePath !== '') {
-                Storage::disk('public')->delete($relativePath);
+        // Nếu là URL đầy đủ, chuyển về đường dẫn tương đối
+        if (Str::startsWith($normalized, ['http://', 'https://'])) {
+            $publicPrefix = rtrim(Storage::disk('public')->url(''), '/');
+
+            if (!Str::startsWith($normalized, $publicPrefix)) {
+                return;
             }
+
+            $normalized = ltrim(Str::after($normalized, $publicPrefix), '/');
         }
+
+        // Loại bỏ tiền tố storage/ nếu có
+        if (Str::startsWith($normalized, 'storage/')) {
+            $normalized = ltrim(Str::after($normalized, 'storage/'), '/');
+        }
+
+        // Loại bỏ tiền tố public/ nếu có
+        if (Str::startsWith($normalized, 'public/')) {
+            $normalized = ltrim(Str::after($normalized, 'public/'), '/');
+        }
+
+        $normalized = ltrim($normalized, '/');
+
+        if ($normalized === '') {
+            return;
+        }
+
+        Storage::disk('public')->delete($normalized);
     }
 
     protected function splitLocation(?string $location): array
