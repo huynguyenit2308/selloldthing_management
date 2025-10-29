@@ -105,7 +105,7 @@ class ProductController extends Controller
             'categories' => $categories,
             'contactMethods' => $contactMethods,
             'conditions' => $conditions,
-            'maxImages' => 9,
+            'maxImages' => 5,
         ]);
     }
      public function show(Product $product): View
@@ -602,6 +602,8 @@ class ProductController extends Controller
      */
     protected function storeProductImages(Product $product, array $files): void
     {
+        $sortOrder = 0;
+        
         foreach (array_filter($files) as $file) {
             try {
                 $image = $this->storeImageFile($file);
@@ -609,6 +611,7 @@ class ProductController extends Controller
                 ProductImage::create([
                     'product_id' => $product->id,
                     'url' => $image,
+                    'sort_order' => $sortOrder++,
                 ]);
             } catch (\Throwable $exception) {
                 report($exception);
