@@ -55,7 +55,7 @@
                                 <div
                                     class="list-group-item d-flex flex-wrap justify-content-between align-items-center border-1 border-bottom py-4">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $image ? asset('storage/' . $image->url) : asset('images/default.jpg') }}"
+                                        <img src="{{ $image ? $image->image_url : asset('images/default.jpg') }}"
                                             alt="{{ $product->name }}" class="img-thumbnail mr-4"
                                             style="width: 140px; height: 140px; object-fit: cover;">
 
