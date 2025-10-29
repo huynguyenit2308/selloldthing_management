@@ -10,14 +10,15 @@ Route::get('/', function () {
     return view('home');
 });
 
-// Admin routes
+// Admin routes danh mục
 Route::prefix('admin')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
     Route::get('/categories/create', [AddCategoryController::class, 'create'])->name('admin.categories.create');
     Route::post('/categories', [AddCategoryController::class, 'store'])->name('admin.categories.store');
-
+    //sửa danh mục
     Route::get('/categories/{category}/edit', [UpdateCategoryController::class, 'edit'])->name('admin.categories.edit');
     Route::put('/categories/{category}', [UpdateCategoryController::class, 'update'])->name('admin.categories.update');
+    //xóa danh mục
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
 
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
