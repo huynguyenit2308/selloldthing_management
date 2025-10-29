@@ -148,6 +148,14 @@
                             @enderror
                         </div>
                         <div class="form-field">
+                            <label for="quantity">Số lượng trong kho <span class="required">*</span></label>
+                            <input id="quantity" name="quantity" type="number" inputmode="numeric" min="0" value="{{ old('quantity', 1) }}" required>
+                            <p class="field-note">Nhập số lượng hiện có. Đặt 0 nếu đã hết hàng.</p>
+                            @error('quantity')
+                                <p class="field-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="form-field">
                             <label for="original_price">Giá gốc (Tham khảo)</label>
                             <div class="input-addon">
                                 <input id="original_price" name="original_price" type="text" inputmode="numeric" value="{{ old('original_price') }}">

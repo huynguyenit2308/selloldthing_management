@@ -96,6 +96,17 @@
                 <section class="account-products-panel">
                     <header class="account-products-toolbar">
                         <form method="GET" action="{{ route('products.manage') }}" class="toolbar-form">
+                            {{-- Preserve other parameters --}}
+                            @if(request('search'))
+                                <input type="hidden" name="search" value="{{ request('search') }}">
+                            @endif
+                            @if(request('status'))
+                                <input type="hidden" name="status" value="{{ request('status') }}">
+                            @endif
+                            @if(request('category'))
+                                <input type="hidden" name="category" value="{{ request('category') }}">
+                            @endif
+                            
                             <div class="toolbar-filters">
                                 <div class="toolbar-group">
                                     <label for="sort">Sắp xếp theo</label>
@@ -165,18 +176,20 @@
                         </div>
                     @endif
 
-                    <div class="account-products-table" role="table">
-                        <div class="table-header" role="row">
-                            <div class="cell index" role="columnheader">STT</div>
-                            <div class="cell image" role="columnheader">Hình ảnh</div>
-                            <div class="cell info" role="columnheader">Tên sản phẩm</div>
-                            <div class="cell price" role="columnheader">Giá</div>
-                            <div class="cell views" role="columnheader">Lượt xem</div>
-                            <div class="cell status" role="columnheader">Trạng thái</div>
-                            <div class="cell actions" role="columnheader">Thao tác</div>
-                        </div>
+                    <div class="products-table-wrapper" role="region" aria-label="Danh sách sản phẩm">
+                        <div class="products-table" role="table">
+                            <div class="table-header" role="row">
+                                <div class="cell stt" role="columnheader">STT</div>
+                                <div class="cell image" role="columnheader">Hình ảnh</div>
+                                <div class="cell info" role="columnheader">Tên sản phẩm</div>
+                                <div class="cell price" role="columnheader">Giá</div>
+                                <div class="cell stock" role="columnheader">Kho</div>
+                                <div class="cell views" role="columnheader">Lượt xem</div>
+                                <div class="cell status" role="columnheader">Trạng thái</div>
+                                <div class="cell actions" role="columnheader">Thao tác</div>
+                            </div>
 
-                        @forelse ($products as $product)
+                            @forelse ($products as $product)
                             @php
                                 $firstImage = $product->images->first();
                                 $primaryImage = $firstImage ? $firstImage->image_url : null;
@@ -185,12 +198,15 @@
                                 $statusText = $statusLabels[$statusKey] ?? ucfirst($statusKey);
                                 $priceText = $product->price ? number_format($product->price, 0, ',', '.') . ' VND' : 'Chưa đặt giá';
                                 $shortDescription = $product->short_description
-                                    ?? ($product->description ? \Illuminate\Support\Str::limit($product->description, 80) : null);
-                                $placeholderText = \Illuminate\Support\Str::limit($product->name ?? 'Sản phẩm', 36, '');
+                                    ?? ($product->description ? \Illuminate\Support\Str::limit($product->description, 50) : null);
+                                $placeholderText = \Illuminate\Support\Str::limit($product->name ?? 'Sản phẩm', 15, '');
+                                $quantity = $product->quantity ?? 0;
+                                $stockLabel = $quantity > 0 ? 'Còn hàng' : 'Hết hàng';
+                                $stockClass = $quantity > 0 ? 'stock-available' : 'stock-out';
                             @endphp
                             <div class="table-row" role="row">
-                                <div class="cell index" role="cell">
-                                    {{ ($products->firstItem() ?? 0) + $loop->index }}
+                                <div class="cell stt" role="cell">
+                                    <span class="row-number">{{ ($products->firstItem() ?? 0) + $loop->index }}</span>
                                 </div>
                                 <div class="cell image" role="cell">
                                     <div class="product-thumbnail {{ $hasPrimaryImage ? 'has-image' : 'is-placeholder' }}" data-product-name="{{ $product->name }}">
@@ -201,19 +217,20 @@
                                     </div>
                                 </div>
                                 <div class="cell info" role="cell">
-                                    <h3>{{ $product->name }}</h3>
-                                    @if ($shortDescription)
-                                        <p class="product-description">{{ $shortDescription }}</p>
-                                    @endif
+                                    <div class="product-info">
+                                        <h3 class="product-title">{{ $product->name }}</h3>
+                                    </div>
                                 </div>
                                 <div class="cell price" role="cell">
-                                    <span>{{ $priceText }}</span>
+                                    <span class="price-value">{{ $priceText }}</span>
+                                </div>
+                                <div class="cell stock" role="cell">
+                                    <span class="stock-status {{ $stockClass }}">
+                                        {{ $stockLabel }}
+                                    </span>
                                 </div>
                                 <div class="cell views" role="cell">
-                                    <span class="views-value" aria-label="{{ number_format($product->view_count ?? 0) }} lượt xem">
-                                        <span class="views-icon" aria-hidden="true">👁️</span>
-                                        {{ number_format($product->view_count ?? 0) }}
-                                    </span>
+                                    <span class="views-value">{{ number_format($product->view_count ?? 0) }}</span>
                                 </div>
                                 <div class="cell status" role="cell">
                                     <span class="status-tag status-{{ $statusKey }}">{{ $statusText }}</span>
@@ -223,58 +240,119 @@
                                         <form method="POST" action="{{ route('products.toggle', $product) }}">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="action-btn" title="Ẩn/hiển thị" aria-label="Ẩn/hiển thị" {{ ($accountRestricted) ? 'disabled' : '' }}>
+                                            <button type="submit" class="action-btn btn-toggle" title="Ẩn/hiển thị" aria-label="Ẩn/hiển thị" {{ ($accountRestricted) ? 'disabled' : '' }}>
                                                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M1.458 12C2.732 7.943 6.796 5 12 5s9.268 2.943 10.542 7c-1.274 4.057-5.338 7-10.542 7S2.732 16.057 1.458 12Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                <span class="sr-only">Ẩn/hiển thị</span>
                                             </button>
                                         </form>
-                                        <button type="button" class="action-btn js-edit-product" data-edit-url="{{ route('products.edit', $product) }}" data-product-id="{{ $product->id }}" title="Chỉnh sửa" aria-label="Chỉnh sửa">
+                                        <button type="button" class="action-btn btn-edit js-edit-product" data-edit-url="{{ route('products.edit', $product) }}" data-product-id="{{ $product->id }}" title="Chỉnh sửa" aria-label="Chỉnh sửa">
                                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 15.5 15.5 4a2.121 2.121 0 1 1 3 3L7 18.5 3 19.5Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="m14.5 5.5 3 3" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            <span class="sr-only">Chỉnh sửa</span>
                                         </button>
-                                        <form method="POST" action="{{ route('products.destroy', $product) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="action-btn action-delete" title="Xóa" aria-label="Xóa" {{ ($accountRestricted) ? 'disabled' : '' }}>
-                                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 7L18.132 19.142A2 2 0 0 1 16.137 21H7.863a2 2 0 0 1-1.995-1.858L5 7" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11v6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 7h18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                <span class="sr-only">Xóa</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="action-btn btn-delete js-delete-product" 
+                                                data-product-id="{{ $product->id }}" 
+                                                data-product-name="{{ $product->name }}"
+                                                data-delete-url="{{ route('products.destroy', $product) }}"
+                                                data-check-url="{{ route('products.checkDelete', $product) }}"
+                                                title="Xóa" aria-label="Xóa" 
+                                                {{ ($accountRestricted) ? 'disabled' : '' }}>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 7L18.132 19.142A2 2 0 0 1 16.137 21H7.863a2 2 0 0 1-1.995-1.858L5 7" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11v6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 7h18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         @empty
                             <div class="table-empty" role="row">
-                                <div class="cell" role="cell">
-                                    <p>Bạn chưa có sản phẩm nào</p>
+                                <div class="empty-content">
+                                    <div class="empty-icon">📦</div>
+                                    <h3>Chưa có sản phẩm nào</h3>
+                                    <p>Bắt đầu bán hàng bằng cách đăng sản phẩm đầu tiên của bạn</p>
                                     <a class="btn-primary" href="{{ route('products.create') }}">Đăng sản phẩm đầu tiên</a>
                                 </div>
                             </div>
                         @endforelse
-                    </div>
-
-                    @if ($products->count() > 0)
-                        <div class="account-products-pagination">
-                            <nav aria-label="Pagination">
-                                <ul class="pagination">
-                                    <li class="pagination-item {{ $products->onFirstPage() ? 'is-disabled' : '' }}">
-                                        <a href="{{ $products->previousPageUrl() ?? '#' }}" aria-disabled="{{ $products->onFirstPage() ? 'true' : 'false' }}">&lt;</a>
-                                    </li>
-                                    @foreach ($products->getUrlRange(1, $products->lastPage()) as $page => $url)
-                                        <li class="pagination-item {{ $page === $products->currentPage() ? 'is-active' : '' }}">
-                                            <a href="{{ $url }}">{{ $page }}</a>
-                                        </li>
-                                    @endforeach
-                                    <li class="pagination-item {{ $products->hasMorePages() ? '' : 'is-disabled' }}">
-                                        <a href="{{ $products->nextPageUrl() ?? '#' }}" aria-disabled="{{ $products->hasMorePages() ? 'false' : 'true' }}">&gt;</a>
-                                    </li>
-                                </ul>
-                            </nav>
                         </div>
-                    @endif
+                    </div>
+                </div>
+
+                @if ($products->count() > 0)
+                    <div class="account-products-pagination">
+                        <nav aria-label="Pagination">
+                            <ul class="pagination">
+                                <li class="pagination-item {{ $products->onFirstPage() ? 'is-disabled' : '' }}">
+                                    <a href="{{ $products->previousPageUrl() ?? '#' }}" aria-disabled="{{ $products->onFirstPage() ? 'true' : 'false' }}">&lt;</a>
+                                </li>
+                                @foreach ($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                                    <li class="pagination-item {{ $page === $products->currentPage() ? 'is-active' : '' }}">
+                                        <a href="{{ $url }}">{{ $page }}</a>
+                                    </li>
+                                @endforeach
+                                <li class="pagination-item {{ $products->hasMorePages() ? '' : 'is-disabled' }}">
+                                    <a href="{{ $products->nextPageUrl() ?? '#' }}" aria-disabled="{{ $products->hasMorePages() ? 'false' : 'true' }}">&gt;</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                @endif
                 </section>
             </div>
         </div>
+    </div>
+
+    <!-- Delete Confirmation Popups -->
+    <div id="deletePopupOverlay" class="popup-overlay" style="display: none;">
+        <!-- Standard Confirm Popup -->
+        <div id="confirmDeletePopup" class="popup-modal confirm-popup" style="display: none;">
+            <div class="popup-header">
+                <h3>Xác nhận xóa sản phẩm</h3>
+            </div>
+            <div class="popup-content">
+                <p>Bạn có chắc chắn muốn xóa sản phẩm '<span id="confirmProductName"></span>' không?</p>
+            </div>
+            <div class="popup-actions">
+                <button type="button" class="btn-secondary" id="cancelDelete">Hủy</button>
+                <button type="button" class="btn-danger" id="confirmDeleteBtn">Xóa</button>
+            </div>
+        </div>
+
+        <!-- Warning Popup -->
+        <div id="warningDeletePopup" class="popup-modal warning-popup" style="display: none;">
+            <div class="popup-header">
+                <span class="warning-icon">⚠️</span>
+                <h3>Cảnh báo trước khi xóa</h3>
+            </div>
+            <div class="popup-content">
+                <p>Sản phẩm '<span id="warningProductName"></span>' có các điều kiện cảnh báo:</p>
+                <ul id="warningList"></ul>
+                <p><strong>Bạn vẫn muốn tiếp tục xóa sản phẩm này?</strong></p>
+            </div>
+            <div class="popup-actions">
+                <button type="button" class="btn-secondary" id="cancelWarningDelete">Hủy</button>
+                <button type="button" class="btn-danger" id="proceedWarningDelete">Vẫn xóa</button>
+            </div>
+        </div>
+
+        <!-- Error Popup -->
+        <div id="errorDeletePopup" class="popup-modal error-popup" style="display: none;">
+            <div class="popup-header">
+                <span class="error-icon">❌</span>
+                <h3>Không thể xóa sản phẩm</h3>
+            </div>
+            <div class="popup-content">
+                <p>Sản phẩm '<span id="errorProductName"></span>' không thể xóa vì:</p>
+                <ul id="errorList"></ul>
+            </div>
+            <div class="popup-actions">
+                <button type="button" class="btn-secondary" id="closeErrorPopup">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="toast-notification" style="display: none;">
+        <div class="toast-content">
+            <span class="toast-message"></span>
+            <button type="button" class="toast-undo" id="undoDelete" style="display: none;">Hoàn tác</button>
+        </div>
+        <button type="button" class="toast-close" id="closeToast">×</button>
     </div>
 @endsection
 
@@ -387,50 +465,233 @@
                     });
                 });
 
-                // AJAX for delete product
-                document.querySelectorAll('form[action*="destroy"]').forEach(function (form) {
-                    form.addEventListener('submit', function (e) {
+                // Enhanced delete product functionality
+                let currentDeleteData = null;
+                let undoTimeout = null;
+
+                // Delete button click handler
+                document.querySelectorAll('.js-delete-product').forEach(function (button) {
+                    button.addEventListener('click', function (e) {
                         e.preventDefault();
-                        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-                            const row = form.closest('.table-row');
+                        
+                        if (button.disabled) return;
+                        
+                        const productId = button.dataset.productId;
+                        const productName = button.dataset.productName;
+                        const checkUrl = button.dataset.checkUrl;
+                        const deleteUrl = button.dataset.deleteUrl;
+                        
+                        currentDeleteData = {
+                            productId,
+                            productName,
+                            deleteUrl,
+                            button,
+                            row: button.closest('.table-row')
+                        };
+                        
+                        // Show loading state
+                        button.style.opacity = '0.6';
+                        button.style.pointerEvents = 'none';
+                        
+                        // Check delete conditions
+                        fetch(checkUrl, {
+                            method: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Reset button state
+                            button.style.opacity = '';
+                            button.style.pointerEvents = '';
                             
-                            fetch(form.action, {
-                                method: 'DELETE',
-                                headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                    'Accept': 'application/json',
-                                }
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    row.style.opacity = '0.5';
-                                    row.style.pointerEvents = 'none';
-                                    setTimeout(() => {
-                                        row.remove();
-                                        const alert = document.createElement('div');
-                                        alert.className = 'alert alert-success';
-                                        alert.textContent = data.message;
-                                        document.querySelector('.account-products-panel').prepend(alert);
-                                        setTimeout(() => alert.remove(), 3000);
-                                    }, 500);
+                            if (data.canDelete) {
+                                if (data.warnings && data.warnings.length > 0) {
+                                    showWarningPopup(productName, data.warnings);
                                 } else {
-                                    const alert = document.createElement('div');
-                                    alert.className = 'alert alert-error';
-                                    alert.textContent = data.message || 'Có lỗi xảy ra';
-                                    document.querySelector('.account-products-panel').prepend(alert);
-                                    setTimeout(() => alert.remove(), 3000);
+                                    showConfirmPopup(productName);
                                 }
-                            })
-                            .catch(error => {
-                                const alert = document.createElement('div');
-                                alert.className = 'alert alert-error';
-                                alert.textContent = 'Lỗi kết nối. Vui lòng thử lại.';
-                                document.querySelector('.account-products-panel').prepend(alert);
-                                setTimeout(() => alert.remove(), 3000);
-                            });
-                        }
+                            } else {
+                                showErrorPopup(productName, data.errors || ['Không thể xóa sản phẩm']);
+                            }
+                        })
+                        .catch(error => {
+                            // Reset button state
+                            button.style.opacity = '';
+                            button.style.pointerEvents = '';
+                            
+                            showErrorPopup(productName, ['Không thể kiểm tra điều kiện xóa. Vui lòng thử lại sau.']);
+                        });
                     });
+                });
+
+                // Popup functions
+                function showConfirmPopup(productName) {
+                    document.getElementById('confirmProductName').textContent = productName;
+                    document.getElementById('deletePopupOverlay').style.display = 'flex';
+                    document.getElementById('confirmDeletePopup').style.display = 'block';
+                }
+
+                function showWarningPopup(productName, warnings) {
+                    document.getElementById('warningProductName').textContent = productName;
+                    const warningList = document.getElementById('warningList');
+                    warningList.innerHTML = '';
+                    warnings.forEach(warning => {
+                        const li = document.createElement('li');
+                        li.textContent = warning;
+                        warningList.appendChild(li);
+                    });
+                    document.getElementById('deletePopupOverlay').style.display = 'flex';
+                    document.getElementById('warningDeletePopup').style.display = 'block';
+                }
+
+                function showErrorPopup(productName, errors) {
+                    document.getElementById('errorProductName').textContent = productName;
+                    const errorList = document.getElementById('errorList');
+                    errorList.innerHTML = '';
+                    errors.forEach(error => {
+                        const li = document.createElement('li');
+                        li.textContent = error;
+                        errorList.appendChild(li);
+                    });
+                    document.getElementById('deletePopupOverlay').style.display = 'flex';
+                    document.getElementById('errorDeletePopup').style.display = 'block';
+                }
+
+                function hideAllPopups() {
+                    document.getElementById('deletePopupOverlay').style.display = 'none';
+                    document.getElementById('confirmDeletePopup').style.display = 'none';
+                    document.getElementById('warningDeletePopup').style.display = 'none';
+                    document.getElementById('errorDeletePopup').style.display = 'none';
+                }
+
+                function performDelete() {
+                    if (!currentDeleteData) return;
+                    
+                    fetch(currentDeleteData.deleteUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Hide row with animation
+                            currentDeleteData.row.style.opacity = '0.5';
+                            currentDeleteData.row.style.pointerEvents = 'none';
+                            
+                            setTimeout(() => {
+                                currentDeleteData.row.style.display = 'none';
+                                showSuccessToast(data.message, data.undoData);
+                            }, 300);
+                        } else {
+                            showAlert('error', data.message || 'Có lỗi xảy ra khi xóa sản phẩm');
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('error', 'Lỗi kết nối. Vui lòng thử lại.');
+                    });
+                }
+
+                function showSuccessToast(message, undoData = null) {
+                    const toast = document.getElementById('toastNotification');
+                    const messageEl = toast.querySelector('.toast-message');
+                    const undoBtn = document.getElementById('undoDelete');
+                    
+                    messageEl.textContent = message;
+                    
+                    if (undoData) {
+                        undoBtn.style.display = 'inline-block';
+                        undoBtn.onclick = () => performUndo(undoData);
+                        
+                        // Auto-hide undo after 8 seconds
+                        undoTimeout = setTimeout(() => {
+                            undoBtn.style.display = 'none';
+                        }, 8000);
+                    } else {
+                        undoBtn.style.display = 'none';
+                    }
+                    
+                    toast.style.display = 'block';
+                    
+                    // Auto-hide toast after 10 seconds
+                    setTimeout(() => {
+                        toast.style.display = 'none';
+                    }, 10000);
+                }
+
+                function performUndo(undoData) {
+                    if (undoTimeout) {
+                        clearTimeout(undoTimeout);
+                        undoTimeout = null;
+                    }
+                    
+                    fetch('/my-products/undo-delete', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(undoData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload page to show restored product
+                            window.location.reload();
+                        } else {
+                            showAlert('error', data.message || 'Không thể hoàn tác');
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('error', 'Lỗi khi hoàn tác. Vui lòng thử lại.');
+                    });
+                    
+                    document.getElementById('toastNotification').style.display = 'none';
+                }
+
+                function showAlert(type, message) {
+                    const alert = document.createElement('div');
+                    alert.className = `alert alert-${type}`;
+                    alert.textContent = message;
+                    document.querySelector('.account-products-panel').prepend(alert);
+                    setTimeout(() => alert.remove(), 5000);
+                }
+
+                // Event listeners for popup buttons
+                document.getElementById('cancelDelete').addEventListener('click', hideAllPopups);
+                document.getElementById('cancelWarningDelete').addEventListener('click', hideAllPopups);
+                document.getElementById('closeErrorPopup').addEventListener('click', hideAllPopups);
+                
+                document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+                    hideAllPopups();
+                    performDelete();
+                });
+                
+                document.getElementById('proceedWarningDelete').addEventListener('click', () => {
+                    hideAllPopups();
+                    performDelete();
+                });
+
+                // Close toast
+                document.getElementById('closeToast').addEventListener('click', () => {
+                    document.getElementById('toastNotification').style.display = 'none';
+                    if (undoTimeout) {
+                        clearTimeout(undoTimeout);
+                        undoTimeout = null;
+                    }
+                });
+
+                // Close popup when clicking overlay
+                document.getElementById('deletePopupOverlay').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) {
+                        hideAllPopups();
+                    }
                 });
 
                 const editButtons = document.querySelectorAll('.js-edit-product');
@@ -446,6 +707,14 @@
                         window.location.href = url;
                     });
                 });
+
+                // Auto-submit form when sort option changes
+                const sortSelect = document.getElementById('sort');
+                if (sortSelect) {
+                    sortSelect.addEventListener('change', function() {
+                        this.closest('form').submit();
+                    });
+                }
             });
         })();
     </script>
