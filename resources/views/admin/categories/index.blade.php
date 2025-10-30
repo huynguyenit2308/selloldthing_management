@@ -145,6 +145,9 @@
                 <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
                     <span class="mr-1">&#x2795;</span> Thêm mới
                 </a>
+                 <a href="{{ route('admin.statistics.categories') }}" class="btn btn-primary">
+                    <span></span> Thống kê danh mục
+                </a>
             </div>
         </div>
 
