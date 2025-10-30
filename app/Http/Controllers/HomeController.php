@@ -23,9 +23,25 @@ class HomeController extends Controller
             ->take(12)
             ->get();
 
+        $topReviewedProducts = Product::published()
+            ->whereHas('reviews')
+            ->with([
+                'images' => function ($query) {
+                    $query->orderBy('sort_order')->orderBy('created_at');
+                },
+                'category',
+            ])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->orderByDesc('reviews_avg_rating')
+            ->orderByDesc('reviews_count')
+            ->take(10)
+            ->get();
+
         return view('home', [
             'categories' => $categories,
             'products' => $products,
+            'topReviewedProducts' => $topReviewedProducts,
         ]);
     }
 }

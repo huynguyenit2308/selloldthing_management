@@ -115,6 +115,59 @@
             font-weight: 700;
             line-height: 1;
         }
+
+        .product_slider_container {
+            position: relative;
+            height: auto;
+            padding-bottom: 56px;
+        }
+
+        .product_slider_item .product {
+            min-height: 340px;
+            border-right: none;
+            padding: 20px 24px 70px;
+        }
+
+        .product_slider_item .product_image {
+            height: 190px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .product_slider_item .product_image img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .product_slider_item .product_info {
+            padding: 0;
+        }
+
+        .product_slider_item .product_price {
+            margin-bottom: 12px;
+        }
+
+        .product_rating {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #6c6f80;
+        }
+
+        .product_rating .stars {
+            color: #ffcc00;
+            display: flex;
+            gap: 2px;
+        }
+
+        .product_rating .rating_count {
+            color: #9ea2b6;
+        }
     </style>
 @endpush
 
@@ -297,130 +350,53 @@
                     <div class="col">
                         <div class="product_slider_container">
                             <div class="owl-carousel owl-theme product_slider">
+                                @forelse ($topReviewedProducts as $product)
+                                    @php
+                                        $image = optional($product->images->first())->image_url;
+                                        if (empty($image)) {
+                                            $image = asset('images/product_1.png');
+                                        }
+                                        $hasDiscount = $product->original_price && $product->original_price > $product->price;
+                                        $discountAmount = $hasDiscount ? $product->original_price - $product->price : 0;
+                                        $rating = round($product->reviews_avg_rating ?? 0, 1);
+                                    @endphp
 
-                                <!-- Slide 1 -->
-
-                                <div class="owl-item product_slider_item">
-                                    <div class="product-item">
-                                        <div class="product discount">
-                                            <div class="product_image">
-                                                <img src="images/product_1.png" alt="">
-                                            </div>
-                                            <div class="favorite favorite_left"></div>
-                                            <div
-                                                class="product_bubble product_bubble_right product_bubble_red d-flex flex-column align-items-center">
-                                                <span>-$20</span>
-                                            </div>
-                                            <div class="product_info">
-                                                <h6 class="product_name"><a href="single.html">Fujifilm X100T 16
-                                                        MP Digital Camera (Silver)</a></h6>
-                                                <div class="product_price">$520.00<span>$590.00</span></div>
+                                    <div class="owl-item product_slider_item">
+                                        <div class="product-item">
+                                            <div class="product {{ $hasDiscount ? 'discount' : '' }}">
+                                                <div class="product_image">
+                                                    <img src="{{ $image }}" alt="{{ $product->name }}">
+                                                </div>
+                                                <div class="favorite {{ $hasDiscount ? 'favorite_left' : '' }}"></div>
+                                                @if ($hasDiscount)
+                                                    <div
+                                                        class="product_bubble product_bubble_right product_bubble_red d-flex flex-column align-items-center">
+                                                        <span class="discount-value">-{{ number_format($discountAmount, 0, ',', '.') }}₫</span>
+                                                    </div>
+                                                @endif
+                                                <div class="product_info">
+                                                    <h6 class="product_name">
+                                                        <a href="{{ route('products.show', $product) }}">{{ Str::limit($product->name, 48) }}</a>
+                                                    </h6>
+                                                    <div class="product_price">
+                                                        {{ number_format($product->price, 0, ',', '.') }}₫
+                                                        @if ($hasDiscount)
+                                                            <span>{{ number_format($product->original_price, 0, ',', '.') }}₫</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="product_rating mt-2">
+                                                        <span class="rating_value">{{ $rating }}/5</span>
+                                                        <span class="rating_count">({{ $product->reviews_count }} đánh giá)</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- Slide 2 -->
-
-                                <div class="owl-item product_slider_item">
-                                    <div class="product-item women">
-                                        <div class="product">
-                                            <div class="product_image">
-                                                <img src="images/product_2.png" alt="">
-                                            </div>
-                                            <div class="favorite"></div>
-                                            <div
-                                                class="product_bubble product_bubble_left product_bubble_green d-flex flex-column align-items-center">
-                                                <span>new</span>
-                                            </div>
-                                            <div class="product_info">
-                                                <h6 class="product_name"><a href="single.html">Samsung CF591
-                                                        Series Curved 27-Inch FHD Monitor</a></h6>
-                                                <div class="product_price">$610.00</div>
-                                            </div>
-                                        </div>
+                                @empty
+                                    <div class="w-100 text-center py-4">
+                                        <p class="mb-0">Chưa có sản phẩm nổi bật theo đánh giá.</p>
                                     </div>
-                                </div>
-
-                                <!-- Slide 3 -->
-
-                                <div class="owl-item product_slider_item">
-                                    <div class="product-item women">
-                                        <div class="product">
-                                            <div class="product_image">
-                                                <img src="images/product_3.png" alt="">
-                                            </div>
-                                            <div class="favorite"></div>
-                                            <div class="product_info">
-                                                <h6 class="product_name"><a href="single.html">Blue Yeti USB
-                                                        Microphone Blackout Edition</a></h6>
-                                                <div class="product_price">$120.00</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Slide 4 -->
-
-                                <div class="owl-item product_slider_item">
-                                    <div class="product-item accessories">
-                                        <div class="product">
-                                            <div class="product_image">
-                                                <img src="images/product_4.png" alt="">
-                                            </div>
-                                            <div
-                                                class="product_bubble product_bubble_right product_bubble_red d-flex flex-column align-items-center">
-                                                <span>sale</span>
-                                            </div>
-                                            <div class="favorite favorite_left"></div>
-                                            <div class="product_info">
-                                                <h6 class="product_name"><a href="single.html">DYMO LabelWriter
-                                                        450 Turbo Thermal Label Printer</a></h6>
-                                                <div class="product_price">$410.00</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Slide 5 -->
-
-                                <div class="owl-item product_slider_item">
-                                    <div class="product-item women men">
-                                        <div class="product">
-                                            <div class="product_image">
-                                                <img src="images/product_5.png" alt="">
-                                            </div>
-                                            <div class="favorite"></div>
-                                            <div class="product_info">
-                                                <h6 class="product_name"><a href="single.html">Pryma Headphones,
-                                                        Rose Gold & Grey</a></h6>
-                                                <div class="product_price">$180.00</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Slide 6 -->
-
-                                <div class="owl-item product_slider_item">
-                                    <div class="product-item accessories">
-                                        <div class="product discount">
-                                            <div class="product_image">
-                                                <img src="images/product_6.png" alt="">
-                                            </div>
-                                            <div class="favorite favorite_left"></div>
-                                            <div
-                                                class="product_bubble product_bubble_right product_bubble_red d-flex flex-column align-items-center">
-                                                <span>-$20</span>
-                                            </div>
-                                            <div class="product_info">
-                                                <h6 class="product_name"><a href="single.html">Fujifilm X100T 16
-                                                        MP Digital Camera (Silver)</a></h6>
-                                                <div class="product_price">$520.00<span>$590.00</span></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                @endforelse
                             </div>
 
                             <!-- Slider Navigation -->
