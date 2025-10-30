@@ -15,4 +15,14 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function updateCategory($validated, $imagePath)
+    {
+        return $this->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'image' => $imagePath,
+            'status' => (int) $validated['status'],
+        ]);
+    }
 }

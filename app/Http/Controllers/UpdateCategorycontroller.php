@@ -13,6 +13,11 @@ class UpdateCategoryController extends Controller
 {
     public function edit(int $categoryId)
     {
+        // Kiểm tra quyền admin
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Bạn không có quyền sửa danh mục');
+        }
+
         $category = Category::find($categoryId);
 
         if (!$category) {
@@ -26,6 +31,11 @@ class UpdateCategoryController extends Controller
 
     public function update(Request $request, int $categoryId)
     {
+        // Kiểm tra quyền admin
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Bạn không có quyền sửa danh mục');
+        }
+
         $category = Category::find($categoryId);
 
         if (!$category) {
@@ -80,14 +90,9 @@ class UpdateCategoryController extends Controller
                     ->withErrors(['image' => 'IMAGE_UPLOAD_FAILED: Không thể upload hình ảnh']);
             }
         }
-
+        //sửa danh mục
         try {
-            $category->update([
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
-                'image' => $imagePath,
-                'status' => (int) $validated['status'],
-            ]);
+            $category->updateCategory($validated, $imagePath);
         } catch (Exception $e) {
             Log::error('SYSTEM_ERROR: ' . $e->getMessage());
 
