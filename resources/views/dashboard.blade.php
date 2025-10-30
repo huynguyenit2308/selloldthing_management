@@ -140,7 +140,7 @@
                                     <li class="checkout">
                                         <a href="{{ route('orders.list') }}">
                                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-                                            <span id="checkout_items" class="checkout_items">2</span>
+                                            <span id="checkout_items" class="checkout_items">{{ session('cart_count', 0) }}</span>
                                         </a>
                                     </li>
                                 </ul>

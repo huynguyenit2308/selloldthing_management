@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\CartCount;
 use App\Helpers\IdEncoder;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -26,6 +27,8 @@ class CRUD_OrderController extends Controller
             }])
             ->orderBy('id', 'desc')
             ->get();
+
+        CartCount::updateCartCount();
 
         return view('order.list_order', compact('orders'));
     }
@@ -76,6 +79,8 @@ class CRUD_OrderController extends Controller
             ->sum(fn($item) => $item->quantity * $item->product->price);
         $order->save();
 
+        CartCount::updateCartCount();
+
         return redirect()->back()->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
     }
 
@@ -110,6 +115,8 @@ class CRUD_OrderController extends Controller
             ->sum(fn($item) => $item->quantity * $item->product->price);
         $order->save();
 
+        CartCount::updateCartCount();
+        
         return redirect()->back()->with('success', 'Sản phẩm đã được hủy trong đơn hàng!');
     }
 }
