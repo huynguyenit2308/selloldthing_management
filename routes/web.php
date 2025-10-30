@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\FacebookController;   
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SocialController;
+use App\Http\Controllers\DashboardController;
 
 // Trang chủ
 Route::get('/', function () {
@@ -17,9 +20,10 @@ Route::get('/', function () {
 // ===== AUTH =====
 
 // Login
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login.form');
-Route::post('/login', [AuthController::class, 'login'])->name('login');
-
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+});
 // Logout
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -76,3 +80,14 @@ Route::middleware(['auth'])->group(function () {
     // Xóa tài khoản
     Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
 });
+
+
+//thong tin ca nhan 
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+});
+
+
