@@ -23,9 +23,7 @@ use App\Http\Controllers\PaymentController;
 
 // Trang chủ
 
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // ===== AUTH =====
 
