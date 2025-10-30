@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AddCategoryController;
 use App\Http\Controllers\UpdateCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\ReviewController;
 
 use App\Http\Controllers\AuthController;
@@ -54,6 +55,21 @@ Route::prefix('admin')->group(function () {
     Route::put('/categories/{category}', [UpdateCategoryController::class, 'update'])->name('admin.categories.update');
     //xóa danh mục
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+    
+    // Admin routes quản lý sản phẩm
+    Route::get('/products', [AdminProductController::class, 'index'])->name('admin.products.index');
+    Route::get('/products/create', [AdminProductController::class, 'create'])->name('admin.products.create');
+    Route::post('/products', [AdminProductController::class, 'store'])->name('admin.products.store');
+    Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('admin.products.edit');
+    Route::put('/products/{product}', [AdminProductController::class, 'update'])->name('admin.products.update');
+    Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('admin.products.destroy');
+    
+    // Admin product actions
+    Route::post('/products/{product}/approve', [AdminProductController::class, 'approve'])->name('admin.products.approve');
+    Route::post('/products/{product}/reject', [AdminProductController::class, 'reject'])->name('admin.products.reject');
+    Route::post('/products/{product}/toggle-featured', [AdminProductController::class, 'toggleFeatured'])->name('admin.products.toggleFeatured');
+    Route::post('/products/{product}/update-status', [AdminProductController::class, 'updateStatus'])->name('admin.products.updateStatus');
+    Route::post('/products/{product}/extend', [AdminProductController::class, 'extendExpiration'])->name('admin.products.extend');
 });
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
