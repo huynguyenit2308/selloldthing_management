@@ -1,8 +1,14 @@
 @foreach ($comments as $comment)
-<div class="comment-item mb-2 ms-{{ $level * 4 }}">
+{{-- Tính toán margin inline cho Comment tĩnh (20px mỗi cấp) --}}
+@php
+    $marginPx = $level * 20;
+@endphp
+
+<div class="comment-item mb-2" id="comment-{{ $comment->id }}" style="margin-left: {{ $marginPx }}px;">
     <div class="d-flex align-items-start">
         <div>
-            <strong>{{ $comment->user->email ?? 'Người dùng' }}</strong>
+            {{-- KHÔI PHỤC NỘI DUNG --}}
+            <strong>{{ $comment->user->email ?? 'Người dùng ẩn danh' }}</strong>
             <p class="mb-1">{{ $comment->content }}</p>
             <small class="text-muted">
                 {{ $comment->created_at->diffForHumans() }}
@@ -23,15 +29,15 @@
             </form>
             @endauth
 
-            {{-- ✅ Đây là nơi gọi đệ quy --}}
-            @if ($comment->repliesRecursive && $comment->repliesRecursive->count())
-                <div class="replies ms-4 mt-2">
+            {{-- Container cho phản hồi con (Đệ quy) - SỬA LỖI: LUÔN RENDER CONTAINER NÀY --}}
+            <div class="replies mt-2">
+                @if ($comment->repliesRecursive && $comment->repliesRecursive->count())
                     @include('phanhoi.phanhoi', [
                         'comments' => $comment->repliesRecursive,
                         'level' => $level + 1
                     ])
-                </div>
-            @endif
+                @endif
+            </div>
         </div>
     </div>
 </div>

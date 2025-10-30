@@ -6,11 +6,8 @@
     <link rel="stylesheet" href="{{ asset('styles/product-detail.css') }}">
     <link rel="stylesheet" href="{{ asset('styles/review.css') }}">
     @endpush
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Font Awesome (cho ngôi sao, icon) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     @section('content')
     <div class="product-detail-wrapper">
@@ -352,7 +349,7 @@
         </div>
     </div>
     <!-- Bootstrap 5 JS Bundle (có PopperJS để dropdown hoạt động) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     @endsection
 
@@ -604,65 +601,59 @@
         // Toggle form reply
         window.toggleReplyForm = function(id) {
             const form = document.getElementById(`reply-form-${id}`);
-            if (form) form.classList.toggle('d-none');
+            const parentId = id.split('-').pop();
+            if (form) {
+                form.classList.toggle('d-none');
+                // Cập nhật parent_id trong form khi hiển thị
+                form.querySelector('input[name="parent_id"]').value = parentId;
+            }
         };
 
-        // Tìm container gốc của comment
-        // ... (Hàm toggleReplyForm giữ nguyên) ...
-
-        // Tìm container gốc của comment
-        function getRootContainer(parentId) {
-            if (!parentId) {
-                // Khi phản hồi review gốc
-                return document.querySelector('.replies-root');
-            }
-
-            const parent = document.getElementById(`comment-${parentId}`);
-            if (parent) {
-                const repliesContainer = parent.querySelector('.replies');
-                if (repliesContainer) return repliesContainer;
-            }
-
-            return document.querySelector('.replies-root');
-        }
-
-
-        // ✅ Hàm tính toán cấp độ mới (Đảm bảo Phản hồi cấp 1 có margin 20px)
+        // Hàm tính toán cấp độ mới
         function calculateNewLevel(parentId) {
-            if (!parentId) {
-                // Phản hồi review gốc (comment cấp 2)
-                return 40;
+            const MARGIN_STEP = 20; // Thụt lề mỗi cấp là 20px
+
+            // 1. Nếu là phản hồi cho REVIEW (cha là Review ID, không phải Comment ID)
+            // Review ID có thể là số, nhưng ta chỉ tìm margin từ element cha đã tồn tại.
+            const parentReview = document.getElementById(`review-${parentId}`);
+            if (parentReview) {
+                // Đây là cấp độ 1 của comments (con của review), bắt đầu margin từ 0.
+                return MARGIN_STEP; // Cấp 1 có margin là 20px
             }
 
-            const parent = document.getElementById(`comment-${parentId}`);
-            if (parent) {
-                const currentMargin = parseInt(parent.style.marginLeft) || 40;
-                // Cấp con kế tiếp thụt sâu thêm 20px
-                return currentMargin + 20;
+            // 2. Nếu là phản hồi cho COMMENT (cha là Comment ID)
+            const parentComment = document.getElementById(`comment-${parentId}`);
+            if (parentComment) {
+                const currentMargin = parseInt(parentComment.style.marginLeft) || 0;
+                return currentMargin + MARGIN_STEP;
             }
 
-            return 40;
+            // Fallback (chưa xác định cha, có thể là lỗi hoặc comment gốc)
+            return 0;
         }
 
-        // Hàm tạo và chèn COMMENT (PHẢN HỒI) mới
+        /**
+         * Chèn Comment (PHẢN HỒI) mới vào DOM
+         * @param {Object} data - Dữ liệu comment mới (id, parent_id, user, content, v.v.)
+         */
         function insertNewComment(data) {
             const parentId = data.parent_id;
             const newMarginLeft = calculateNewLevel(data.parent_id);
 
-            // *** KHÔNG CẦN KIỂM TRA isRootComment & ratingHtml nữa ***
-            // *** Vì hàm này chỉ tạo ra Phản hồi (comment) ***
-
             const newComment = document.createElement('div');
+            // Sử dụng các class Bootstrap và class tùy chỉnh 'comment-item'
             newComment.classList.add('comment-item', 'mb-2');
-            newComment.id = `comment-${data.id}`;
+            newComment.id = `comment-${data.id}`; // Phản hồi luôn dùng ID 'comment-ID'
             newComment.dataset.parentId = data.parent_id;
-            newComment.style.marginLeft = `${newMarginLeft}px`;
+            newComment.style.cssText = `margin-left: ${newMarginLeft}px; display: block;`; 
 
-            // HTML chỉ dành cho Phản hồi (Comment)
+            console.log(`[AJAX Success] Inserting new comment ID: ${data.id}, Parent ID: ${parentId}, Margin: ${newMarginLeft}px`);
+
+            // HTML cho Phản hồi (Comment)
             newComment.innerHTML = `
             <div class="d-flex align-items-start">
                 <div>
-                    <strong>${data.user}:</strong>
+                    <strong>${data.user || 'Người dùng ẩn danh'}:</strong>
                     <p class="mb-1">${data.content}</p>
                     <small class="text-muted">
                         Vừa xong 
@@ -685,40 +676,82 @@
             </div>
         `;
 
-            const container = getRootContainer(data.parent_id);
-            container.appendChild(newComment);
+            // --- LOGIC CHÈN ĐÃ SỬA CHỮA (TÌM CONTAINER CHÍNH XÁC) ---
+            let container = null;
+
+            // 1. Kiểm tra nếu là Phản hồi cho một Comment khác (cha là comment-ID)
+            const parentCommentElement = document.getElementById(`comment-${parentId}`);
+
+            // 2. Kiểm tra nếu là Phản hồi cho một Review (cha là review-ID)
+            const parentReviewElement = document.getElementById(`review-${parentId}`);
+
+            if (parentCommentElement) {
+                // Phản hồi cho Comment -> chèn vào container .replies của Comment đó
+                container = parentCommentElement.querySelector('.replies');
+            } else if (parentReviewElement) {
+                // Phản hồi cho Review -> chèn vào container .replies-root của Review đó
+                container = parentReviewElement.querySelector('.replies-root');
+            }
+
+            if (container) {
+                container.appendChild(newComment);
+            } else {
+                console.error(`Lỗi: Không tìm thấy container để chèn comment mới với parentId: ${parentId}.`);
+                // Fallback: Chèn vào danh sách review gốc nếu không tìm thấy cha (tránh mất dữ liệu)
+                document.getElementById('review-list')?.appendChild(newComment);
+            }
         }
 
-
-        // Xử lý sự kiện Submit Form (AJAX)
+        // Xử lý sự kiện Submit Form (AJAX) - Chỉ dành cho các form phản hồi con
         document.addEventListener('submit', async function(e) {
             const form = e.target.closest('.reply-form');
-            // Cũng có thể xử lý form chính #comment-form ở đây nếu cần, nhưng hiện tại chỉ xử lý .reply-form
             if (!form) return;
 
             e.preventDefault();
 
+            const submitButton = form.querySelector('[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Đang gửi...'; // Hiển thị trạng thái tải
+
             const formData = new FormData(form);
             const action = form.getAttribute('action');
 
-            const res = await fetch(action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            // Lấy tên người dùng hoặc ID của người đang gửi (Giả định lấy từ session/auth)
+            // Trong môi trường Blade, bạn có thể truyền tên người dùng thông qua input ẩn nếu cần.
+            // Giả lập tên người dùng (Nếu server không trả về)
+            if (!formData.has('user')) {
+                formData.append('user', 'Người dùng Auth');
+            }
+
+            try {
+                const res = await fetch(action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        // Cần có X-Requested-With và X-CSRF-TOKEN
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // Chèn comment mới vào DOM
+                    insertNewComment(data);
+
+                    // Dọn dẹp
+                    form.reset();
+                    form.classList.add('d-none'); // Ẩn form phản hồi
+                } else {
+                    alert('❌ Gửi phản hồi thất bại: ' + (data.message || 'Lỗi không xác định.'));
                 }
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                // Chèn comment mới vào DOM
-                insertNewComment(data);
-
-                // Dọn dẹp
-                form.reset();
-                form.classList.add('d-none');
+            } catch (err) {
+                console.error('Lỗi Fetch/AJAX:', err);
+                alert('⚠️ Lỗi kết nối máy chủ khi gửi phản hồi.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Gửi';
             }
         });
     </script>
