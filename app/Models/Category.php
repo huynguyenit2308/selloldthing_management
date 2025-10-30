@@ -25,4 +25,14 @@ class Category extends Model
             'status' => 1,
         ]);
     }
+
+    public function updateCategory($validated, $imagePath)
+    {
+        return $this->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'image' => $imagePath,
+            'status' => (int) $validated['status'],
+        ]);
+    }
 }
