@@ -15,4 +15,14 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function addCategory($validated, $imagePath)
+    {
+        return self::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'image' => $imagePath,
+            'status' => 1,
+        ]);
+    }
 }

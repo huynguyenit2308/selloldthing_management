@@ -13,11 +13,21 @@ class AddCategoryController extends Controller
 {
     public function create()
     {
+        // Kiểm tra quyền admin
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Bạn không có quyền thêm danh mục');
+        }
+
         return view('admin.categories.add_category');
     }
 
     public function store(Request $request)
     {
+        // Kiểm tra quyền admin
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Bạn không có quyền thêm danh mục');
+        }
+
         $validated = $request->validate(
             [
                 'name' => [
@@ -56,13 +66,10 @@ class AddCategoryController extends Controller
             }
         }
 
+        //thêm danh mục 
         try {
-            Category::create([
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
-                'image' => $imagePath,
-                'status' => 1,
-            ]);
+            $category = new Category();
+            $category->addCategory($validated, $imagePath);
         } catch (Exception $e) {
             Log::error('SYSTEM_ERROR: ' . $e->getMessage());
 
