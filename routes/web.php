@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\FacebookController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ChatBotController;
 use App\Http\Controllers\CRUD_InvoiceController;
 use App\Http\Controllers\CRUD_OrderController;
 use App\Http\Controllers\PaymentController;
@@ -115,7 +116,8 @@ Route::get('invoice/list', [CRUD_InvoiceController::class, 'listInvoice'])->name
 Route::get('invoice/detail', [CRUD_InvoiceController::class, 'detailInvoice'])->name('invoice.detail');
 // Hủy đơn hàng
 Route::post('order/cancel/{encodeId}', [CRUD_OrderController::class, 'cancelOrder'])->name('order.cancel')->middleware('auth');
-
+// ChatBot
+Route::post('/chat/send', [ChatBotController::class, 'send'])->name('chat.send');
 // Route fallback cho mọi GET không hợp lệ
 Route::get('auth/google/callback', function () {
     $user = Socialite::driver('google')->user();

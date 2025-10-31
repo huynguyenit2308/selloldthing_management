@@ -119,7 +119,8 @@
                                             Admin
                                         </a>
                                         <div class="dropdown-menu" aria-labelledby="adminDropdown">
-                                            <a class="dropdown-item" href="{{ route('admin.products.index') }}">Quản lý sản phẩm</a>
+                                            <a class="dropdown-item" href="{{ route('admin.products.index') }}">Quản lý
+                                                sản phẩm</a>
                                             <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản
                                                 lý danh mục</a>
                                             <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý
@@ -140,7 +141,8 @@
                                     <li class="checkout">
                                         <a href="{{ route('orders.list') }}">
                                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-                                            <span id="checkout_items" class="checkout_items">{{ session('cart_count', 0) }}</span>
+                                            <span id="checkout_items"
+                                                class="checkout_items">{{ session('cart_count', 0) }}</span>
                                         </a>
                                     </li>
                                 </ul>
@@ -195,8 +197,57 @@
             </div>
         </footer>
 
+        <div id="chatbot-box">
+            <div id="chatbot-header">💬 Hỗ trợ tự động</div>
+            <div id="chatbot-messages"></div>
+            <div id="chatbot-input">
+                <input type="text" id="chatbot-text" placeholder="Nhập tin nhắn..." />
+                <button id="chatbot-send">Gửi</button>
+            </div>
+        </div>
+        <button id="chatbot-toggle">💬</button>
+
     </div>
 
+    <script>
+        const toggleBtn = document.getElementById('chatbot-toggle');
+        const chatBox = document.getElementById('chatbot-box');
+        const sendBtn = document.getElementById('chatbot-send');
+        const input = document.getElementById('chatbot-text');
+        const messages = document.getElementById('chatbot-messages');
+
+        toggleBtn.onclick = () => {
+            chatBox.style.display = chatBox.style.display === 'flex' ? 'none' : 'flex';
+            chatBox.style.flexDirection = 'column';
+        };
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+            messages.innerHTML += `<div class="chat-message user">${text}</div>`;
+            input.value = '';
+
+            const response = await fetch('{{ route('chat.send') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    message: text
+                })
+            });
+
+            const data = await response.json();
+            messages.innerHTML += `<div class="chat-message bot">${data.reply.replace(/\n/g, '<br>')}</div>`;
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        sendBtn.onclick = sendMessage;
+        input.addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
     <script src="{{ asset('js/jquery-3.2.1.min.js') }}"></script>
     <script src="{{ asset('styles/bootstrap4/popper.js') }}"></script>
     <script src="{{ asset('styles/bootstrap4/bootstrap.min.js') }}"></script>
