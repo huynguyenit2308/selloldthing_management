@@ -65,11 +65,6 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a class="dropdown-item" href="{{ route('products.manage') }}">
-                                                        <i class="fa fa-archive" aria-hidden="true"></i> Đăng sản phẩm
-                                                    </a>
-                                                </li>
-                                                <li>
                                                     <a class="dropdown-item" href="#">
                                                         <i class="fa fa-user" aria-hidden="true"></i> Thông Tin Cá Nhân
                                                     </a>
@@ -78,6 +73,11 @@
                                                     <a class="dropdown-item" href="#">
                                                         <i class="fa fa-history" aria-hidden="true"></i> Xem Lịch Sử Mua
                                                         Hàng
+                                                    </a>
+                                                </li>
+                                                   <li>
+                                                    <a class="dropdown-item" href="{{ route('products.manage') }}">
+                                                        <i class="fa fa-archive" aria-hidden="true"></i> Đăng sản phẩm
                                                     </a>
                                                 </li>
 
