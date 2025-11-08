@@ -10,7 +10,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReviewController;
-
+use App\Http\Controllers\CategoryStatisticsController;
 use App\Http\Controllers\AuthController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
@@ -60,7 +60,10 @@ Route::prefix('admin')->group(function () {
     Route::put('/categories/{category}', [UpdateCategoryController::class, 'update'])->name('admin.categories.update');
     //xóa danh mục
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
-    
+      //thống kê danh mục
+    Route::get('/statistics/categories', [CategoryStatisticsController::class, 'index'])->name('admin.statistics.categories');
+    Route::get('/statistics/categories/export', [CategoryStatisticsController::class, 'exportExcel'])->name('admin.statistics.categories.export');
+    Route::get('/statistics/categories/chart-data', [CategoryStatisticsController::class, 'getChartData'])->name('admin.statistics.categories.chart-data');
     // Admin routes quản lý sản phẩm
     Route::get('/products', [AdminProductController::class, 'index'])->name('admin.products.index');
     Route::get('/products/create', [AdminProductController::class, 'create'])->name('admin.products.create');
