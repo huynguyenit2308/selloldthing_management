@@ -256,14 +256,19 @@
 
                     @forelse ($topCategories as $index => $topCategory)
                         @php
-                            // Lấy hình ảnh danh mục hoặc dùng banner mặc định
+                            // Mặc định sử dụng banner mặc định
                             $categoryImage = $defaultBanners[$index] ?? 'images/banner_1.jpg';
                             
+                            // Kiểm tra và lấy hình ảnh danh mục nếu có
                             if (!empty($topCategory->image)) {
                                 if (filter_var($topCategory->image, FILTER_VALIDATE_URL)) {
+                                    // URL đầy đủ, sử dụng trực tiếp
                                     $categoryImage = $topCategory->image;
+                                } elseif (str_starts_with($topCategory->image, 'images/')) {
+                                    // Đường dẫn public/images/
+                                    $categoryImage = asset($topCategory->image);
                                 } else {
-                                    // Sử dụng helper asset() để tạo URL
+                                    // Đường dẫn storage
                                     $categoryImage = asset('storage/' . $topCategory->image);
                                 }
                             }
