@@ -19,7 +19,53 @@
 </head>
 
 <body class="@yield('body-class')">
+	@auth
+        @php
+            $user = Auth::user();
+            $missingInfo = empty($user->fullname) || empty($user->phone) || empty($user->address);
+        @endphp
 
+        @if ($missingInfo)
+            <div id="update-info-popup" style="
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+                    justify-content: center; z-index: 9999; transition: opacity 0.4s ease;">
+
+                <div style="
+                        background: #fff; padding: 25px 30px; border-radius: 12px; 
+                        text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.3); 
+                        width: 350px; position: relative;">
+
+                    <!-- nút đóng -->
+                    <button id="popup-close-btn" style="
+                            position: absolute; top: 8px; right: 10px; border: none; 
+                            background: transparent; font-size: 20px; color: #999; cursor: pointer;">
+                        &times;
+                    </button>
+
+                    <h5 style="color:#333; margin-top: 10px;">⚠️ Vui lòng cập nhật thông tin!</h5>
+                    <p style="color: #777; font-size: 15px;">Để hoàn tất hồ sơ của bạn, hãy cập nhật thông tin cá nhân.</p>
+                    <a href="{{ route('profile.edit') }}" id="btn-update" class="btn btn-warning mt-3 px-4">Cập nhật ngay</a>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const popup = document.getElementById('update-info-popup');
+                    const btnUpdate = document.getElementById('btn-update');
+                    const btnClose = document.getElementById('popup-close-btn');
+
+                    function hidePopup() {
+                        popup.style.opacity = "0";
+                        setTimeout(() => popup.style.display = "none", 400);
+                    }
+
+                    btnUpdate.addEventListener('click', hidePopup);
+                    btnClose.addEventListener('click', hidePopup);
+                });
+            </script>
+        @endif
+    @endauth
     <div class="super_container">
 
         <!-- Header -->
@@ -70,7 +116,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a class="dropdown-item" href="#">
+                                                    <a class="dropdown-item" href="{{ route(name: 'profile.show') }}">
                                                         <i class="fa fa-user" aria-hidden="true"></i> Thông Tin Cá Nhân
                                                     </a>
                                                 </li>
@@ -117,23 +163,22 @@
                                     <li><a href="{{ route('home') }}">Trang chủ</a></li>
                                     <li><a href="{{ route('categories.index') }}">Danh mục</a></li>
                                     <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
-                                    <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown"
-                                            role="button" data-toggle="dropdown" aria-haspopup="true"
-                                            aria-expanded="false">
-                                            Admin
-                                        </a>
-                                        <div class="dropdown-menu" aria-labelledby="adminDropdown">
-                                            <a class="dropdown-item" href="{{ route('admin.products.index') }}">Quản lý
-                                                sản phẩm</a>
-                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản
-                                                lý danh mục</a>
-                                            <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý
-                                                voucher</a>
-                                            <a class="dropdown-item" href="{{ route('invoice.list') }}">Quản lý
-                                                hóa đơn</a>
-                                        </div>
-                                    </li>
+                                     @auth
+                                    @if (Auth::user()->role === 'admin')
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        Admin
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="adminDropdown">
+                                        <a class="dropdown-item" href="{{ route('admin.products.index') }}">Quản lý sản phẩm</a>
+                                        <a class="dropdown-item" href="{{ route('admin.categories.index') }}">Quản lý danh mục</a>
+                                        <a class="dropdown-item" href="{{ route('voucher.list') }}">Quản lý voucher</a>
+                                        <a class="dropdown-item" href="{{ route('invoice.list') }}">Quản lý hóa đơn</a>
+                                    </div>
+                                </li>
+                                    @endif
+                                @endauth
                                 </ul>
                                 <ul class="navbar_user">
                                     <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
