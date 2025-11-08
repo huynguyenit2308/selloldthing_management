@@ -30,7 +30,7 @@ class ProductImage extends Model
         $path = trim((string) ($this->attributes['url'] ?? ''));
 
         if ($path === '') {
-            return asset('images/product_1.png');
+            return asset('images/no-image.svg');
         }
 
         $normalized = str_replace('\\', '/', $path);
@@ -101,6 +101,6 @@ class ProductImage extends Model
             }
         }
 
-        return asset('images/product_1.png');
+        return asset('images/no-image.svg');
     }
 }

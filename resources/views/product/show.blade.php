@@ -30,7 +30,7 @@
                 if ($galleryImages->isEmpty()) {
                 $galleryImages = collect([null]);
                 }
-                $primaryImageUrl = optional($galleryImages->first())->image_url ?? asset('images/product_1.png');
+                $primaryImageUrl = optional($galleryImages->first())->image_url ?? asset('images/no-image.svg');
                 @endphp
                 <div class="product-gallery-preview">
                     <img src="{{ $primaryImageUrl }}" alt="{{ $product->name }}" data-active-image>
@@ -39,7 +39,7 @@
                 <div class="product-gallery-thumbnails">
                     @foreach ($galleryImages as $index => $image)
                     @php
-                    $imageUrl = $image ? $image->image_url : asset('images/product_1.png');
+                    $imageUrl = $image ? $image->image_url : asset('images/no-image.svg');
                     $isActive = $index === 0;
                     @endphp
                     <button type="button" class="product-gallery-thumb {{ $isActive ? 'active' : '' }}" data-image="{{ $imageUrl }}" aria-label="Ảnh phụ {{ $index + 1 }} của {{ $product->name }}" aria-pressed="{{ $isActive ? 'true' : 'false' }}">
@@ -47,8 +47,8 @@
                     </button>
                     @endforeach
 
-                    @for ($i = $galleryImages->count(); $i < 4; $i++) <button type="button" class="product-gallery-thumb placeholder" aria-hidden="true" data-image="{{ asset('images/product_1.png') }}" disabled>
-                        <img src="{{ asset('images/product_1.png') }}" alt="Ảnh sản phẩm dự phòng">
+                    @for ($i = $galleryImages->count(); $i < 4; $i++) <button type="button" class="product-gallery-thumb placeholder" aria-hidden="true" data-image="{{ asset('images/no-image.svg') }}" disabled>
+                        <img src="{{ asset('images/no-image.svg') }}" alt="Ảnh sản phẩm dự phòng">
                         </button>
                         @endfor
                 </div>
@@ -107,9 +107,9 @@
             <aside class="product-seller-card">
                 <div class="product-seller-avatar" aria-hidden="true">Ảnh</div>
                 <div class="product-seller-info">
-                    <div class="product-seller-name">Tên người bán: {{ data_get($product, 'seller_name', 'Đang cập nhật') }}</div>
+                    <div class="product-seller-name">Tên người bán: {{ data_get($product, 'user.name', 'Đang cập nhật') }}</div>
                     <div class="product-seller-meta">Số sao đánh giá: {{ $averageRating > 0 ? $averageRating : 'Chưa có' }}</div>
-                    <div class="product-seller-meta">Ngày gia nhập: {{ optional($product->created_at)->format('d/m/Y') }}</div>
+                    <div class="product-seller-meta">Ngày gia nhập: {{ optional(data_get($product, 'user.created_at'))->format('d/m/Y') ?? 'Đang cập nhật' }}</div>
                 </div>
                 <div class="product-seller-actions">
                     <button type="button" class="btn-outline btn-with-icon">
@@ -272,18 +272,24 @@
                 <h2>Sản phẩm tương tự</h2>
             </header>
 
-            <div class="product-similar-grid">
+            @php
+                $similarColumns = max(1, min($similarProducts->count(), 4));
+                $baseCardWidth = 280;
+                $gridGap = 24;
+                $gridMaxWidth = ($baseCardWidth * $similarColumns) + max(0, ($similarColumns - 1)) * $gridGap;
+                $gridStyle = $similarColumns < 4
+                    ? 'max-width: ' . $gridMaxWidth . 'px; margin-left: 0;'
+                    : null;
+            @endphp
+
+            <div class="product-similar-grid columns-{{ $similarColumns }}" @if($gridStyle) style="{{ $gridStyle }}" @endif>
                 @forelse ($similarProducts as $similar)
                 @php
                 $similarImage = $similar->images->first();
                 @endphp
                 <article class="product-similar-card">
                     <div class="product-similar-image">
-                        @if ($similarImage)
-                        <img src="{{ $similarImage->image_url }}" alt="{{ $similar->name }}">
-                        @else
-                        <img src="{{ asset('images/product_1.png') }}" alt="{{ $similar->name }}">
-                        @endif
+                        <img src="{{ optional($similarImage)->image_url ?? asset('images/no-image.svg') }}" alt="{{ $similar->name }}">
                     </div>
                     <div class="product-similar-body">
                         <h3><a href="{{ route('products.show', $similar) }}">{{ $similar->name }}</a></h3>

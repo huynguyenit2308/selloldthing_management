@@ -411,6 +411,27 @@ body.product-detail-page {
     gap: 24px;
 }
 
+.product-similar-grid.columns-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.product-similar-grid.columns-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.product-similar-grid.columns-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.product-similar-grid.columns-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.product-similar-grid.is-tight {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .product-similar-card {
     background: var(--pd-surface);
     border-radius: var(--pd-radius-lg);

@@ -118,6 +118,7 @@ class ProductController extends Controller
             'reviews' => function ($q) {
                 $q->with('user')->latest();
             },
+            'user',
         ]);
 
         $averageRating = round((float) $product->reviews->avg('rating'), 1);

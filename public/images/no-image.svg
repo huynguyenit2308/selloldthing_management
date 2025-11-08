@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-labelledby="title desc">
+  <title>No image placeholder</title>
+  <desc>Simple placeholder graphic that indicates when a product image is missing.</desc>
+  <rect width="300" height="300" fill="#f1f4f8" rx="24" ry="24" />
+  <path d="M60 220l54-70 55 40 43-58 68 88H60z" fill="#d0d7e3" />
+  <circle cx="110" cy="110" r="38" fill="#d0d7e3" />
+  <text x="150" y="180" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="28" fill="#8a94a6">NO IMAGE</text>
+</svg>
