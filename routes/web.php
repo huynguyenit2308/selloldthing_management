@@ -82,6 +82,45 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //thong tin ca nhan 
 
 Route::middleware('auth')->group(function () {
