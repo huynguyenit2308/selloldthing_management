@@ -98,6 +98,17 @@ Route::post('/comments/{comment}/reply', [CommentController::class, 'reply'])
 Route::get('/reviews/{reviewId}/comments', [CommentController::class, 'show'])
     ->name('comments.show');
 
+// 🟩 Route để CẬP NHẬT (Sửa/PUT) một comment
+Route::put('/comments/{comment}', [CommentController::class, 'update'])
+    ->name('comments.update')
+    ->middleware('auth');
+
+// 🟥 Route để XÓA (DELETE) một comment
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+    ->name('comments.destroy')
+    ->middleware('auth');
+
+
 
 
 // Hiển thị chi tiết sản phẩm + danh sách đánh giá

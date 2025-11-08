@@ -86,4 +86,46 @@ class CommentController extends Controller
         ])->findOrFail($reviewId);
         return view('product.show', compact('review'));
     }
+    public function update(Request $request, Comment $comment)
+    {
+        // 1. Kiểm tra quyền: Chỉ chủ comment mới được sửa
+        if (auth()->id() !== $comment->user_id) {
+            return response()->json(['success' => false, 'message' => 'Không có quyền.'], 403);
+        }
+
+        // 2. Validate
+        $request->validate(['content' => 'required|string|min:1']);
+
+        // 3. Cập nhật
+        $comment->update([
+            'content' => $request->content
+        ]);
+
+        // 4. Trả về JSON cho JavaScript
+        return response()->json([
+            'success' => true,
+            'comment' => $comment // Gửi lại comment đã cập nhật
+        ]);
+    }
+
+    /**
+     * [MỚI] Xóa một comment
+     */
+    public function destroy(Comment $comment)
+    {
+        // 1. Kiểm tra quyền: Chỉ chủ comment mới được xóa
+        // (Hoặc bạn có thể cho phép chủ review cũng được xóa)
+        if (auth()->id() !== $comment->user_id) {
+            return response()->json(['success' => false, 'message' => 'Không có quyền.'], 403);
+        }
+        
+        // 2. Xóa
+        // Model Comment sẽ tự động xóa các 'replies' con nếu bạn đã 
+        // thiết lập 'onDelete('cascade')' trong migration.
+        // Nếu không, bạn cần xóa đệ quy.
+        $comment->delete();
+
+        // 3. Trả về JSON
+        return response()->json(['success' => true]);
+    }
 }
