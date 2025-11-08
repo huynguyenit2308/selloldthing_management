@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Database\Eloquent\Factories\HasFactory;
-// use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Foundation\Auth\User as Authenticatable; 
 use Illuminate\Notifications\Notifiable;
@@ -11,19 +11,33 @@ use Illuminate\Notifications\Notifiable;
 //class User extends Model
 final class User extends Authenticatable implements AuthenticatableContract
 {
-    // use HasFactory, Notifiable;
-    use Notifiable;
+    use HasFactory, Notifiable;
     protected $fillable = [
+        'is_new',
+        'facebook_id',
+        'provider',
+        'provider_id',
+        'username',
+        'fullname',
         'name',
         'email',
         'password',
         'phone',
         'address',
         'role',
+        'reset_code',
+        'reset_expires_at',
+        'avatar',
     ];
 
     protected $hidden = [
-        'password'
+        'password',
+        'reset_code',
+    ];
+
+    protected $casts = [
+        'is_new' => 'boolean',
+        'reset_expires_at' => 'datetime',
     ];
 
     // Quan hệ
