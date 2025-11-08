@@ -77,7 +77,7 @@
                                                 </li>
                                                    <li>
                                                     <a class="dropdown-item" href="{{ route('products.manage') }}">
-                                                        <i class="fa fa-archive" aria-hidden="true"></i> Đăng sản phẩm
+                                                        <i class="fa fa-archive" aria-hidden="true"></i> Sản phẩm của tôi
                                                     </a>
                                                 </li>
 
