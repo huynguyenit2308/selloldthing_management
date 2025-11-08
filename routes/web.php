@@ -8,6 +8,7 @@ use App\Http\Controllers\AddCategoryController;
 use App\Http\Controllers\UpdateCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminProductController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReviewController;
 
 use App\Http\Controllers\AuthController;
@@ -161,6 +162,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/confirm-logout', [AccountController::class, 'confirmLogoutAfterChange'])->name('account.confirmLogout');
     // Xóa tài khoản
     Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
+
+    // Quản lý tồn kho
+    Route::get('/account/inventory', [InventoryController::class, 'index'])->name('account.inventory');
+    Route::get('/account/inventory/export', [InventoryController::class, 'export'])->name('account.inventory.export');
+    Route::patch('/account/inventory/{product}', [InventoryController::class, 'updateStock'])->name('account.inventory.update');
+    Route::post('/account/inventory/bulk', [InventoryController::class, 'bulkSave'])->name('account.inventory.bulk');
 });
 
 

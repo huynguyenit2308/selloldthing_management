@@ -65,6 +65,11 @@
                                                     </a>
                                                 </li>
                                                 <li>
+                                                    <a class="dropdown-item" href="{{ route(name: 'account.inventory') }}">
+                                                        <i class="fa fa-dashboard" aria-hidden="true"></i> Quản lý số lượng tồn kho
+                                                    </a>
+                                                </li>
+                                                <li>
                                                     <a class="dropdown-item" href="#">
                                                         <i class="fa fa-user" aria-hidden="true"></i> Thông Tin Cá Nhân
                                                     </a>
