@@ -236,25 +236,52 @@
                                                     {{-- **BƯỚC QUAN TRỌNG NHẤT:** Tạo container .replies --}}
                                                     <div class="replies-root mt-4">
                                                         @foreach($review->comments as $comment)
+                                                        {{-- Thẻ div .comment-item cho CẤP 1 --}}
                                                         <div class="comment-item mb-2" id="comment-{{ $comment->id }}" data-parent-id="{{ $comment->parent_id }}" style="margin-left: 20px; display: block;">
                                                             <div class="d-flex align-items-start">
                                                                 <div>
                                                                     <strong>{{ $comment->user->name ?? 'Người dùng' }}:</strong>
-                                                                    <p class="mb-1" data-comment-content>{{ $comment->content }}</p>
+
+                                                                    {{-- [MỚI] Thêm Wrapper cho Cấp 1 --}}
+                                                                    <div class="comment-content-wrapper" id="comment-content-wrapper-{{ $comment->id }}">
+
+                                                                        {{-- 1. Nội dung gốc (hiện mặc định) --}}
+                                                                        <p class="mb-1" data-comment-content>{{ $comment->content }}</p>
+
+                                                                        {{-- 2. [MỚI] Form sửa (ẩn mặc định) --}}
+                                                                        @auth
+                                                                        <form id="edit-form-comment-{{ $comment->id }}" class="comment-edit-form d-none mt-2" onsubmit="event.preventDefault(); saveCommentEdit({{ $comment->id }});">
+                                                                            <textarea class="form-control form-control-sm" name="content" required>{{ $comment->content }}</textarea>
+                                                                            <div class="mt-2">
+                                                                                <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
+                                                                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCommentEditForm({{ $comment->id }})">❌ Hủy</button>
+                                                                            </div>
+                                                                        </form>
+                                                                        @endauth
+                                                                    </div>
+                                                                    {{-- Kết thúc wrapper --}}
+
+
+                                                                    {{-- 3. Thanh công cụ (Phản hồi, Sửa, Xóa) --}}
                                                                     <small class="text-muted">
                                                                         {{ $comment->created_at->diffForHumans() }}
 
                                                                         @auth
-                                                                        · <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="toggleReplyForm('comment-{{ $comment->id }}')">Phản hồi</button>
-                                                                        {{-- Thêm nút Sửa/Xóa cho comment nếu cần --}}
+                                                                        · <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="toggleReplyForm('comment-{{ $comment->id }}')">💬 Phản hồi</button>
+
+                                                                        {{-- [MỚI] Thêm Nút Sửa/Xóa cho Cấp 1 --}}
+                                                                        @if(auth()->id() === $comment->user_id)
+                                                                        · <button class="btn btn-link btn-sm text-decoration-none p-0 text-primary" onclick="toggleCommentEditForm({{ $comment->id }})">✏️ Sửa</button>
+                                                                        · <button class="btn btn-link btn-sm text-decoration-none p-0 text-danger" onclick="deleteComment({{ $comment->id }})">🗑️ Xóa</button>
+                                                                        @endif
+
                                                                         @endauth
                                                                     </small>
 
-                                                                    {{-- Form phản hồi cho comment CẤP 1 --}}
+                                                                    {{-- 4. Form phản hồi (cho comment CẤP 1) --}}
                                                                     @auth
-                                                                    <form id="reply-form-comment-{{ $comment->id }}" class="reply-form d-none mt-1" action="{{ route('comments.reply', $review->id) }}" {{-- Giữ nguyên route store --}} method="POST">
+                                                                    <form id="reply-form-comment-{{ $comment->id }}" class="reply-form d-none mt-1" action="{{ route('comments.reply', $comment->id) }}" {{-- SỬA LẠI: Trỏ đến route 'reply' --}} method="POST">
                                                                         @csrf
-                                                                        {{-- Quan trọng: parent_id là của comment này --}}
                                                                         <input type="hidden" name="parent_id" value="{{ $comment->id }}">
                                                                         <div class="input-group input-group-sm">
                                                                             <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
@@ -263,12 +290,15 @@
                                                                     </form>
                                                                     @endauth
 
+                                                                    {{-- 5. Container gọi đệ quy Cấp 2+ (ĐÃ SỬA DẤU PHẨY) --}}
                                                                     <div class="replies mt-2">
                                                                         @include('phanhoi.phanhoi', [
                                                                         'comments' => $comment->replies,
-                                                                        'level' => 2
+                                                                        'level' => 2,
+                                                                        'review_id' => $review->id // Truyền review_id xuống
                                                                         ])
                                                                     </div>
+
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -818,30 +848,49 @@
 
                         // 2. Tạo HTML cho comment mới
                         newComment.innerHTML = `
-                    <div class="d-flex align-items-start">
-                        <div>
-                            <strong>${data.user || 'Người dùng ẩn danh'}:</strong>
-                            <p class="mb-1">${data.content}</p>
-                            <small class="text-muted">
-                                Vừa xong 
-                                · <button class="btn btn-link btn-sm text-decoration-none p-0" 
-                                    onclick="toggleReplyForm('comment-${data.id}')">Phản hồi</button>
-                            </small>
+                        <div class="d-flex align-items-start">
+                            <div>
+                                <strong>${data.user || 'Người dùng ẩn danh'}:</strong>
 
-                            <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" 
-                            action="/comments/${data.id}/reply" method="POST">
-                                <input type="hidden" name="_token" value="${formData.get('_token')}">
-                                <input type="hidden" name="parent_id" value="${data.id}">
-                                <div class="input-group input-group-sm">
-                                    <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
-                                    <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                <div class="comment-content-wrapper" id="comment-content-wrapper-${data.id}">
+                                    
+                                    <p class="mb-1" data-comment-content>${data.content}</p>
+
+                                    <form id="edit-form-comment-${data.id}" class="comment-edit-form d-none mt-2" 
+                                          onsubmit="event.preventDefault(); saveCommentEdit(${data.id});">
+                                        <textarea class="form-control form-control-sm" name="content" required>${data.content}</textarea>
+                                        <div class="mt-2">
+                                            <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
+                                            <button type="button" class="btn btn-secondary btn-sm" 
+                                                    onclick="toggleCommentEditForm(${data.id})">❌ Hủy</button>
+                                        </div>
+                                    </form>
                                 </div>
-                            </form>
-                            
-                            <div class="replies mt-2"></div> 
+                                <small class="text-muted">
+                                    Vừa xong 
+                                    · <button class="btn btn-link btn-sm text-decoration-none p-0" 
+                                        onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
+
+                                    · <button class="btn btn-link btn-sm text-decoration-none p-0 text-primary" 
+                                          onclick="toggleCommentEditForm(${data.id})">✏️ Sửa</button>
+                                    · <button class="btn btn-link btn-sm text-decoration-none p-0 text-danger" 
+                                          onclick="deleteComment(${data.id})">🗑️ Xóa</button>
+                                </small>
+
+                                <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" 
+                                      action="/comments/${data.id}/reply" method="POST"> {{-- Trỏ đúng route 'reply' --}}
+                                    <input type="hidden" name="_token" value="${formData.get('_token')}">
+                                    <input type="hidden" name="parent_id" value="${data.id}">
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
+                                        <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                    </div>
+                                </form>
+                                
+                                <div class="replies mt-2"></div> 
+                            </div>
                         </div>
-                    </div>
-                    `;
+                        `;
 
                         // 3. Tìm đúng container để chèn
                         let container = null;
