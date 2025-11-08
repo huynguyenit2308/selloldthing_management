@@ -105,12 +105,12 @@
                     <div class="row">
                         <div class="col-lg-12 text-right">
                             <div class="logo_container">
-                                <a href="#">Cửa hàng<span> đồ cũ</span></a>
+                                <a href="{{ route('home') }}">Cửa hàng<span> đồ cũ</span></a>
                             </div>
                             <nav class="navbar">
                                 <ul class="navbar_menu">
-                                    <li><a href="#">Trang chủ</a></li>
-                                    <li><a href="#">Danh mục</a></li>
+                                    <li><a href="{{ route('home') }}">Trang chủ</a></li>
+                                    <li><a href="{{ route('categories.index') }}">Danh mục</a></li>
                                     <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown"
@@ -167,8 +167,8 @@
                         <div
                             class="footer_nav_container d-flex flex-sm-row flex-column align-items-center justify-content-lg-start justify-content-center text-center">
                             <ul class="footer_nav">
-                                <li><a href="#">Danh mục</a></li>
-                                <li><a href="#">Sản phẩm</a></li>
+                                <li><a href="{{ route('categories.index') }}">Danh mục</a></li>
+                                <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
                             </ul>
                         </div>
                     </div>
