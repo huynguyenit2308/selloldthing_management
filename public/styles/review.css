@@ -35,4 +35,16 @@
         cursor: pointer;
         font-size: 20px;
     }
-    
+    .comment-item {
+        /* Giữ style phân cấp */
+        border-left: 1px solid #ddd; 
+        padding-left: 1rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
+        background-color: #f8f9fa; /* Tương đương bg-gray-50 */
+        border-radius: 0.25rem;
+    }
+    .review-stars .bi-star-fill {
+        color: #ffc107; /* text-warning */
+    }

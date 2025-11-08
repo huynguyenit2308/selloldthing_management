@@ -108,4 +108,16 @@ class ReviewController extends Controller
             'message' => 'Đã xóa đánh giá thành công.'
         ]);
     }
+    public function show($id)
+    {
+        $review = Review::with('user')->findOrFail($id);
+
+        // ✅ Lấy comment cha (parent_id = null) + load replies đệ quy
+        $comments = $review->comments()
+            ->whereNull('parent_id')
+            ->with(['user', 'repliesRecursive.user'])
+            ->get();
+
+        return view('product.show', compact('review', 'comments'));
+    }
 }

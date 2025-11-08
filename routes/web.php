@@ -10,7 +10,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReviewController;
-
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\AuthController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
@@ -134,6 +134,8 @@ Route::get('auth/google', [App\Http\Controllers\Auth\GoogleController::class, 'r
 Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'callback']);
 // ===== END AUTH =====
 
+
+
 // Facebook OAuth
 Route::get('auth/facebook', [FacebookController::class, 'redirect'])->name('facebook.redirect');
 Route::get('auth/facebook/callback', [FacebookController::class, 'callback'])->name('facebook.callback');
@@ -176,6 +178,33 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/account/inventory/{product}', [InventoryController::class, 'updateStock'])->name('account.inventory.update');
     Route::post('/account/inventory/bulk', [InventoryController::class, 'bulkSave'])->name('account.inventory.bulk');
 });
+
+
+
+// 🟦 Lưu bình luận cho review
+Route::post('/reviews/{reviewId}/comments', [CommentController::class, 'store'])
+    ->name('comments.store');
+
+// 🟨 Lưu phản hồi cho comment
+Route::post('/comments/{comment}/reply', [CommentController::class, 'reply'])
+    ->name('comments.reply');
+
+// 🟩 Hiển thị chi tiết review + toàn bộ comment (nếu cần)
+Route::get('/reviews/{reviewId}/comments', [CommentController::class, 'show'])
+    ->name('comments.show');
+
+// 🟩 Route để CẬP NHẬT (Sửa/PUT) một comment
+Route::put('/comments/{comment}', [CommentController::class, 'update'])
+    ->name('comments.update')
+    ->middleware('auth');
+
+// 🟥 Route để XÓA (DELETE) một comment
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+    ->name('comments.destroy')
+    ->middleware('auth');
+
+
+
 
 
 // Hiển thị chi tiết sản phẩm + danh sách đánh giá
