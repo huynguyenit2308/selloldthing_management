@@ -459,16 +459,50 @@
                         .then(data => {
                             if (data.success) {
                                 const review = data.review;
-                                const userName = review.user?.name || 'Không rõ';
+                                const userName = review.user?.name || 'Người dùng ẩn danh'; // Dùng tên user
 
+                                // 1. [MỚI] Helper để tạo HTML cho các ngôi sao
+                                let starsHtml = '';
+                                for (let i = 1; i <= 5; i++) {
+                                    if (i <= review.rating) {
+                                        starsHtml += '<i class="bi bi-star-fill text-warning"></i>';
+                                    } else {
+                                        starsHtml += '<i class="bi bi-star text-secondary"></i>';
+                                    }
+                                }
+
+                                // 2. [MỚI] Lấy CSRF token và URL cho form phản hồi Cấp 1
+                                const csrfToken = formData.get('_token');
+                                const commentStoreUrl = `/reviews/${review.id}/comments`; // Trỏ đến route 'comments.store'
+
+                                // 3. [MỚI] Đây là toàn bộ HTML chính xác
                                 const reviewHtml = `
                             <div class="card mb-3 position-relative" id="review-${review.id}">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
-                                            <h5>Đánh giá: <span class="review-rating">${review.rating}</span> sao</h5>
-                                            <p class="review-comment">${review.comment}</p>
-                                            <small>Người đánh giá: ${userName}</small>
+                                            <h6 class="mb-1 fw-bold">${userName}</h6>
+                                            
+                                            <div class="review-stars mb-1">
+                                                ${starsHtml}
+                                            </div>
+
+                                            <p class="mb-0">${review.comment}</p>
+
+                                            <small class="text-muted">Vừa xong</small>
+
+                                            <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
+
+                                            <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST">
+                                                <input type="hidden" name="_token" value="${csrfToken}">
+                                                <input type="hidden" name="parent_id" value="">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
+                                                    <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                                </div>
+                                            </form>
+
+                                            <div class="replies-root mt-4"></div> 
                                         </div>
 
                                         <div class="dropdown">
@@ -494,6 +528,7 @@
 
                                 reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
                                 reviewForm.reset();
+
                             } else {
                                 alert('❌ Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại.'));
                             }
@@ -572,30 +607,79 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            const reviewDiv = document.getElementById(`review-${id}`);
-                            reviewDiv.innerHTML = `
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h5>Đánh giá: <span class="review-rating">${rating}</span> sao</h5>
-                                    <p class="review-comment">${comment}</p>
-                                    <small>Người đánh giá: ${data.review.user?.name || 'Không rõ'}</small>
+                            const review = data.review;
+                            const userName = review.user?.name || 'Người dùng ẩn danh'; // Dùng tên user
+
+                            // 1. [MỚI] Helper để tạo HTML cho các ngôi sao
+                            let starsHtml = '';
+                            for (let i = 1; i <= 5; i++) {
+                                if (i <= review.rating) {
+                                    starsHtml += '<i class="bi bi-star-fill text-warning"></i>';
+                                } else {
+                                    starsHtml += '<i class="bi bi-star text-secondary"></i>';
+                                }
+                            }
+
+                            // 2. [MỚI] Lấy CSRF token và URL cho form phản hồi Cấp 1
+                            const csrfToken = formData.get('_token');
+                            const commentStoreUrl = `/reviews/${review.id}/comments`; // Trỏ đến route 'comments.store'
+
+                            // 3. [MỚI] Đây là toàn bộ HTML chính xác
+                            const reviewHtml = `
+                            <div class="card mb-3 position-relative" id="review-${review.id}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">${userName}</h6>
+                                            
+                                            <div class="review-stars mb-1">
+                                                ${starsHtml}
+                                            </div>
+
+                                            <p class="mb-0">${review.comment}</p>
+
+                                            <small class="text-muted">Vừa xong</small>
+
+                                            <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
+
+                                            <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST">
+                                                <input type="hidden" name="_token" value="${csrfToken}">
+                                                <input type="hidden" name="parent_id" value="">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
+                                                    <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                                </div>
+                                            </form>
+
+                                            <div class="replies-root mt-4"></div> 
+                                        </div>
+
+                                        <div class="dropdown">
+                                            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
+                                                        ✏️ Sửa
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
+                                                        🗑️ Xóa
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="dropdown">
-                                    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <button class="dropdown-item" onclick="editReview(${id}, ${rating}, '${comment.replace(/'/g, "\\'")}')">
-                                            ✏️ Sửa
-                                        </button>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                            </div>`;
+
+                            reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
+                            reviewForm.reset();
+
                         } else {
-                            alert('❌ Lưu thất bại!');
+                            alert('❌ Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại.'));
                         }
                     })
                     .catch(() => alert('⚠️ Có lỗi khi gửi dữ liệu lên server.'));
