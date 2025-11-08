@@ -23,7 +23,7 @@ class ProfileService
         // Kiểm tra xem user đã nhập đủ thông tin chưa
         $missingInfo = empty($user->fullname) || empty($user->phone) || empty($user->address);
 
-        return view('loc.info-personal', compact('user', 'missingInfo'));
+        return view('loc.info-personal_v2', compact('user', 'missingInfo'));
     }
 
     /**
@@ -32,7 +32,7 @@ class ProfileService
     public function edit()
     {
         $user = Auth::user();
-        return view('loc.edit-personal', compact('user'));
+        return view('loc.edit-personal_v2', compact('user'));
     }
 
     /**
