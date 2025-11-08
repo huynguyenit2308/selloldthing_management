@@ -27,6 +27,11 @@ use App\Http\Controllers\PaymentController;
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+// Danh sách danh mục
+Route::get('/categories', [CategoryController::class, 'indexFrontend'])->name('categories.index');
+// Xem danh mục
+Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+
 // ===== AUTH =====
 
 // Login

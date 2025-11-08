@@ -168,6 +168,23 @@
         .product_rating .rating_count {
             color: #9ea2b6;
         }
+
+        /* Banner Category Product Count */
+        .banner_product_count {
+            display: block;
+            font-size: 13px;
+            font-weight: 400;
+            margin-top: 6px;
+            opacity: 0.9;
+            letter-spacing: 0.3px;
+        }
+
+        .banner_category a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
     </style>
 @endpush
 
@@ -190,9 +207,9 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="menu_item"><a href="#">Trang chủ</a></li>
-                    <li class="menu_item"><a href="#">Danh mục</a></li>
-                    <li class="menu_item"><a href="#">Sản phẩm</a></li>
+                    <li class="menu_item"><a href="{{ route('home') }}">Trang chủ</a></li>
+                    <li class="menu_item"><a href="{{ route('categories.index') }}">Danh mục</a></li>
+                    <li class="menu_item"><a href="{{ route('products.index') }}">Sản phẩm</a></li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -224,32 +241,57 @@
             </div>
         </div>
 
-        <!-- Banner -->
+        <!-- Banner - Top 3 danh mục có nhiều sản phẩm nhất -->
 
         <div class="banner">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="banner_item align-items-center" style="background-image:url(images/banner_1.jpg)">
-                            <div class="banner_category">
-                                <a href="categories.html">Tên danh mục</a>
+                    @php
+                        $defaultBanners = [
+                            'images/banner_1.jpg',
+                            'images/banner_2.jpg',
+                            'images/banner_3.jpg'
+                        ];
+                    @endphp
+
+                    @forelse ($topCategories as $index => $topCategory)
+                        @php
+                            // Lấy hình ảnh danh mục hoặc dùng banner mặc định
+                            $categoryImage = $defaultBanners[$index] ?? 'images/banner_1.jpg';
+                            
+                            if (!empty($topCategory->image)) {
+                                if (filter_var($topCategory->image, FILTER_VALIDATE_URL)) {
+                                    $categoryImage = $topCategory->image;
+                                } else {
+                                    // Sử dụng helper asset() để tạo URL
+                                    $categoryImage = asset('storage/' . $topCategory->image);
+                                }
+                            }
+                        @endphp
+
+                        <div class="col-md-4">
+                            <div class="banner_item align-items-center" 
+                                 style="background-image:url({{ $categoryImage }})">
+                                <div class="banner_category">
+                                    <a href="{{ route('categories.show', $topCategory->id) }}">
+                                        {{ $topCategory->name }}
+                                        <span class="banner_product_count">({{ $topCategory->products_count }} sản phẩm)</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="banner_item align-items-center" style="background-image:url(images/banner_2.jpg)">
-                            <div class="banner_category">
-                                <a href="categories.html">Tên danh mục</a>
+                    @empty
+                        {{-- Hiển thị banner mặc định nếu không có danh mục --}}
+                        @foreach ($defaultBanners as $banner)
+                            <div class="col-md-4">
+                                <div class="banner_item align-items-center" style="background-image:url({{ $banner }})">
+                                    <div class="banner_category">
+                                        <a href="{{ route('categories.index') }}">Khám phá danh mục</a>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="banner_item align-items-center" style="background-image:url(images/banner_3.jpg)">
-                            <div class="banner_category">
-                                <a href="categories.html">Tên danh mục</a>
-                            </div>
-                        </div>
-                    </div>
+                        @endforeach
+                    @endforelse
                 </div>
             </div>
         </div>

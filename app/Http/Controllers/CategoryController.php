@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Product;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\View\View;
 
 class CategoryController extends Controller
 {
+    // Admin: Quản lý danh mục
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
@@ -39,6 +42,122 @@ class CategoryController extends Controller
             'q' => $q,
             'status' => $status,
         ]);
+    }
+
+    // Frontend: Hiển thị tất cả danh mục
+    public function indexFrontend(): View
+    {
+        try {
+            $categories = Category::where('status', 1)
+                ->withCount(['products' => function ($query) {
+                    $query->where('status', 'published');
+                }])
+                ->orderBy('name')
+                ->get();
+
+            return view('admin.categories.index_category', [
+                'categories' => $categories,
+                'error' => null,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('CATEGORY_LIST_ERROR: ' . $e->getMessage());
+            
+            return view('admin.categories.index_category', [
+                'categories' => collect([]),
+                'error' => [
+                    'type' => 'CONNECTION_ERROR',
+                    'message' => 'Không thể tải danh sách danh mục',
+                    'action' => 'retry'
+                ],
+            ]);
+        }
+    }
+
+    public function show(Category $category, Request $request): View
+    {
+        try {
+            // Kiểm tra danh mục có active không
+            if ($category->status != 1) {
+                return view('admin.categories.show_category', [
+                    'category' => $category,
+                    'products' => collect([]),
+                    'allCategories' => collect([]),
+                    'sort' => 'newest',
+                    'filter' => 'all',
+                    'error' => [
+                        'type' => 'CATEGORY_INACTIVE',
+                        'message' => 'Danh mục này hiện không khả dụng',
+                        'action' => 'redirect'
+                    ],
+                ]);
+            }
+
+            // Lấy tất cả danh mục để hiển thị sidebar
+            $allCategories = Category::where('status', 1)->orderBy('name')->get();
+            
+            // Lấy các tham số lọc và sắp xếp từ request
+            $sort = $request->query('sort', 'newest');
+            $filter = $request->query('filter', 'all');
+            
+            // Query sản phẩm theo danh mục
+            $productsQuery = Product::published()
+                ->where('category_id', $category->id)
+                ->with([
+                    'images' => function ($query) {
+                        $query->orderBy('sort_order')->orderBy('created_at');
+                    },
+                    'category',
+                ]);
+            
+            // Áp dụng bộ lọc
+            if ($filter === 'discount') {
+                $productsQuery->whereColumn('original_price', '>', 'price')
+                    ->whereNotNull('original_price');
+            }
+            
+            // Áp dụng sắp xếp
+            switch ($sort) {
+                case 'oldest':
+                    $productsQuery->oldest('created_at');
+                    break;
+                case 'price_asc':
+                    $productsQuery->orderBy('price', 'asc');
+                    break;
+                case 'price_desc':
+                    $productsQuery->orderBy('price', 'desc');
+                    break;
+                default:
+                    $productsQuery->latest('created_at');
+                    break;
+            }
+            
+            // Phân trang sản phẩm (6 sản phẩm mỗi trang)
+            $products = $productsQuery->paginate(6)->withQueryString();
+            
+            return view('admin.categories.show_category', [
+                'category' => $category,
+                'products' => $products,
+                'allCategories' => $allCategories,
+                'sort' => $sort,
+                'filter' => $filter,
+                'error' => null,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('CATEGORY_SHOW_ERROR: ' . $e->getMessage());
+            
+            return view('admin.categories.show_category', [
+                'category' => $category ?? null,
+                'products' => collect([]),
+                'allCategories' => collect([]),
+                'sort' => 'newest',
+                'filter' => 'all',
+                'error' => [
+                    'type' => 'CONNECTION_ERROR',
+                    'message' => 'Không thể tải danh sách sản phẩm',
+                    'action' => 'retry'
+                ],
+            ]);
+        }
     }
 
     public function destroy(Category $category): RedirectResponse
