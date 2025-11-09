@@ -23,6 +23,7 @@ use App\Http\Controllers\CRUD_InvoiceController;
 use App\Http\Controllers\CRUD_OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchController;
 
 // Trang chủ
 
@@ -32,6 +33,19 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 Route::get('/categories', [CategoryController::class, 'indexFrontend'])->name('categories.index');
 // Xem danh mục
 Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+
+// Search
+Route::get('/search', [SearchController::class, 'page'])->name('search.index');
+Route::prefix('search')->group(function () {
+    Route::get('/bootstrap', [SearchController::class, 'bootstrap'])->name('search.bootstrap');
+    Route::get('/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
+    Route::get('/results', [SearchController::class, 'results'])->name('search.results');
+    Route::get('/history', [SearchController::class, 'history'])->name('search.history.index');
+    Route::delete('/history', [SearchController::class, 'clearHistory'])->name('search.history.clear');
+    Route::delete('/history/{history}', [SearchController::class, 'destroyHistory'])->name('search.history.destroy');
+    Route::post('/products/{product}/favorite', [SearchController::class, 'toggleFavorite'])->name('search.favorite.toggle');
+    Route::post('/products/{product}/cart', [SearchController::class, 'addToCart'])->name('search.cart.add');
+});
 
 // ===== AUTH =====
 

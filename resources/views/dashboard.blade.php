@@ -14,6 +14,7 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('plugins/OwlCarousel2-2.2.1/animate.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('styles/main_styles.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('styles/responsive.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('styles/search_overlay.css') }}">
     @stack('styles')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
@@ -159,11 +160,21 @@
             <div class="main_nav_container">
                 <div class="container">
                     <div class="row">
-                        <div class="col-lg-12 text-right">
-                            <div class="logo_container">
-                                <a href="{{ route('home') }}">Cửa hàng<span> đồ cũ</span></a>
-                            </div>
-                            <nav class="navbar">
+                        <div class="col-lg-12">
+                            <div class="main_nav_content">
+                                <div class="logo_container">
+                                    <a href="{{ route('home') }}">Cửa hàng<span> đồ cũ</span></a>
+                                </div>
+                                <form class="nav_search" action="{{ route('search.index') }}" method="GET">
+                                    <label for="main-search" class="sr-only">Tìm kiếm sản phẩm</label>
+                                    <input id="main-search" type="text" name="q"
+                                        value="{{ request('q') }}" placeholder="Tìm kiếm sản phẩm..."
+                                        aria-label="Tìm kiếm sản phẩm" data-search-overlay-trigger="true">
+                                    <button type="submit" aria-label="Tìm kiếm">
+                                        <i class="fa fa-search" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                                <nav class="navbar">
                                 <ul class="navbar_menu">
                                     <li><a href="{{ route('home') }}">Trang chủ</a></li>
                                     <li><a href="{{ route('categories.index') }}">Danh mục</a></li>
@@ -186,7 +197,6 @@
                                 @endauth
                                 </ul>
                                 <ul class="navbar_user">
-                                    <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
                                     <li class="notification">
                                         <a href="#">
                                             <i class="fa fa-bell" aria-hidden="true"></i>
@@ -205,6 +215,7 @@
                                     <i class="fa fa-bars" aria-hidden="true"></i>
                                 </div>
                             </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -262,6 +273,58 @@
         </div>
         <button id="chatbot-toggle">💬</button>
 
+        <div id="search-overlay"
+            data-bootstrap-url="{{ route('search.bootstrap') }}"
+            data-suggest-url="{{ route('search.suggest') }}"
+            data-results-url="{{ route('search.results') }}"
+            data-history-url="{{ route('search.history.index') }}"
+            data-history-clear-url="{{ route('search.history.clear') }}"
+            data-favorite-url-template="{{ url('search/products/__ID__/favorite') }}"
+            data-cart-url-template="{{ url('search/products/__ID__/cart') }}"
+            data-csrf-token="{{ csrf_token() }}">
+            <div class="search-overlay__backdrop"></div>
+            <div class="search-overlay__panel">
+                <button type="button" class="search-overlay__close" aria-label="Đóng tìm kiếm">&times;</button>
+                <div class="search-overlay__input-wrapper">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                    <input type="text" class="search-overlay__input" id="search-overlay-input"
+                        placeholder="Tìm kiếm sản phẩm..." autocomplete="off">
+                    <div class="search-overlay__actions">
+                        <button type="button" class="primary" data-action="submit">Tìm kiếm</button>
+                        <button type="button" data-action="clear">Xóa</button>
+                    </div>
+                    <div class="search-overlay__autocomplete" hidden>
+                        <ul class="search-overlay__autocomplete-list"></ul>
+                    </div>
+                </div>
+                <div class="search-overlay__error" hidden></div>
+                <div class="search-overlay__sections">
+                    <div class="search-overlay__section" data-section="suggestions">
+                        <div class="search-overlay__section-header">
+                            <h2 class="search-overlay__section-title">Gợi ý tìm kiếm</h2>
+                        </div>
+                        <div class="search-overlay__tags" data-role="suggestion-tags"></div>
+                    </div>
+                    <div class="search-overlay__section" data-section="history">
+                        <div class="search-overlay__section-header">
+                            <h2 class="search-overlay__section-title">Tìm kiếm gần đây</h2>
+                            <button type="button" class="search-overlay__history-clear" data-action="history-clear">Xóa tất cả</button>
+                        </div>
+                        <ul class="search-overlay__history-list" data-role="history-list"></ul>
+                    </div>
+                    <div class="search-overlay__section" data-section="results">
+                        <div class="search-overlay__section-header">
+                            <h2 class="search-overlay__section-title">Kết quả tìm kiếm</h2>
+                        </div>
+                        <div class="search-overlay__loader" hidden>Đang tìm kiếm...</div>
+                        <div class="search-overlay__results-empty" data-role="empty" hidden>Không tìm thấy sản phẩm phù hợp.</div>
+                        <div class="search-overlay__results" data-role="results"></div>
+                        <div class="search-overlay__pagination" data-role="pagination"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -310,6 +373,7 @@
     <script src="{{ asset('plugins/OwlCarousel2-2.2.1/owl.carousel.js') }}"></script>
     <script src="{{ asset('plugins/easing/easing.js') }}"></script>
     <script src="{{ asset('js/custom.js') }}"></script>
+    <script src="{{ asset('js/search_overlay.js') }}"></script>
     @stack('scripts')
 </body>
 
