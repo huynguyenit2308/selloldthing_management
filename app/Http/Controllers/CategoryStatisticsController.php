@@ -99,15 +99,16 @@ class CategoryStatisticsController extends Controller
 
     private function getOverviewStatistics($dateRange)
     {
-        // Tổng doanh thu
+        // Tổng doanh thu: Tính từ các đơn hàng đã thanh toán thành công (status = 'completed')
+        // Khi thanh toán thành công, PaymentController tự động cập nhật Order status thành 'completed'
         $totalRevenue = Order::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'completed') // Chỉ tính đơn hàng đã hoàn thành
             ->sum('total_price');
 
-        // Tổng sản phẩm đã bán
+        // Tổng sản phẩm đã bán: Đếm số lượng sản phẩm trong các đơn hàng đã hoàn thành
         $totalProductsSold = OrderItem::whereHas('order', function($query) use ($dateRange) {
                 $query->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
-                      ->where('status', 'completed');
+                      ->where('status', 'completed'); // Chỉ tính đơn hàng đã thanh toán
             })
             ->sum('quantity');
 
@@ -145,22 +146,41 @@ class CategoryStatisticsController extends Controller
 
     private function getCategoryStatistics($dateRange)
     {
+        /**
+         * Tính toán thống kê doanh thu theo danh mục
+         * 
+         * Cách hoạt động:
+         * 1. Khi khách hàng thanh toán thành công (tiền mặt hoặc MoMo)
+         *    -> PaymentController tự động cập nhật Order.status = 'completed'
+         * 
+         * 2. Query này sẽ tính:
+         *    - Số sản phẩm đã bán (products_sold): Tổng quantity từ OrderItem
+         *    - Doanh thu (revenue): Tổng (quantity * giá sản phẩm)
+         *    Đều dựa trên các Order có status = 'completed'
+         * 
+         * 3. Kết quả được sử dụng để:
+         *    - Hiển thị biểu đồ phân bố doanh thu theo danh mục
+         *    - Hiển thị bảng thống kê chi tiết
+         */
         return Category::select('categories.id', 'categories.name', 'categories.description')
             ->withCount(['products as total_products'])
             ->addSelect([
+                // Tính số sản phẩm đã bán của danh mục
                 'products_sold' => OrderItem::selectRaw('COALESCE(SUM(order_items.quantity), 0)')
                     ->join('orders', 'order_items.order_id', '=', 'orders.id')
                     ->join('products', 'order_items.product_id', '=', 'products.id')
                     ->whereColumn('products.category_id', 'categories.id')
                     ->whereBetween('orders.created_at', [$dateRange['start'], $dateRange['end']])
-                    ->where('orders.status', 'completed'),
+                    ->where('orders.status', 'completed'), // Chỉ tính đơn hàng đã thanh toán
                     
+                // Tính doanh thu của danh mục (số lượng * giá)
+                // Doanh thu này sẽ tự động cộng dồn khi có thanh toán thành công
                 'revenue' => OrderItem::selectRaw('COALESCE(SUM(order_items.quantity * products.price), 0)')
                     ->join('orders', 'order_items.order_id', '=', 'orders.id')
                     ->join('products', 'order_items.product_id', '=', 'products.id')
                     ->whereColumn('products.category_id', 'categories.id')
                     ->whereBetween('orders.created_at', [$dateRange['start'], $dateRange['end']])
-                    ->where('orders.status', 'completed')
+                    ->where('orders.status', 'completed') // Chỉ tính đơn hàng đã thanh toán
             ])
             ->where('categories.status', 1) // Chỉ danh mục active
             ->orderByDesc('revenue')

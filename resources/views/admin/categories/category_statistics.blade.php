@@ -6,8 +6,8 @@
     background: linear-gradient(135deg, #f5f7fb 0%, #eef2f8 100%);
     padding: 32px 0 48px;
     min-height: calc(100vh - 120px);
+    margin-top: 120px;
 }
-
 .category-statistics-page .statistics-container {
     max-width: 1280px;
     margin: 0 auto;
@@ -18,6 +18,8 @@
     display: flex;
     gap: 24px;
     align-items: flex-start;
+    position: relative;
+    isolation: isolate;
 }
 
 .sidebar {
@@ -29,6 +31,8 @@
     position: sticky;
     top: 110px;
     height: fit-content;
+    z-index: 10;
+    flex-shrink: 0;
 }
 
 .sidebar h3 {
@@ -64,7 +68,6 @@
     border-radius: 14px;
     background: #f9fafb;
     transition: all 0.25s ease;
-    text-decoration: none;
 }
 
 .sidebar ul li a i {
@@ -89,6 +92,8 @@
     border-radius: 24px;
     padding: 32px 36px;
     box-shadow: 0 24px 60px rgba(16, 24, 40, 0.08);
+    position: relative;
+    z-index: 20;
 }
 
 .content-header {
@@ -122,8 +127,6 @@
     color: #1f2937;
     min-width: 180px;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
-    background-color: #fff;
-    cursor: pointer;
 }
 
 .date-filter button {
@@ -135,7 +138,6 @@
     color: #ffffff;
     box-shadow: 0 12px 25px rgba(99, 102, 241, 0.25);
     transition: transform 0.2s ease;
-    cursor: pointer;
 }
 
 .date-filter button:hover {
@@ -147,6 +149,8 @@
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 20px;
     margin-bottom: 32px;
+    position: relative;
+    z-index: 1;
 }
 
 .stat-card {
@@ -156,17 +160,18 @@
     display: flex;
     gap: 18px;
     align-items: center;
-    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 18px 35px rgba(15, 23, 42, 0.08);
     border: 1px solid rgba(99, 102, 241, 0.08);
+    position: relative;
+    z-index: 2;
 }
 
 .stat-icon {
     width: 58px;
     height: 58px;
     border-radius: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    place-items: center;
     color: #ffffff;
     flex-shrink: 0;
 }
@@ -207,6 +212,8 @@
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 24px;
     margin-bottom: 32px;
+    position: relative;
+    z-index: 1;
 }
 
 .chart-container {
@@ -249,7 +256,6 @@
     color: #4b5563;
     background: transparent;
     transition: all 0.2s ease;
-    cursor: pointer;
 }
 
 .chart-actions button.active,
@@ -271,6 +277,8 @@
     padding: 28px 30px;
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
     border: 1px solid rgba(229, 231, 235, 0.7);
+    position: relative;
+    z-index: 1;
 }
 
 .table-header {
@@ -299,7 +307,6 @@
     font-weight: 600;
     box-shadow: 0 12px 28px rgba(14, 165, 233, 0.25);
     transition: transform 0.2s ease;
-    cursor: pointer;
 }
 
 .export-btn:hover {
@@ -318,11 +325,11 @@ thead th {
     letter-spacing: 0.08em;
     color: #6b7280;
     padding-bottom: 14px;
-    text-align: left;
 }
 
 tbody tr {
     background: #f9fafb;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     border-radius: 16px;
 }
 
@@ -354,9 +361,8 @@ tbody tr td:last-child {
     width: 46px;
     height: 46px;
     border-radius: 14px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    place-items: center;
     color: #ffffff;
     box-shadow: 0 10px 22px rgba(15, 23, 42, 0.15);
 }
@@ -400,504 +406,36 @@ tbody small {
 }
 
 @media (max-width: 768px) {
-    .category-statistics-page {
-        padding: 24px 0;
-    }
-    
-    .statistics-container {
-        padding: 0 16px;
-    }
-    
     .content {
-        padding: 20px;
-    }
-
-    .content-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .date-filter {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .date-filter select {
-        flex: 1;
-    }
-
-    .stats-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .charts-section {
-        grid-template-columns: 1fr;
-    }
-
-    table {
-        font-size: 14px;
-    }
-    
-    .table-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .export-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .sidebar {
-        padding: 20px;
-    }
-    
-    .content {
-        padding: 16px;
-    }
-    
-    .stat-card {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .chart-container {
-        padding: 16px;
-    }
-    
-    .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    
-    .chart-actions {
-        width: 100%;
-        justify-content: center;
-    }
-}
-        background: linear-gradient(135deg, #f5f7fb 0%, #eef2f8 100%);
-        padding: 32px 0 48px;
-        min-height: calc(100vh - 120px);
-    }
-
-    .category-statistics-page .statistics-container {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 0 24px;
-    }
-
-    .main-content {
-        display: flex;
-        gap: 24px;
-        align-items: flex-start;
-    }
-
-    .sidebar {
-        width: 260px;
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 28px 24px;
-        box-shadow: 0 18px 40px rgba(18, 38, 63, 0.08);
-        position: sticky;
-        top: 110px;
-        height: fit-content;
-    }
-
-    .sidebar h3 {
-        font-size: 14px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #6b7280;
-        margin-bottom: 18px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .sidebar .sidebar-heading {
-        margin-top: 28px;
-    }
-
-    .sidebar ul {
-        list-style: none;
-        padding: 0;
-        margin: 0 0 28px 0;
-        display: grid;
-        gap: 10px;
-    }
-
-    .sidebar ul li a {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-weight: 500;
-        color: #1f2937;
-        padding: 12px 16px;
-        border-radius: 14px;
-        background: #f9fafb;
-        transition: all 0.25s ease;
-    }
-
-    .sidebar ul li a i {
-        color: #6366f1;
-    }
-
-    .sidebar ul li a:hover,
-    .sidebar ul li a.active {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
-        color: #ffffff;
-        box-shadow: 0 12px 25px rgba(79, 70, 229, 0.25);
-    }
-
-    .sidebar ul li a:hover i,
-    .sidebar ul li a.active i {
-        color: #ffffff;
-    }
-
-    .content {
-        flex: 1;
-        background: #ffffff;
-        border-radius: 24px;
-        padding: 32px 36px;
-        box-shadow: 0 24px 60px rgba(16, 24, 40, 0.08);
-    }
-
-    .content-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 18px;
-        margin-bottom: 28px;
-    }
-
-    .content-header h2 {
-        font-size: 24px;
-        font-weight: 700;
-        color: #111827;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .date-filter {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-    }
-
-    .date-filter select {
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        padding: 10px 14px;
-        font-weight: 500;
-        color: #1f2937;
-        min-width: 180px;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
-    }
-
-    .date-filter button {
-        border-radius: 12px;
-        border: none;
-        padding: 10px 18px;
-        font-weight: 600;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: #ffffff;
-        box-shadow: 0 12px 25px rgba(99, 102, 241, 0.25);
-        transition: transform 0.2s ease;
-    }
-
-    .date-filter button:hover {
-        transform: translateY(-2px);
-    }
-
-    .stats-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 20px;
-        margin-bottom: 32px;
-    }
-
-    .stat-card {
-        background: #ffffff;
-        border-radius: 22px;
         padding: 24px;
-        display: flex;
-        gap: 18px;
-        align-items: center;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 18px 35px rgba(15, 23, 42, 0.08);
-        border: 1px solid rgba(99, 102, 241, 0.08);
     }
 
-    .stat-icon {
-        width: 58px;
-        height: 58px;
-        border-radius: 16px;
-        display: grid;
-        place-items: center;
-        color: #ffffff;
-        flex-shrink: 0;
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
-    .stat-info h3 {
-        font-size: 15px;
-        text-transform: uppercase;
-        color: #6b7280;
-        margin-bottom: 6px;
-        letter-spacing: 0.06em;
+    .date-filter {
+        width: 100%;
+        justify-content: space-between;
     }
 
-    .stat-value {
-        font-size: 26px;
-        font-weight: 700;
-        color: #111827;
-        margin-bottom: 4px;
+    .date-filter select {
+        flex: 1;
     }
 
-    .stat-change {
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 14px;
-    }
-
-    .stat-change.positive {
-        color: #10b981;
-    }
-
-    .stat-change.negative {
-        color: #ef4444;
+    .stats-cards {
+        grid-template-columns: 1fr;
     }
 
     .charts-section {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-
-    .chart-container {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08));
-        border-radius: 24px;
-        padding: 24px 26px;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-        border: 1px solid rgba(99, 102, 241, 0.1);
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-        min-height: 360px;
-    }
-
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .chart-header h3 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #111827;
-    }
-
-    .chart-actions {
-        display: inline-flex;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.8);
-        padding: 6px;
-        border-radius: 14px;
-    }
-
-    .chart-actions button {
-        border: none;
-        padding: 8px 14px;
-        border-radius: 10px;
-        font-weight: 600;
-        color: #4b5563;
-        background: transparent;
-        transition: all 0.2s ease;
-    }
-
-    .chart-actions button.active,
-    .chart-actions button:hover {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
-        color: #ffffff;
-        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25);
-    }
-
-    .chart {
-        position: relative;
-        flex: 1;
-        min-height: 260px;
-    }
-
-    .categories-table-container {
-        background: #ffffff;
-        border-radius: 24px;
-        padding: 28px 30px;
-        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-        border: 1px solid rgba(229, 231, 235, 0.7);
-    }
-
-    .table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        gap: 16px;
-    }
-
-    .table-header h3 {
-        font-size: 20px;
-        font-weight: 700;
-        color: #111827;
-    }
-
-    .export-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        border: none;
-        border-radius: 12px;
-        padding: 10px 18px;
-        background: linear-gradient(135deg, #0ea5e9, #6366f1);
-        color: #ffffff;
-        font-weight: 600;
-        box-shadow: 0 12px 28px rgba(14, 165, 233, 0.25);
-        transition: transform 0.2s ease;
-    }
-
-    .export-btn:hover {
-        transform: translateY(-2px);
+        grid-template-columns: 1fr;
     }
 
     table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 12px;
+        font-size: 14px;
     }
-
-    thead th {
-        text-transform: uppercase;
-        font-size: 13px;
-        letter-spacing: 0.08em;
-        color: #6b7280;
-        padding-bottom: 14px;
-    }
-
-    tbody tr {
-        background: #f9fafb;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-        border-radius: 16px;
-    }
-
-    tbody td {
-        padding: 18px 16px;
-        vertical-align: middle;
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    tbody tr td:first-child {
-        border-top-left-radius: 16px;
-        border-bottom-left-radius: 16px;
-    }
-
-    tbody tr td:last-child {
-        border-top-right-radius: 16px;
-        border-bottom-right-radius: 16px;
-    }
-
-    .category-name {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        font-weight: 700;
-    }
-
-    .category-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 14px;
-        display: grid;
-        place-items: center;
-        color: #ffffff;
-        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.15);
-    }
-
-    .progress-bar {
-        width: 100%;
-        height: 10px;
-        background: rgba(226, 232, 240, 0.9);
-        border-radius: 999px;
-        overflow: hidden;
-        margin-bottom: 6px;
-    }
-
-    .progress {
-        height: 100%;
-        border-radius: inherit;
-        transition: width 0.35s ease;
-    }
-
-    tbody small {
-        font-weight: 600;
-        color: #6b7280;
-    }
-
-    .text-center {
-        text-align: center;
-        color: #6b7280;
-        font-weight: 500;
-    }
-
-    @media (max-width: 1100px) {
-        .main-content {
-            flex-direction: column;
-        }
-
-        .sidebar {
-            position: relative;
-            top: 0;
-            width: 100%;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .content {
-            padding: 24px;
-        }
-
-        .content-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .date-filter {
-            width: 100%;
-            justify-content: space-between;
-        }
-
-        .date-filter select {
-            flex: 1;
-        }
-
-        .stats-cards {
-            grid-template-columns: 1fr;
-        }
-
-        .charts-section {
-            grid-template-columns: 1fr;
-        }
-
-        table {
-            font-size: 14px;
-        }
-    }
->>>>>>> 3514ca6 (up demo category_statistics)
+}
 </style>
 @endpush
 
@@ -910,9 +448,9 @@ tbody small {
                 <h3><i class="fas fa-chart-bar"></i> Báo cáo & Thống kê</h3>
                 <ul>
                     <li><a href="{{ route('admin.statistics.categories') }}" class="active"><i class="fas fa-chart-pie"></i> Tổng quan</a></li>
-                    <li><a href="#"><i class="fas fa-shopping-cart"></i> Doanh thu</a></li>
-                    <li><a href="#"><i class="fas fa-box"></i> Sản phẩm</a></li>
-                    <li><a href="#"><i class="fas fa-users"></i> Khách hàng</a></li>
+                    <li><a href="#charts-section" class="scroll-to-section"><i class="fas fa-shopping-cart"></i> Doanh thu</a></li>
+                    <li><a href="#charts-section" class="scroll-to-section"><i class="fas fa-box"></i> Sản phẩm</a></li>
+                    <li><a href="#table-section" class="scroll-to-section"><i class="fas fa-table"></i> Thống kê chi tiết</a></li>
                     <li><a href="{{ route('admin.statistics.categories.export') }}" class="export-link"><i class="fas fa-file-export"></i> Xuất báo cáo</a></li>
                 </ul>
 
@@ -1005,7 +543,7 @@ tbody small {
             </div>
 
             <!-- Charts Section -->
-            <div class="charts-section">
+            <div class="charts-section" id="charts-section">
                 <div class="chart-container">
                     <div class="chart-header">
                         <h3>Doanh thu theo ngày trong tuần</h3>
@@ -1035,7 +573,7 @@ tbody small {
             </div>
 
             <!-- Categories Table -->
-            <div class="categories-table-container">
+            <div class="categories-table-container" id="table-section">
                 <div class="table-header">
                     <h3>Thống kê chi tiết theo danh mục</h3>
                     <button class="export-btn" onclick="exportToExcel()"><i class="fas fa-file-export"></i> Xuất Excel</button>
@@ -1225,6 +763,118 @@ tbody small {
 
             loadRevenueChart();
             loadDistributionChart();
+
+            // Khởi tạo: Đảm bảo menu "Tổng quan" được highlight khi load page
+            const overviewLink = document.querySelector('.sidebar ul:first-of-type li:first-child a');
+            if (overviewLink && !overviewLink.classList.contains('active')) {
+                overviewLink.classList.add('active');
+            }
+
+            // Thêm chức năng scroll đến các section khi click menu
+            const scrollLinks = document.querySelectorAll('.scroll-to-section');
+            const sections = {
+                'charts-section': document.getElementById('charts-section'),
+                'table-section': document.getElementById('table-section')
+            };
+
+            scrollLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetSection = sections[targetId];
+                    
+                    if (targetSection) {
+                        const headerHeight = 120; // Chiều cao của header sticky + padding
+                        const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+
+                        // Cập nhật active state
+                        updateActiveMenu(this);
+                    }
+                });
+            });
+
+            // Hàm cập nhật active state cho menu
+            function updateActiveMenu(activeLink) {
+                scrollLinks.forEach(link => link.classList.remove('active'));
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+            }
+
+            // Xử lý hiện/ẩn thanh top_nav khi scroll
+            const topNav = document.querySelector('.top_nav');
+            let lastScrollTop = 0;
+            const scrollThreshold = 100; // Scroll 100px mới bắt đầu hiện thanh
+            
+            // Ban đầu ẩn thanh nếu đang ở top
+            if (window.pageYOffset < scrollThreshold) {
+                if (topNav) topNav.classList.add('hidden');
+            }
+
+            // Theo dõi scroll để tự động highlight menu item và hiện/ẩn top_nav
+            let ticking = false;
+            const allMenuLinks = document.querySelectorAll('.sidebar ul:first-of-type li a');
+            
+            window.addEventListener('scroll', function() {
+                const currentScroll = window.pageYOffset;
+                
+                // Xử lý hiện/ẩn top_nav
+                if (topNav) {
+                    if (currentScroll > scrollThreshold) {
+                        // Khi scroll xuống quá ngưỡng, hiện thanh
+                        topNav.classList.remove('hidden');
+                        topNav.classList.add('visible');
+                    } else {
+                        // Khi ở top, ẩn thanh
+                        topNav.classList.remove('visible');
+                        topNav.classList.add('hidden');
+                    }
+                }
+                
+                lastScrollTop = currentScroll;
+                if (!ticking) {
+                    window.requestAnimationFrame(function() {
+                        const scrollPosition = window.pageYOffset + 200;
+                        
+                        // Kiểm tra section nào đang hiển thị
+                        if (sections['charts-section']) {
+                            const chartsTop = sections['charts-section'].offsetTop;
+                            
+                            const tableTop = sections['table-section'] ? sections['table-section'].offsetTop : 999999;
+                            
+                            if (scrollPosition >= tableTop) {
+                                // Đang ở phần table - highlight menu Thống kê chi tiết
+                                allMenuLinks.forEach(link => link.classList.remove('active'));
+                                const tableLink = document.querySelector('.scroll-to-section[href="#table-section"]');
+                                if (tableLink) tableLink.classList.add('active');
+                            } else if (scrollPosition >= chartsTop) {
+                                // Đang ở phần charts - highlight menu Doanh thu
+                                allMenuLinks.forEach(link => link.classList.remove('active'));
+                                const chartLink = document.querySelector('.scroll-to-section[href="#charts-section"]');
+                                if (chartLink) chartLink.classList.add('active');
+                            } else {
+                                // Đang ở phần overview - highlight Tổng quan
+                                allMenuLinks.forEach(link => {
+                                    if (!link.classList.contains('scroll-to-section') && 
+                                        link.querySelector('.fa-chart-pie')) {
+                                        link.classList.add('active');
+                                    } else {
+                                        link.classList.remove('active');
+                                    }
+                                });
+                            }
+                        }
+                        
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
         });
     </script>
     @endpush
