@@ -178,11 +178,20 @@ class PaymentController extends Controller
                         'payment_status' => 'completed',
                     ]);
 
+                    // Cập nhật status cho các OrderItem đã thanh toán
                     foreach ($order->items as $item) {
                         if (in_array($item->id, $itemIds)) {
                             $item->status = 'completed';
                             $item->save();
                         }
+                    }
+
+                    // Kiểm tra nếu tất cả OrderItem của Order đã completed
+                    // thì cập nhật Order status thành completed để tính vào thống kê doanh thu
+                    $allItemsCompleted = $order->items()->where('status', '!=', 'completed')->count() === 0;
+                    if ($allItemsCompleted) {
+                        $order->status = 'completed';
+                        $order->save();
                     }
                 }
                 return redirect()->route('orders.list')->with('success', 'Thanh toán tiền mặt thành công!');
@@ -312,15 +321,21 @@ class PaymentController extends Controller
 
                 if (is_array($data) && isset($data['item_ids'])) {
                     $firstOrderId = null;
+                    $orderIds = [];
+                    
+                    // Cập nhật status cho các OrderItem đã thanh toán
                     foreach ($data['item_ids'] as $itemId) {
                         $item = \App\Models\OrderItem::find($itemId);
                         if ($item) {
                             $item->status = 'completed';
                             $item->save();
 
-                            // Lưu lại order_id đầu tiên
+                            // Lưu lại order_id đầu tiên và tất cả order_ids
                             if (!$firstOrderId) {
                                 $firstOrderId = $item->order_id;
+                            }
+                            if (!in_array($item->order_id, $orderIds)) {
+                                $orderIds[] = $item->order_id;
                             }
                         }
                     }
@@ -334,6 +349,19 @@ class PaymentController extends Controller
                         'payment_method' => 'momo',
                         'payment_status' => 'completed',
                     ]);
+
+                    // Kiểm tra và cập nhật Order status thành completed
+                    // nếu tất cả OrderItem đã completed (để tính vào thống kê doanh thu)
+                    foreach ($orderIds as $orderId) {
+                        $order = \App\Models\Order::find($orderId);
+                        if ($order) {
+                            $allItemsCompleted = $order->items()->where('status', '!=', 'completed')->count() === 0;
+                            if ($allItemsCompleted) {
+                                $order->status = 'completed';
+                                $order->save();
+                            }
+                        }
+                    }
                 }
             }
 
