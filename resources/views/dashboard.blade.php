@@ -80,6 +80,11 @@
                                                         Hàng
                                                     </a>
                                                 </li>
+                                                   <li>
+                                                    <a class="dropdown-item" href="{{ route('products.manage') }}">
+                                                        <i class="fa fa-archive" aria-hidden="true"></i> Sản phẩm của tôi
+                                                    </a>
+                                                </li>
 
                                                 <li>
                                                     <div class="dropdown-divider"></div> <!-- ngăn cách -->
