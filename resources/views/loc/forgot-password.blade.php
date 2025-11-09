@@ -29,7 +29,7 @@
 
         <!-- ✅ Nút quay về đăng nhập -->
         <div class="text-center mt-3">
-            <a href="{{ route('login.form') }}" class="text-decoration-none">← Quay về đăng nhập</a>
+            <a href="{{ route('login') }}" class="text-decoration-none">← Quay về đăng nhập</a>
         </div>
     </div>
 </body>

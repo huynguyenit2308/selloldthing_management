@@ -4,50 +4,24 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Laravel\Socialite\Facades\Socialite;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Services\SocialAccountService;
 use Exception;
 
 class FacebookController extends Controller
 {
     public function redirect()
     {
-        return Socialite::driver('facebook')->scopes(['email'])->redirect();
+        return Socialite::driver('facebook')->redirect();
     }
 
-    public function callback()
+    public function callback(SocialAccountService $service)
     {
         try {
-            $facebookUser = Socialite::driver('facebook')->user();
-
-            // Tìm user theo facebook_id hoặc email
-            $user = User::where('facebook_id', $facebookUser->getId())
-                        ->orWhere('email', $facebookUser->getEmail())
-                        ->first();
-
-            if (!$user) {
-                $user = User::create([
-                    'name'        => $facebookUser->getName(),
-                    'email'       => $facebookUser->getEmail(),
-                    'facebook_id' => $facebookUser->getId(),
-                    'password'    => bcrypt('12345678'), // tạm
-                ]);
-            } else {
-                // Nếu có user rồi nhưng chưa lưu facebook_id thì update
-                if (!$user->facebook_id) {
-                    $user->update([
-                        'facebook_id' => $facebookUser->getId(),
-                    ]);
-                }
-            }
-
-            // Login user
-            Auth::login($user);
-
+            $providerUser = Socialite::driver('facebook')->user();
+            $service->createOrGetUser($providerUser, 'facebook');
             return redirect()->route('home');
         } catch (Exception $e) {
-            // Nếu có lỗi -> quay lại login với message
-            return redirect()->route('login.form')->with('error', 'Đăng nhập Facebook thất bại!');
+            return redirect()->route('login')->with('error', 'Đăng nhập Facebook thất bại!');
         }
     }
 }

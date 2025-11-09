@@ -22,6 +22,7 @@ use App\Http\Controllers\ChatBotController;
 use App\Http\Controllers\CRUD_InvoiceController;
 use App\Http\Controllers\CRUD_OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
 
 // Trang chủ
 
@@ -178,6 +179,12 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/account/inventory/{product}', [InventoryController::class, 'updateStock'])->name('account.inventory.update');
     Route::post('/account/inventory/bulk', [InventoryController::class, 'bulkSave'])->name('account.inventory.bulk');
 });
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+});
+
 
 
 
