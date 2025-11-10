@@ -16,6 +16,17 @@ class Category extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function watchlists()
+    {
+        return $this->hasMany(CategoryWatchlist::class);
+    }
+
+    public function watchers()
+    {
+        return $this->belongsToMany(User::class, 'category_watchlist', 'category_id', 'user_id')
+                    ->withTimestamps();
+    }
+
     public function addCategory($validated, $imagePath)
     {
         return self::create([

@@ -55,8 +55,17 @@ class CategoryController extends Controller
                 ->orderBy('name')
                 ->get();
 
+            // Lấy danh sách ID của các danh mục user đã theo dõi
+            $watchedCategoryIds = [];
+            if (auth()->check()) {
+                $watchedCategoryIds = \App\Models\CategoryWatchlist::where('user_id', auth()->id())
+                    ->pluck('category_id')
+                    ->toArray();
+            }
+
             return view('admin.categories.index_category', [
                 'categories' => $categories,
+                'watchedCategoryIds' => $watchedCategoryIds,
                 'error' => null,
             ]);
         } catch (\Exception $e) {
@@ -64,6 +73,7 @@ class CategoryController extends Controller
             
             return view('admin.categories.index_category', [
                 'categories' => collect([]),
+                'watchedCategoryIds' => [],
                 'error' => [
                     'type' => 'CONNECTION_ERROR',
                     'message' => 'Không thể tải danh sách danh mục',

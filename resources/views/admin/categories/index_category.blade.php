@@ -46,6 +46,7 @@
             text-decoration: none;
             color: inherit;
             display: block;
+            position: relative;
         }
 
         .category-card:hover {
@@ -60,6 +61,60 @@
             padding-top: 60%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             overflow: hidden;
+        }
+
+        .watchlist-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            color: #6b7280;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .watchlist-btn:hover {
+            transform: scale(1.1);
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .watchlist-btn.watched {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+
+        .watchlist-btn.watched:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+
+        .watchlist-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .watchlist-btn .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: currentColor;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .category-image {
@@ -330,13 +385,23 @@
                             }
                         @endphp
 
-                        <a href="{{ route('categories.show', $category->id) }}" class="category-card">
-                            <div class="category-image-wrapper">
-                                <img src="{{ $imageUrl }}" alt="{{ $category->name }}" class="category-image">
-                                <div class="category-overlay">
-                                    <h3 class="category-name-overlay">{{ $category->name }}</h3>
+                        <div class="category-card">
+                            @auth
+                                <button 
+                                    class="watchlist-btn {{ in_array($category->id, $watchedCategoryIds ?? []) ? 'watched' : '' }}" 
+                                    onclick="toggleWatchlist(event, {{ $category->id }})"
+                                    data-category-id="{{ $category->id }}"
+                                    title="{{ in_array($category->id, $watchedCategoryIds ?? []) ? 'Bỏ theo dõi' : 'Theo dõi danh mục' }}">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            @endauth
+                            <a href="{{ route('categories.show', $category->id) }}" style="text-decoration: none; color: inherit;">
+                                <div class="category-image-wrapper">
+                                    <img src="{{ $imageUrl }}" alt="{{ $category->name }}" class="category-image">
+                                    <div class="category-overlay">
+                                        <h3 class="category-name-overlay">{{ $category->name }}</h3>
+                                    </div>
                                 </div>
-                            </div>
                             <div class="category-info">
                                 <h3 class="category-name">{{ $category->name }}</h3>
                                 <p class="category-description">
@@ -349,7 +414,8 @@
                                     <span class="category-arrow">→</span>
                                 </div>
                             </div>
-                        </a>
+                            </a>
+                        </div>
                     @endforeach
                 </div>
             @else
@@ -366,3 +432,177 @@
         </div>
     </main>
 @endsection
+
+@push('scripts')
+<script>
+    // CSRF Token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    // Toggle watchlist
+    async function toggleWatchlist(event, categoryId) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const button = event.currentTarget;
+        const icon = button.querySelector('i');
+        const isWatched = button.classList.contains('watched');
+        
+        // Kiểm tra authentication
+        @guest
+            window.location.href = '{{ route("login.form") }}';
+            return;
+        @endguest
+
+        // Disable button trong khi xử lý
+        button.disabled = true;
+        const originalIcon = icon.className;
+        icon.className = 'spinner';
+
+        try {
+            const url = `/watchlist/${categoryId}/toggle`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Toggle trạng thái
+                button.classList.toggle('watched');
+                icon.className = originalIcon;
+                
+                // Cập nhật title
+                button.title = button.classList.contains('watched') 
+                    ? 'Bỏ theo dõi' 
+                    : 'Theo dõi danh mục';
+
+                // Hiển thị thông báo
+                showToast(data.message, 'success');
+            } else {
+                // Xử lý lỗi
+                handleWatchlistError(data, button);
+                icon.className = originalIcon;
+            }
+        } catch (error) {
+            console.error('Watchlist error:', error);
+            showToast('Không thể thực hiện thao tác. Vui lòng thử lại.', 'error');
+            icon.className = originalIcon;
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    // Xử lý lỗi watchlist
+    function handleWatchlistError(data, button) {
+        let message = data.message || 'Có lỗi xảy ra';
+        
+        switch(data.error) {
+            case 'UNAUTHORIZED':
+                window.location.href = '{{ route("login.form") }}';
+                break;
+            case 'WATCHLIST_LIMIT_REACHED':
+                message = 'Bạn đã đạt giới hạn theo dõi. Vui lòng xóa bớt để thêm mới.';
+                break;
+            case 'RATE_LIMIT_EXCEEDED':
+                message = 'Quá nhiều yêu cầu. Vui lòng đợi một chút.';
+                break;
+            case 'CATEGORY_NOT_FOUND':
+                if (data.auto_remove) {
+                    // Reload trang nếu category không tồn tại
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+                break;
+        }
+        
+        showToast(message, 'error');
+    }
+
+    // Hiển thị toast notification
+    function showToast(message, type = 'info') {
+        // Xóa toast cũ nếu có
+        const oldToast = document.querySelector('.toast-notification');
+        if (oldToast) {
+            oldToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Hiển thị toast
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Tự động ẩn sau 3 giây
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Thêm CSS cho toast
+    if (!document.getElementById('toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            .toast-notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 16px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                z-index: 9999;
+                opacity: 0;
+                transform: translateX(400px);
+                transition: all 0.3s ease;
+            }
+            
+            .toast-notification.show {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            
+            .toast-notification i {
+                font-size: 20px;
+            }
+            
+            .toast-success {
+                border-left: 4px solid #10b981;
+            }
+            
+            .toast-success i {
+                color: #10b981;
+            }
+            
+            .toast-error {
+                border-left: 4px solid #ef4444;
+            }
+            
+            .toast-error i {
+                color: #ef4444;
+            }
+            
+            .toast-notification span {
+                font-size: 14px;
+                font-weight: 500;
+                color: #1f2937;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+</script>
+@endpush
