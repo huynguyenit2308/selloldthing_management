@@ -9,6 +9,9 @@ use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\CategoryStatisticsExport;
+use Illuminate\Support\Facades\Log;
 
 class CategoryStatisticsController extends Controller
 {
@@ -33,19 +36,119 @@ class CategoryStatisticsController extends Controller
         ]);
     }
 
+    /**
+     * Xuất báo cáo thống kê ra file Excel
+     * Xử lý các lỗi:
+     * - NO_DATA_FOR_PERIOD: Không có dữ liệu
+     * - INVALID_DATE_RANGE: Khoảng thời gian không hợp lệ
+     * - DATA_TOO_LARGE_FOR_PDF: Dữ liệu quá lớn
+     * - OUT_OF_MEMORY: Không đủ bộ nhớ
+     */
     public function exportExcel(Request $request)
     {
-        $timePeriod = $request->query('time_period', 'week');
-        $dateRange = $this->getDateRange($timePeriod);
-        $categoryStats = $this->getCategoryStatistics($dateRange);
-
-        // TODO: Triển khai xuất Excel
-        // Sử dụng Maatwebsite/Laravel-Excel hoặc thư viện xuất Excel khác
-        
-        return response()->json([
-            'message' => 'Chức năng xuất Excel sẽ được triển khai',
-            'data' => $categoryStats
-        ]);
+        try {
+            $timePeriod = $request->query('time_period', 'week');
+            
+            // Validate time period
+            if (!in_array($timePeriod, ['today', 'week', 'month', 'quarter', 'year'])) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'INVALID_DATE_RANGE',
+                    'message' => 'Khoảng thời gian không hợp lệ'
+                ], 400);
+            }
+            
+            $dateRange = $this->getDateRange($timePeriod);
+            $categoryStats = $this->getCategoryStatistics($dateRange);
+            $overviewStats = $this->getOverviewStatistics($dateRange);
+            
+            // Kiểm tra có dữ liệu không
+            if ($categoryStats->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'NO_DATA_FOR_PERIOD',
+                    'message' => 'Không có dữ liệu thống kê cho khoảng thời gian này'
+                ], 404);
+            }
+            
+            // Kiểm tra dữ liệu có quá lớn không (> 10000 records)
+            if ($categoryStats->count() > 10000) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'DATA_TOO_LARGE_FOR_PDF',
+                    'message' => 'Dữ liệu quá lớn để tạo PDF. Vui lòng chọn khoảng thời gian nhỏ hơn.',
+                    'data' => [
+                        'record_count' => $categoryStats->count(),
+                        'max_allowed' => 10000
+                    ]
+                ], 400);
+            }
+            
+            $fileName = 'thong-ke-danh-muc-' . $timePeriod . '-' . now()->format('Y-m-d-His') . '.xlsx';
+            
+            return Excel::download(
+                new CategoryStatisticsExport($categoryStats, $overviewStats, $dateRange),
+                $fileName
+            );
+            
+        } catch (\Throwable $e) {
+            Log::error('Export Excel failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Kiểm tra lỗi memory
+            if (strpos($e->getMessage(), 'memory') !== false) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'OUT_OF_MEMORY',
+                    'message' => 'Không đủ bộ nhớ để xử lý. Vui lòng thử lại.'
+                ], 500);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'error_code' => 'SERVER_ERROR',
+                'message' => 'Đã có lỗi xảy ra khi xuất Excel. Vui lòng thử lại.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+    
+    /**
+     * Hiển thị trang in báo cáo
+     * Trả về view với dữ liệu để in
+     */
+    public function printReport(Request $request)
+    {
+        try {
+            $timePeriod = $request->query('time_period', 'week');
+            
+            // Validate time period
+            if (!in_array($timePeriod, ['today', 'week', 'month', 'quarter', 'year'])) {
+                return back()->with('error', 'Khoảng thời gian không hợp lệ');
+            }
+            
+            $dateRange = $this->getDateRange($timePeriod);
+            $categoryStats = $this->getCategoryStatistics($dateRange);
+            $overviewStats = $this->getOverviewStatistics($dateRange);
+            
+            // Kiểm tra có dữ liệu không
+            if ($categoryStats->isEmpty()) {
+                return back()->with('error', 'Không có dữ liệu thống kê cho khoảng thời gian này');
+            }
+            
+            return view('admin.categories.print_report', [
+                'categoryStats' => $categoryStats,
+                'overviewStats' => $overviewStats,
+                'dateRange' => $dateRange,
+                'timePeriod' => $timePeriod,
+                'generatedAt' => now()->timezone('Asia/Ho_Chi_Minh')
+            ]);
+            
+        } catch (\Throwable $e) {
+            Log::error('Print report failed: ' . $e->getMessage());
+            return back()->with('error', 'Không thể tạo báo cáo. Vui lòng thử lại.');
+        }
     }
 
     private function getDateRange($timePeriod)

@@ -79,6 +79,7 @@ Route::prefix('admin')->group(function () {
       //thống kê danh mục
     Route::get('/statistics/categories', [CategoryStatisticsController::class, 'index'])->name('admin.statistics.categories');
     Route::get('/statistics/categories/export', [CategoryStatisticsController::class, 'exportExcel'])->name('admin.statistics.categories.export');
+    Route::get('/statistics/categories/print', [CategoryStatisticsController::class, 'printReport'])->name('admin.statistics.categories.print');
     Route::get('/statistics/categories/chart-data', [CategoryStatisticsController::class, 'getChartData'])->name('admin.statistics.categories.chart-data');
     // Admin routes quản lý sản phẩm
     Route::get('/products', [AdminProductController::class, 'index'])->name('admin.products.index');

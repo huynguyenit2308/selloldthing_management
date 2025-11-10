@@ -451,7 +451,6 @@ tbody small {
                     <li><a href="#charts-section" class="scroll-to-section"><i class="fas fa-shopping-cart"></i> Doanh thu</a></li>
                     <li><a href="#charts-section" class="scroll-to-section"><i class="fas fa-box"></i> Sản phẩm</a></li>
                     <li><a href="#table-section" class="scroll-to-section"><i class="fas fa-table"></i> Thống kê chi tiết</a></li>
-                    <li><a href="{{ route('admin.statistics.categories.export') }}" class="export-link"><i class="fas fa-file-export"></i> Xuất báo cáo</a></li>
                 </ul>
 
                 <h3 class="sidebar-heading"><i class="fas fa-filter"></i> Bộ lọc thời gian</h3>
@@ -461,6 +460,12 @@ tbody small {
                     <li><a href="{{ route('admin.statistics.categories', ['time_period' => 'month']) }}" class="{{ $timePeriod == 'month' ? 'active' : '' }}"><i class="fas fa-calendar-alt"></i> Tháng này</a></li>
                     <li><a href="{{ route('admin.statistics.categories', ['time_period' => 'quarter']) }}" class="{{ $timePeriod == 'quarter' ? 'active' : '' }}"><i class="fas fa-calendar"></i> Quý này</a></li>
                     <li><a href="{{ route('admin.statistics.categories', ['time_period' => 'year']) }}" class="{{ $timePeriod == 'year' ? 'active' : '' }}"><i class="fas fa-star"></i> Năm nay</a></li>
+                </ul>
+                
+                <h3 class="sidebar-heading"><i class="fas fa-download"></i> Xuất báo cáo</h3>
+                <ul>
+                    <li><a href="javascript:void(0)" id="print-report-btn"><i class="fas fa-print"></i> In báo cáo</a></li>
+                    <li><a href="javascript:void(0)" id="export-excel-btn"><i class="fas fa-file-excel"></i> Xuất Excel</a></li>
                 </ul>
             </div>
 
@@ -625,6 +630,58 @@ tbody small {
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xuất Excel -->
+<div class="modal fade" id="exportExcelModal" tabindex="-1" role="dialog" aria-labelledby="exportExcelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header" style="border-bottom: 1px solid #e5e7eb; padding: 20px 24px;">
+                <h5 class="modal-title font-weight-bold" id="exportExcelModalLabel" style="color: #1f2937;">
+                    <i class="fas fa-file-excel" style="color: #10b981;"></i> Xuất báo cáo Excel
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div id="export-content">
+                    <p style="margin-bottom: 16px; color: #374151;">Bạn có muốn xuất báo cáo thống kê danh mục ra file Excel không?</p>
+                    <p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">
+                        <i class="fas fa-info-circle"></i> File Excel sẽ chứa đầy đủ dữ liệu thống kê cho khoảng thời gian đã chọn.
+                    </p>
+                </div>
+                
+                <!-- Hiển thị lỗi -->
+                <div id="export-error" class="alert alert-danger d-none" style="margin-top: 16px; border-radius: 8px;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="export-error-text"></span>
+                </div>
+
+                <!-- Hiển thị thành công -->
+                <div id="export-success" class="alert alert-success d-none" style="margin-top: 16px; border-radius: 8px;">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="export-success-text"></span>
+                </div>
+
+                <!-- Loading spinner -->
+                <div id="export-loading" class="d-none text-center" style="padding: 20px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Đang xử lý...</span>
+                    </div>
+                    <p style="margin-top: 12px; color: #6b7280;">Đang xuất file Excel...</p>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #e5e7eb; padding: 16px 24px;">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 8px;">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <button type="button" class="btn btn-primary" id="confirm-export-btn" style="border-radius: 8px; background: #10b981; border-color: #10b981;">
+                    <i class="fas fa-download"></i> Có, xuất ngay
+                </button>
             </div>
         </div>
     </div>
@@ -874,6 +931,164 @@ tbody small {
                     });
                     ticking = true;
                 }
+            });
+
+            // ===== XỬ LÝ IN BÁO CÁO =====
+            const printReportBtn = document.getElementById('print-report-btn');
+            if (printReportBtn) {
+                printReportBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const timePeriod = timePeriodSelect.value;
+                    const printUrl = '{{ route("admin.statistics.categories.print") }}?time_period=' + timePeriod;
+                    
+                    // Mở trang in trong tab mới
+                    const printWindow = window.open(printUrl, '_blank');
+                    
+                    if (!printWindow) {
+                        alert('Popup bị chặn. Vui lòng cho phép popup trong cài đặt trình duyệt và thử lại.');
+                    }
+                });
+            }
+
+            // ===== XỬ LÝ XUẤT EXCEL =====
+            const exportExcelBtn = document.getElementById('export-excel-btn');
+            const exportModal = $('#exportExcelModal');
+            const confirmExportBtn = document.getElementById('confirm-export-btn');
+            const exportContent = document.getElementById('export-content');
+            const exportError = document.getElementById('export-error');
+            const exportErrorText = document.getElementById('export-error-text');
+            const exportSuccess = document.getElementById('export-success');
+            const exportSuccessText = document.getElementById('export-success-text');
+            const exportLoading = document.getElementById('export-loading');
+
+            // Mở modal xác nhận
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    resetExportModal();
+                    exportModal.modal('show');
+                });
+            }
+
+            // Xác nhận xuất Excel
+            if (confirmExportBtn) {
+                confirmExportBtn.addEventListener('click', async function() {
+                    const timePeriod = timePeriodSelect.value;
+                    
+                    // Hiển thị loading
+                    showExportLoading();
+                    
+                    try {
+                        const exportUrl = '{{ route("admin.statistics.categories.export") }}?time_period=' + timePeriod;
+                        
+                        const response = await fetch(exportUrl, {
+                            method: 'GET',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                            }
+                        });
+
+                        const contentType = response.headers.get('content-type');
+                        
+                        // Kiểm tra nếu response là JSON (có lỗi)
+                        if (contentType && contentType.includes('application/json')) {
+                            const data = await response.json();
+                            handleExportError(data.error_code, data.message, data.data);
+                        } 
+                        // Nếu thành công, download file
+                        else if (response.ok) {
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = 'thong-ke-danh-muc-' + timePeriod + '-' + new Date().getTime() + '.xlsx';
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                            
+                            showExportSuccess('Xuất file Excel thành công!');
+                            
+                            // Đóng modal sau 1.5 giây
+                            setTimeout(() => {
+                                exportModal.modal('hide');
+                            }, 1500);
+                        } else {
+                            throw new Error('Lỗi khi tải file');
+                        }
+                        
+                    } catch (error) {
+                        console.error('Export error:', error);
+                        showExportError('Đã có lỗi xảy ra khi xuất Excel. Vui lòng thử lại.');
+                    }
+                });
+            }
+
+            // Xử lý các loại lỗi export
+            function handleExportError(errorCode, message, additionalData = null) {
+                switch (errorCode) {
+                    case 'NO_DATA_FOR_PERIOD':
+                        showExportError('Không có dữ liệu thống kê cho khoảng thời gian này.');
+                        break;
+                        
+                    case 'INVALID_DATE_RANGE':
+                        showExportError('Khoảng thời gian không hợp lệ. Vui lòng chọn lại.');
+                        break;
+                        
+                    case 'DATA_TOO_LARGE_FOR_PDF':
+                        const recordCount = additionalData?.record_count || 0;
+                        const maxAllowed = additionalData?.max_allowed || 10000;
+                        showExportError(`Dữ liệu quá lớn để xuất (${recordCount} records). Vui lòng chọn khoảng thời gian nhỏ hơn (tối đa ${maxAllowed} records).`);
+                        break;
+                        
+                    case 'OUT_OF_MEMORY':
+                        showExportError('Không đủ bộ nhớ để xử lý. Vui lòng thử lại hoặc chọn khoảng thời gian nhỏ hơn.');
+                        break;
+                        
+                    default:
+                        showExportError(message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            }
+
+            function showExportLoading() {
+                exportContent.classList.add('d-none');
+                exportError.classList.add('d-none');
+                exportSuccess.classList.add('d-none');
+                exportLoading.classList.remove('d-none');
+                confirmExportBtn.disabled = true;
+            }
+
+            function showExportError(message) {
+                exportContent.classList.add('d-none');
+                exportLoading.classList.add('d-none');
+                exportSuccess.classList.add('d-none');
+                exportError.classList.remove('d-none');
+                exportErrorText.textContent = message;
+                confirmExportBtn.disabled = false;
+            }
+
+            function showExportSuccess(message) {
+                exportContent.classList.add('d-none');
+                exportLoading.classList.add('d-none');
+                exportError.classList.add('d-none');
+                exportSuccess.classList.remove('d-none');
+                exportSuccessText.textContent = message;
+                confirmExportBtn.disabled = true;
+            }
+
+            function resetExportModal() {
+                exportContent.classList.remove('d-none');
+                exportLoading.classList.add('d-none');
+                exportError.classList.add('d-none');
+                exportSuccess.classList.add('d-none');
+                confirmExportBtn.disabled = false;
+            }
+
+            // Reset modal khi đóng
+            exportModal.on('hidden.bs.modal', function() {
+                resetExportModal();
             });
         });
     </script>
