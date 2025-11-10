@@ -21,6 +21,196 @@
 
     @stack('styles')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <style>
+        /* Notification Dropdown Styles */
+        .notification {
+            position: relative;
+        }
+
+        .notification-dropdown-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 380px;
+            max-height: 500px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            z-index: 1000;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        .notification-header h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+        .notification-actions button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .notification-actions button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .notification-body {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .notification-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notification-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .notification-body::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .notification-body::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        .notification-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .notification-item:hover {
+            background: #f9fafb;
+        }
+
+        .notification-item.unread {
+            background: #eef2ff;
+        }
+
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #6366f1;
+            border-radius: 50%;
+        }
+
+        .notification-item.unread .notification-content {
+            padding-left: 15px;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .notification-loading,
+        .notification-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .notification-loading i {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .notification-footer {
+            padding: 12px 20px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .notification-footer a {
+            color: #6366f1;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .notification-footer a:hover {
+            color: #4f46e5;
+        }
+
+        #notification-count {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        /* Show dropdown on active */
+        .notification.active .notification-dropdown-content {
+            display: block !important;
+        }
+    </style>
 </head>
 
 <body class="@yield('body-class')">
@@ -126,6 +316,11 @@
                                                     </a>
                                                 </li>
                                                 <li>
+                                                    <a class="dropdown-item" href="{{ route('watchlist.index') }}">
+                                                        <i class="fa fa-heart" aria-hidden="true"></i> Theo dõi danh mục
+                                                    </a>
+                                                </li>
+                                                <li>
                                                     <a class="dropdown-item" href="#">
                                                         <i class="fa fa-history" aria-hidden="true"></i> Xem Lịch Sử Mua
                                                         Hàng
@@ -201,12 +396,32 @@
                                 @endauth
                                 </ul>
                                 <ul class="navbar_user">
-                                    <li class="notification">
-                                        <a href="#">
+                                    @auth
+                                    <li class="notification" id="notification-dropdown">
+                                        <a href="#" id="notification-bell">
                                             <i class="fa fa-bell" aria-hidden="true"></i>
-                                            <span class="notification_count">3</span>
+                                            <span class="notification_count" id="notification-count">0</span>
                                         </a>
+                                        <div class="notification-dropdown-content" id="notification-list" style="display: none;">
+                                            <div class="notification-header">
+                                                <h4>Thông báo</h4>
+                                                <div class="notification-actions">
+                                                    <button type="button" id="mark-all-read" title="Đánh dấu tất cả là đã đọc">
+                                                        <i class="fa fa-check-double"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="notification-body" id="notification-items">
+                                                <div class="notification-loading">
+                                                    <i class="fa fa-spinner fa-spin"></i> Đang tải...
+                                                </div>
+                                            </div>
+                                            <div class="notification-footer">
+                                                <a href="#" id="load-more-notifications">Xem thêm</a>
+                                            </div>
+                                        </div>
                                     </li>
+                                    @endauth
                                     <li class="checkout">
                                         <a href="{{ route('orders.list') }}">
                                             <i class="fa fa-shopping-cart" aria-hidden="true"></i>
@@ -378,6 +593,244 @@
     <script src="{{ asset('plugins/easing/easing.js') }}"></script>
     <script src="{{ asset('js/custom.js') }}"></script>
     <script src="{{ asset('js/search_overlay.js') }}"></script>
+    
+    @auth
+    <script>
+        // Notification System
+        (function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const notificationBell = document.getElementById('notification-bell');
+            const notificationDropdown = document.getElementById('notification-dropdown');
+            const notificationList = document.getElementById('notification-list');
+            const notificationItems = document.getElementById('notification-items');
+            const notificationCount = document.getElementById('notification-count');
+            const markAllReadBtn = document.getElementById('mark-all-read');
+            const loadMoreBtn = document.getElementById('load-more-notifications');
+            
+            let currentPage = 1;
+            let isLoading = false;
+
+            // Toggle dropdown
+            if (notificationBell) {
+                notificationBell.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    notificationDropdown.classList.toggle('active');
+                    
+                    if (notificationDropdown.classList.contains('active')) {
+                        loadNotifications();
+                    }
+                });
+            }
+
+            // Đóng dropdown khi click bên ngoài
+            document.addEventListener('click', function(e) {
+                if (!notificationDropdown.contains(e.target)) {
+                    notificationDropdown.classList.remove('active');
+                }
+            });
+
+            // Load notifications
+            async function loadNotifications(page = 1) {
+                if (isLoading) return;
+                
+                isLoading = true;
+                
+                if (page === 1) {
+                    notificationItems.innerHTML = '<div class="notification-loading"><i class="fa fa-spinner fa-spin"></i> Đang tải...</div>';
+                }
+
+                try {
+                    const response = await fetch(`/notifications?page=${page}&per_page=10`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        if (page === 1) {
+                            notificationItems.innerHTML = '';
+                        }
+
+                        if (result.data.length === 0 && page === 1) {
+                            notificationItems.innerHTML = '<div class="notification-empty"><i class="fa fa-bell-slash"></i><br>Không có thông báo nào</div>';
+                            loadMoreBtn.style.display = 'none';
+                        } else {
+                            result.data.forEach(notification => {
+                                notificationItems.appendChild(createNotificationElement(notification));
+                            });
+
+                            // Hiển thị/ẩn nút load more
+                            if (result.current_page >= result.last_page) {
+                                loadMoreBtn.style.display = 'none';
+                            } else {
+                                loadMoreBtn.style.display = 'block';
+                            }
+                        }
+
+                        currentPage = result.current_page;
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi tải thông báo:', error);
+                    notificationItems.innerHTML = '<div class="notification-empty"><i class="fa fa-exclamation-triangle"></i><br>Không thể tải thông báo</div>';
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            // Tạo element cho notification
+            function createNotificationElement(notification) {
+                const div = document.createElement('div');
+                div.className = `notification-item ${!notification.is_read ? 'unread' : ''}`;
+                div.dataset.notificationId = notification.id;
+
+                const timeAgo = getTimeAgo(notification.created_at);
+
+                div.innerHTML = `
+                    <div class="notification-content">
+                        <div class="notification-title">${escapeHtml(notification.title)}</div>
+                        <div class="notification-message">${escapeHtml(notification.message)}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+
+                div.addEventListener('click', function() {
+                    handleNotificationClick(notification);
+                });
+
+                return div;
+            }
+
+            // Xử lý khi click vào notification
+            async function handleNotificationClick(notification) {
+                // Đánh dấu là đã đọc
+                if (!notification.is_read) {
+                    await markAsRead(notification.id);
+                }
+
+                // Chuyển hướng nếu có link
+                if (notification.link) {
+                    window.location.href = notification.link;
+                }
+            }
+
+            // Đánh dấu notification là đã đọc
+            async function markAsRead(notificationId) {
+                try {
+                    const response = await fetch(`/notifications/${notificationId}/mark-as-read`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const item = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                        if (item) {
+                            item.classList.remove('unread');
+                        }
+                        updateUnreadCount();
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi đánh dấu đã đọc:', error);
+                }
+            }
+
+            // Đánh dấu tất cả là đã đọc
+            if (markAllReadBtn) {
+                markAllReadBtn.addEventListener('click', async function() {
+                    try {
+                        const response = await fetch('/notifications/mark-all-as-read', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                                item.classList.remove('unread');
+                            });
+                            updateUnreadCount();
+                        }
+                    } catch (error) {
+                        console.error('Lỗi khi đánh dấu tất cả đã đọc:', error);
+                    }
+                });
+            }
+
+            // Load more notifications
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loadNotifications(currentPage + 1);
+                });
+            }
+
+            // Cập nhật số lượng thông báo chưa đọc
+            async function updateUnreadCount() {
+                try {
+                    const response = await fetch('/notifications/unread-count', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        notificationCount.textContent = result.count;
+                        
+                        if (result.count === 0) {
+                            notificationCount.style.display = 'none';
+                        } else {
+                            notificationCount.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi cập nhật số thông báo:', error);
+                }
+            }
+
+            // Helper: Format time ago
+            function getTimeAgo(timestamp) {
+                const now = new Date();
+                const time = new Date(timestamp);
+                const diff = Math.floor((now - time) / 1000);
+
+                if (diff < 60) return 'Vừa xong';
+                if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+                if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+                if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+                
+                return time.toLocaleDateString('vi-VN');
+            }
+
+            // Helper: Escape HTML
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Auto-update unread count mỗi 30 giây
+            setInterval(updateUnreadCount, 30000);
+            
+            // Load unread count ngay khi trang load
+            updateUnreadCount();
+        })();
+    </script>
+    @endauth
+    
     @stack('scripts')
 </body>
 

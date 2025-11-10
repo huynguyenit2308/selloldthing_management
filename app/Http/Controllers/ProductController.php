@@ -438,6 +438,18 @@ class ProductController extends Controller
 
             DB::commit();
 
+            // Gửi thông báo cho user đang theo dõi danh mục (sau khi commit transaction)
+            try {
+                $notificationService = app(\App\Services\NotificationService::class);
+                $notificationService->notifyWatchersOfNewProduct($product);
+            } catch (\Exception $e) {
+                \Log::error('Lỗi khi gửi thông báo sản phẩm mới', [
+                    'product_id' => $product->id,
+                    'error' => $e->getMessage()
+                ]);
+                // Không throw exception để không ảnh hưởng đến việc tạo sản phẩm
+            }
+
             return redirect()
                 ->route('products.manage')
                 ->with('product_status_success', 'Sản phẩm đã được gửi để duyệt.');

@@ -25,6 +25,8 @@ use App\Http\Controllers\CRUD_OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\CategoryWatchlistController;
+use App\Http\Controllers\NotificationController;
 
 // Trang chủ
 
@@ -202,6 +204,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    
+    // Category Watchlist Routes
+    Route::get('/watchlist', [CategoryWatchlistController::class, 'index'])->name('watchlist.index');
+    Route::post('/watchlist/{category}', [CategoryWatchlistController::class, 'store'])->name('watchlist.store');
+    Route::delete('/watchlist/{category}', [CategoryWatchlistController::class, 'destroy'])->name('watchlist.destroy');
+    Route::post('/watchlist/{category}/toggle', [CategoryWatchlistController::class, 'toggle'])->name('watchlist.toggle');
+    
+    // Notification Routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
 });
 
 

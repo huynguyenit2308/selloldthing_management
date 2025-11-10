@@ -66,4 +66,25 @@ final class User extends Authenticatable implements AuthenticatableContract
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function watchlists()
+    {
+        return $this->hasMany(CategoryWatchlist::class);
+    }
+
+    public function watchedCategories()
+    {
+        return $this->belongsToMany(Category::class, 'category_watchlist', 'user_id', 'category_id')
+                    ->withTimestamps();
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->hasMany(Notification::class)->where('is_read', false);
+    }
 }
