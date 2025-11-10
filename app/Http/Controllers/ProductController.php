@@ -266,7 +266,7 @@ class ProductController extends Controller
             'categories' => $categories,
             'contactMethods' => $contactMethods,
             'conditions' => $conditions,
-            'maxImages' => 6,
+            'maxImages' => 5,
             'locationCity' => old('location_city', $draft['data']['location_city'] ?? $locationCity),
             'locationDistrict' => old('location_district', $draft['data']['location_district'] ?? $locationDistrict),
             'selectedContactMethods' => old('contact_methods', $draft['data']['contact_methods'] ?? $selectedContactMethods),
@@ -590,8 +590,8 @@ class ProductController extends Controller
                 $validator->errors()->add('images', 'Vui lòng giữ lại ít nhất 1 ảnh sản phẩm');
             }
 
-            if ($finalTotal > 6) {
-                $validator->errors()->add('images', 'Chỉ được upload tối đa 6 ảnh');
+            if ($finalTotal > 5) {
+                $validator->errors()->add('images', 'Chỉ được upload tối đa 5 ảnh');
             }
 
             if ($existingIds->isNotEmpty()) {
@@ -905,9 +905,13 @@ class ProductController extends Controller
             return $respond(false, 'Không thể thay đổi trạng thái sản phẩm đã bán');
         }
 
+        if ($product->status === 'pending') {
+            return $respond(false, 'Sản phẩm đang chờ duyệt, vui lòng đợi quản trị viên phê duyệt');
+        }
+
         $nextStatus = match ($product->status) {
             'published' => 'hidden',
-            'hidden', 'pending' => 'published',
+            'hidden' => 'published',
             default => null,
         };
 
