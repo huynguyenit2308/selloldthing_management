@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Foundation\Auth\User as Authenticatable; 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany; // Đảm bảo bạn use 'BelongsToMany'
 
 //class User extends Model
 final class User extends Authenticatable implements AuthenticatableContract
@@ -57,9 +58,10 @@ final class User extends Authenticatable implements AuthenticatableContract
         return $this->hasMany(Comment::class);
     }
 
-    public function favorites()
+    public function favorites(): BelongsToMany 
     {
-        return $this->hasMany(Favorite::class);
+        // Sử dụng 'belongsToMany', không phải 'hasMany'
+        return $this->belongsToMany(Product::class, 'favorites', 'user_id', 'product_id');
     }
 
     public function payments()

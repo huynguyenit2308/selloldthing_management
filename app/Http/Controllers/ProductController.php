@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
@@ -51,6 +52,7 @@ class ProductController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+
         $priceBounds = (clone $baseQuery)
             ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
             ->first();
@@ -60,6 +62,11 @@ class ProductController extends Controller
         $locationOptions = Schema::hasColumn('products', 'location')
             ? (clone $baseQuery)->whereNotNull('location')->distinct()->orderBy('location')->pluck('location')
             : collect();
+        $userFavoriteIds = [];
+        if (Auth::check()) {
+            // Lấy TẤT CẢ ID yêu thích của user
+            $userFavoriteIds = Auth::user()->favorites()->pluck('product_id')->toArray();
+        }
 
         return view('product.index', [
             'categories' => $categories,
@@ -74,6 +81,7 @@ class ProductController extends Controller
             'priceBounds' => $priceBounds,
             'conditionOptions' => $conditionOptions,
             'locationOptions' => $locationOptions,
+            'userFavoriteIds' => $userFavoriteIds, // <-- THÊM MỚI DÒNG NÀY 
         ]);
     }
 
@@ -108,7 +116,7 @@ class ProductController extends Controller
             'maxImages' => 5,
         ]);
     }
-     public function show(Product $product): View
+    public function show(Product $product): View
     {
         $product->load([
             'images' => function ($q) {
@@ -132,11 +140,22 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
+        $isFavorited = false; // Mặc định là chưa thích
+        $userFavoriteIds = [];
+
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        if (Auth::check()) {
+            $userFavoriteIds = Auth::user()->favorites()->pluck('product_id')->toArray(); // <-- THÊM MỚI
+            // Kiểm tra xem trong danh sách favorites của user có tồn tại product_id này không
+            $isFavorited = Auth::user()->favorites()->where('product_id', $product->id)->exists();
+        }
         return view('product.show', [
             'product' => $product,
             'averageRating' => $averageRating,
             'reviewsCount' => $reviewsCount,
             'similarProducts' => $similarProducts,
+            'isFavorited' => $isFavorited, // <-- THÊM MỚI DÒNG NÀY
+            'userFavoriteIds' => $userFavoriteIds, // <-- TRUYỀN BIẾN MỚI SANG VIEW
         ]);
     }
 
@@ -167,10 +186,10 @@ class ProductController extends Controller
 
         if ($searchTerm !== '') {
             $baseQuery->where(function ($query) use ($searchTerm) {
-                $query->where('name', 'like', '%'.$searchTerm.'%');
+                $query->where('name', 'like', '%' . $searchTerm . '%');
 
                 if (Schema::hasColumn('products', 'description')) {
-                    $query->orWhere('description', 'like', '%'.$searchTerm.'%');
+                    $query->orWhere('description', 'like', '%' . $searchTerm . '%');
                 }
             });
         }
@@ -308,7 +327,7 @@ class ProductController extends Controller
                 'price' => $validated['price'],
                 'original_price' => $validated['original_price'] ?? null,
                 'quantity' => $validated['quantity'],
-                'location' => $validated['location_city'].' - '.$validated['location_district'],
+                'location' => $validated['location_city'] . ' - ' . $validated['location_district'],
                 'contact_method' => implode(',', $validated['contact_methods']),
             ]);
 
@@ -316,7 +335,7 @@ class ProductController extends Controller
                 'return_policy' => $validated['return_policy'] ?? null,
                 'shipping_policy' => $validated['shipping_policy'] ?? null,
                 'additional_note' => $validated['additional_note'] ?? null,
-            ], fn ($value) => $value !== null && $value !== '');
+            ], fn($value) => $value !== null && $value !== '');
 
             $product->additional_info = !empty($additionalInfo)
                 ? json_encode($additionalInfo, JSON_UNESCAPED_UNICODE)
@@ -425,7 +444,7 @@ class ProductController extends Controller
                 'price' => $validated['price'],
                 'original_price' => $validated['original_price'] ?? null,
                 'quantity' => $validated['quantity'],
-                'location' => $validated['location_city'].' - '.$validated['location_district'],
+                'location' => $validated['location_city'] . ' - ' . $validated['location_district'],
                 'contact_method' => implode(',', $validated['contact_methods']),
                 'status' => 'pending',
             ]);
@@ -470,7 +489,10 @@ class ProductController extends Controller
     protected function validateProduct(Request $request, User $user): array
     {
         $forbiddenKeywords = [
-            'cấm', 'illegal', 'fake', 'scam',
+            'cấm',
+            'illegal',
+            'fake',
+            'scam',
         ];
 
         $phoneVerified = (bool) ($user->phone && $user->phone !== '');
@@ -584,10 +606,10 @@ class ProductController extends Controller
             }
 
             $existingIds = collect($request->input('existing_images', []))
-                ->map(static fn ($id) => (int) $id)
+                ->map(static fn($id) => (int) $id)
                 ->filter();
             $removeIds = collect($request->input('remove_image_ids', []))
-                ->map(static fn ($id) => (int) $id)
+                ->map(static fn($id) => (int) $id)
                 ->filter();
 
             $totalExisting = ProductImage::where('product_id', $product->id)
@@ -627,7 +649,7 @@ class ProductController extends Controller
     protected function storeProductImages(Product $product, array $files): void
     {
         $sortOrder = 0;
-        
+
         foreach (array_filter($files) as $file) {
             try {
                 $imagePath = $this->storeImageFile($file);
@@ -669,7 +691,7 @@ class ProductController extends Controller
         //     ]);
         // }
 
-        $targetPath = 'product_uploads/'.date('Y/m');
+        $targetPath = 'product_uploads/' . date('Y/m');
         \Log::info('Đang lưu vào', ['path' => $targetPath]);
 
         $path = $file->store($targetPath, ['disk' => 'public']);
@@ -688,7 +710,7 @@ class ProductController extends Controller
 
     protected function syncProductImages(Product $product, array $newFiles, array $existingOrder, array $removeIds): void
     {
-        $removeIds = collect($removeIds)->map(static fn ($id) => (int) $id)->filter()->unique()->values();
+        $removeIds = collect($removeIds)->map(static fn($id) => (int) $id)->filter()->unique()->values();
 
         if ($removeIds->isNotEmpty()) {
             $imagesToDelete = ProductImage::where('product_id', $product->id)
@@ -702,8 +724,8 @@ class ProductController extends Controller
         }
 
         $orderedIds = collect($existingOrder)
-            ->map(static fn ($id) => (int) $id)
-            ->filter(fn ($id) => !$removeIds->contains($id))
+            ->map(static fn($id) => (int) $id)
+            ->filter(fn($id) => !$removeIds->contains($id))
             ->values();
 
         if ($orderedIds->isEmpty()) {
@@ -1005,7 +1027,7 @@ class ProductController extends Controller
         // Check daily delete limit (business rule)
         $dailyDeleteCount = Cache::get("user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 0);
         $maxDailyDeletes = 10; // Configure this as needed
-        
+
         if ($dailyDeleteCount >= $maxDailyDeletes) {
             $errors[] = 'Bạn đã vượt quá số lần xóa cho phép trong ngày';
         }
@@ -1063,7 +1085,7 @@ class ProductController extends Controller
         // Check daily delete limit
         $dailyDeleteCount = Cache::get("user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 0);
         $maxDailyDeletes = 10;
-        
+
         if ($dailyDeleteCount >= $maxDailyDeletes) {
             return $respond(false, 'Bạn đã vượt quá số lần xóa cho phép trong ngày');
         }
@@ -1088,8 +1110,8 @@ class ProductController extends Controller
 
             // Increment daily delete count
             Cache::put(
-                "user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 
-                $dailyDeleteCount + 1, 
+                "user_delete_count_{$user->id}_" . now()->format('Y-m-d'),
+                $dailyDeleteCount + 1,
                 now()->endOfDay()
             );
 
@@ -1138,7 +1160,7 @@ class ProductController extends Controller
 
             // Restore the product
             $product = Product::withTrashed()->find($validated['product_id']);
-            
+
             if (!$product) {
                 return response()->json([
                     'success' => false,
@@ -1162,8 +1184,8 @@ class ProductController extends Controller
             $dailyDeleteCount = Cache::get("user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 0);
             if ($dailyDeleteCount > 0) {
                 Cache::put(
-                    "user_delete_count_{$user->id}_" . now()->format('Y-m-d'), 
-                    $dailyDeleteCount - 1, 
+                    "user_delete_count_{$user->id}_" . now()->format('Y-m-d'),
+                    $dailyDeleteCount - 1,
                     now()->endOfDay()
                 );
             }
@@ -1249,7 +1271,7 @@ class ProductController extends Controller
 
         if ($processedCount > 0) {
             return back()
-                ->with('product_bulk_success', 'Đã xử lý '.number_format($processedCount).' sản phẩm')
+                ->with('product_bulk_success', 'Đã xử lý ' . number_format($processedCount) . ' sản phẩm')
                 ->with('product_bulk_errors', $errors);
         }
 
