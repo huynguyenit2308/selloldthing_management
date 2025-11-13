@@ -815,27 +815,26 @@ class ProductSeeder extends Seeder
                 'view_count' => $data['view_count'],
             ]);
 
-            $images = [];
-            foreach ($product->getImages() as $image) {
-                if (isset($data['images']) && is_array($data['images'])) {
-                    $images = array_values(array_filter($data['images']));
+              $images = [];
+
+            if (isset($data['images']) && is_array($data['images'])) {
+                $images = array_values(array_filter($data['images']));
+            }
+
+            if (empty($images) && !empty($data['image'])) {
+                $images = [$data['image']];
+            }
+
+            foreach ($images as $index => $imageUrl) {
+                if (empty($imageUrl)) {
+                    continue;
                 }
 
-                if (empty($images) && !empty($data['image'])) {
-                    $images = [$data['image']];
-                }
-
-                foreach ($images as $index => $imageUrl) {
-                    if (empty($imageUrl)) {
-                        continue;
-                    }
-
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'url' => $imageUrl,
-                        'description' => 'Ảnh ' . ($index + 1) . ' cho ' . $data['name'],
-                    ]);
-                }
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'url' => $imageUrl,
+                    'description' => 'Ảnh ' . ($index + 1) . ' cho ' . $data['name'],
+                ]);
             }
         }
     }
