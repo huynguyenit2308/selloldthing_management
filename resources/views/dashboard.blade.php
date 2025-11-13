@@ -320,6 +320,12 @@
                                                         <i class="fa fa-heart" aria-hidden="true"></i> Theo dõi danh mục
                                                     </a>
                                                 </li>
+                                                <!-- của loi -->
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ route('favorite.hienthi') }}">
+                                                        <i class="fa fa-heart" aria-hidden="true"></i> Danh sách yêu thích
+                                                    </a>
+                                                </li>
                                                 <li>
                                                     <a class="dropdown-item" href="#">
                                                         <i class="fa fa-history" aria-hidden="true"></i> Xem Lịch Sử Mua
