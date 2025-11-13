@@ -1,0 +1,10 @@
+.favorite-button.favorited .fa-heart {
+    color: #ff0000; /* Màu đỏ khi đã thích */
+}
+.btn-outline {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}

@@ -27,6 +27,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CategoryWatchlistController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\FavoriteController;
 
 // Trang chủ
 
@@ -78,7 +79,7 @@ Route::prefix('admin')->group(function () {
     Route::put('/categories/{category}', [UpdateCategoryController::class, 'update'])->name('admin.categories.update');
     //xóa danh mục
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
-      //thống kê danh mục
+    //thống kê danh mục
     Route::get('/statistics/categories', [CategoryStatisticsController::class, 'index'])->name('admin.statistics.categories');
     Route::get('/statistics/categories/export', [CategoryStatisticsController::class, 'exportExcel'])->name('admin.statistics.categories.export');
     Route::get('/statistics/categories/print', [CategoryStatisticsController::class, 'printReport'])->name('admin.statistics.categories.print');
@@ -90,7 +91,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('admin.products.edit');
     Route::put('/products/{product}', [AdminProductController::class, 'update'])->name('admin.products.update');
     Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('admin.products.destroy');
-    
+
     // Admin product actions
     Route::post('/products/{product}/approve', [AdminProductController::class, 'approve'])->name('admin.products.approve');
     Route::post('/products/{product}/reject', [AdminProductController::class, 'reject'])->name('admin.products.reject');
@@ -204,13 +205,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-    
+
     // Category Watchlist Routes
     Route::get('/watchlist', [CategoryWatchlistController::class, 'index'])->name('watchlist.index');
     Route::post('/watchlist/{category}', [CategoryWatchlistController::class, 'store'])->name('watchlist.store');
     Route::delete('/watchlist/{category}', [CategoryWatchlistController::class, 'destroy'])->name('watchlist.destroy');
     Route::post('/watchlist/{category}/toggle', [CategoryWatchlistController::class, 'toggle'])->name('watchlist.toggle');
-    
+
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
@@ -265,11 +266,19 @@ Route::put('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.
 Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
 
+Route::get('/my-favorites', [FavoriteController::class, 'index'])
+    ->middleware('auth')
+    ->name('favorite.hienthi'); 
+
+Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])
+    ->middleware('auth')
+    ->name('favorites.toggle');
+
 
 Route::fallback(function () {
     abort(404);
 
-  
+
 
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -289,5 +298,4 @@ Route::fallback(function () {
     Route::fallback(function () {
         abort(404);
     });
-
 });

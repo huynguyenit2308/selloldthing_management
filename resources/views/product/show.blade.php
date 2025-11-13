@@ -5,6 +5,7 @@
         @push('styles')
         <link rel="stylesheet" href="{{ asset('styles/product-detail.css') }}">
         <link rel="stylesheet" href="{{ asset('styles/review.css') }}">
+        <link rel="stylesheet" href="{{ asset('styles/favorite.css') }}">
         @endpush
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -85,8 +86,14 @@
                             <button type="button" class="btn-primary btn-icon-only" aria-label="Thêm vào giỏ hàng">
                                 <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="btn-outline btn-icon-only" aria-label="Yêu thích">
-                                <i class="fa fa-heart" aria-hidden="true"></i>
+                            <button type="button"
+                                class="btn-outline btn-icon-only favorite-button {{ $isFavorited ? 'favorited' : '' }}"
+                                aria-label="Yêu thích"
+                                data-id="{{ $product->id }}"
+                                data-url="{{ route('favorites.toggle') }}"
+                                id="fav-btn-{{ $product->id }}">
+
+                                <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}" aria-hidden="true"></i>
                             </button>
                         </div>
 
@@ -399,8 +406,18 @@
                                     <a class="btn-primary btn-icon-only" href="{{ route('products.show', $similar) }}" aria-label="Thêm vào giỏ hàng">
                                         <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                                     </a>
-                                    <button type="button" class="btn-outline btn-icon-only" aria-label="Yêu thích">
-                                        <i class="fa fa-heart" aria-hidden="true"></i>
+                                    @php
+                                    // Kiểm tra xem ID của $similar có trong danh sách yêu thích không
+                                    $isSimilarFavorited = in_array($similar->id, $userFavoriteIds);
+                                    @endphp
+
+                                    <button type="button"
+                                        class="btn-outline btn-icon-only favorite-button {{ $isSimilarFavorited ? 'favorited' : '' }}"
+                                        aria-label="Yêu thích"
+                                        data-id="{{ $similar->id }}"
+                                        data-url="{{ route('favorites.toggle') }}"
+                                        id="fav-btn-{{ $similar->id }}">
+                                        <i class="fa {{ $isSimilarFavorited ? 'fa-heart' : 'fa-heart-o' }}" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
@@ -925,6 +942,62 @@
                     submitButton.disabled = false;
                     submitButton.textContent = 'Gửi';
                 }
+            });
+            document.querySelectorAll('.favorite-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault(); // Ngăn hành vi mặc định của button
+
+                    const buttonElement = this;
+                    const productId = buttonElement.dataset.id;
+                    const toggleUrl = buttonElement.dataset.url;
+
+                    // Lấy CSRF token từ thẻ meta
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                    // Lấy icon bên trong nút
+                    const icon = buttonElement.querySelector('i.fa');
+
+                    // Gửi request đến server bằng Fetch API
+                    fetch(toggleUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken // Gửi kèm CSRF token
+                            },
+                            body: JSON.stringify({
+                                product_id: productId
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            // Server sẽ trả về trạng thái mới ('added' hoặc 'removed')
+                            if (data.status === 'added') {
+                                // Thêm class 'favorited' vào nút
+                                buttonElement.classList.add('favorited');
+                                // Đổi icon thành 'fa-heart' (đầy)
+                                icon.classList.remove('fa-heart-o');
+                                icon.classList.add('fa-heart');
+                                console.log('Đã thêm vào yêu thích');
+                            } else if (data.status === 'removed') {
+                                // Xóa class 'favorited' khỏi nút
+                                buttonElement.classList.remove('favorited');
+                                // Đổi icon thành 'fa-heart-o' (viền)
+                                icon.classList.remove('fa-heart');
+                                icon.classList.add('fa-heart-o');
+                                console.log('Đã xóa khỏi yêu thích');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Có lỗi xảy ra:', error);
+                            alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+                        });
+                });
             });
         </script>
         @endpush
