@@ -82,6 +82,14 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
+
+                'name' => 'MacBook Pro 14" M1 Pro 16GB/512GB',
+                'category' => 'Laptop',
+                'price' => 12990000,
+                'original_price' => 15990000,
+                'description' => 'Xiaomi 12T Pro chip Snapdragon 8+ Gen 1, camera 200MP, hỗ trợ sạc nhanh 120W.',
+                'short_description' => 'Máy chính hãng, kích hoạt 2 tháng, còn seal phụ kiện.',
+                'condition' => 'good',
                 'name' => 'Google Pixel 8 Pro 128GB Xanh Biển',
                 'category' => 'Điện tử - Điện thoại',
                 'price' => 22490000,
@@ -350,17 +358,26 @@ class ProductSeeder extends Seeder
                 'description' => 'Bộ vest Aristino dòng Premium màu xanh navy, chất vải wool blend, may đo chuẩn.',
                 'short_description' => 'Vest mặc 1 lần dự tiệc, chưa qua giặt hấp.',
                 'condition' => 'like_new',
+
                 'location' => 'Nam Từ Liêm, Hà Nội',
                 'seller_name' => 'Phan Thanh Bình',
                 'contact_phone' => '0905123456',
                 'contact_email' => 'binhphan@example.com',
                 'contact_method' => 'zalo',
+                'sku' => 'XM-12TPRO-256-BL',
+                'origin' => 'Xiaomi VN',
+                'warranty' => '10 tháng',
+                'attachments' => 'Hộp, sạc 120W, ốp lưng, kính cường lực',
+                'additional_info' => 'Tặng gói bảo hành rơi vỡ 3 tháng.',
+                'quantity' => 6,
+                'image' => 'images/product_3.png',
                 'sku' => 'ARI-VEST-52-NAVY',
                 'origin' => 'Aristino Vietnam',
                 'warranty' => null,
                 'attachments' => 'Áo vest, quần tây, áo gile, túi áo, móc treo',
                 'additional_info' => 'Bao chỉnh sửa form miễn phí tại showroom Aristino.',
                 'quantity' => 1,
+
                 'status' => 'published',
                 'view_count' => 107,
                 'images' => [
@@ -372,6 +389,144 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'Dell XPS 13 9310 FHD+',
+                'category' => 'Laptop',
+                'price' => 2500000,
+                'original_price' => 4500000,
+                'description' => 'Áo khoác jacket North Face chính hãng, size L, màu đen, chống thấm nước tuyệt vời.',
+                'short_description' => 'Áo mới 95%, đã giặt khô.',
+                'condition' => 'like_new',
+                'location' => 'Quận 1, TP. HCM',
+                'seller_name' => 'Nguyễn Văn A',
+                'contact_phone' => '0977665544',
+                'contact_email' => 'vana@example.com',
+                'contact_method' => 'phone',
+                'sku' => 'NF-JACKET-L-BLK',
+                'origin' => 'North Face USA',
+                'warranty' => null,
+                'attachments' => 'Tag chính hãng',
+                'additional_info' => 'Phù hợp mùa đông, giữ ấm tốt.',
+                'quantity' => 2,
+                'image' => 'images/product_4.png',
+                'status' => 'published',
+                'view_count' => 156,
+            ],
+            [
+                'name' => 'Giày Sneaker Nike Air Max 270',
+                'category' => 'Thời trang',
+                'price' => 1800000,
+                'original_price' => 3200000,
+                'description' => 'Giày Nike Air Max 270 size 42, màu trắng đen, đã mang 3 lần, còn rất mới.',
+                'short_description' => 'Giày authentic, fullbox, phụ kiện đầy đủ.',
+                'condition' => 'like_new',
+                'location' => 'Bình Thạnh, TP. HCM',
+                'seller_name' => 'Võ Bảo Trân',
+                'contact_phone' => '0933557799',
+                'contact_email' => 'baotran@example.com',
+                'contact_method' => 'phone',
+                'sku' => 'NIKE-AM270-42-WB',
+                'origin' => 'Nike Store',
+                'warranty' => null,
+                'attachments' => 'Hộp, giấy gói, sticker',
+                'additional_info' => 'Đế còn nguyên, không trầy xước.',
+                'quantity' => 1,
+                'image' => 'images/product_5.png',
+                'status' => 'published',
+                'view_count' => 89,
+            ],
+            [
+                'name' => 'Túi xách Louis Vuitton Neverfull MM',
+                'category' => 'Thời trang',
+                'price' => 15000000,
+                'original_price' => 32000000,
+                'description' => 'Túi Louis Vuitton Neverfull MM size trung, họa tiết Monogram kinh điển, hàng authentic.',
+                'short_description' => 'Túi chính hãng, kèm hóa đơn, 90% mới.',
+                'condition' => 'good',
+                'location' => 'Quận 1, TP. HCM',
+                'seller_name' => 'Đặng Hoàng Phúc',
+                'contact_phone' => '0944332211',
+                'contact_email' => 'phucdang@example.com',
+                'contact_method' => 'phone',
+                'sku' => 'LV-NEVERFULL-MM-MONO',
+                'origin' => 'Louis Vuitton France',
+                'warranty' => null,
+                'attachments' => 'Dustbag, hóa đơn cửa hàng',
+                'additional_info' => 'Kiểm tra kỹ tại cửa hàng LV trước khi mua.',
+                'quantity' => 1,
+                'image' => 'images/product_6.png',
+                'status' => 'published',
+                'view_count' => 234,
+            ],
+            // ========== DANH MỤC 3: Đồ gia dụng (6 sản phẩm) ==========
+            [
+                'name' => 'Nồi cơm điện Cuckoo 1.8L',
+                'category' => 'Đồ gia dụng',
+                'price' => 2800000,
+                'original_price' => 4200000,
+                'description' => 'Nồi cơm điện Cuckoo áp suất 1.8L, công nghệ Hàn Quốc, nấu cơm ngon mềm.',
+                'short_description' => 'Nồi còn mới 90%, dùng 6 tháng.',
+                'condition' => 'good',
+                'location' => 'Tân Bình, TP. HCM',
+                'seller_name' => 'Ngô Anh Thư',
+                'contact_phone' => '0968112233',
+                'contact_email' => 'anhthu@example.com',
+                'contact_method' => 'phone',
+                'sku' => 'CUCKOO-1.8L-PRESS',
+                'origin' => 'Cuckoo Korea',
+                'warranty' => '6 tháng',
+                'attachments' => 'Hộp, sách hướng dẫn, xửng hấp',
+                'additional_info' => 'Tặng kèm 2kg gạo ST25.',
+                'quantity' => 2,
+                'image' => 'images/product_7.png',
+                'status' => 'published',
+                'view_count' => 176,
+            ],
+            [
+                'name' => 'Máy lọc không khí Xiaomi 3H',
+                'category' => 'Đồ gia dụng',
+                'price' => 1900000,
+                'original_price' => 2900000,
+                'description' => 'Máy lọc không khí Xiaomi 3H, lọc PM 2.5, diện tích 45m2, hoạt động êm ái.',
+                'short_description' => 'Máy còn mới 95%, thay lõi định kỳ.',
+                'condition' => 'like_new',
+                'location' => 'Nam Từ Liêm, Hà Nội',
+                'seller_name' => 'Phan Thanh Bình',
+                'contact_phone' => '0905123456',
+                'contact_email' => 'binhphan@example.com',
+                'contact_method' => 'zalo',
+                'sku' => 'XIAOMI-3H-AIRPUR',
+                'origin' => 'Xiaomi VN',
+                'warranty' => '4 tháng',
+                'attachments' => 'Hộp, bộ lọc HEPA mới',
+                'additional_info' => 'Tặng kèm 1 bộ lọc thay thế.',
+                'quantity' => 3,
+                'image' => 'images/product_8.png',
+                'status' => 'published',
+                'view_count' => 98,
+            ],
+            // ========== DANH MỤC 4: Sách - Văn phòng phẩm (3 sản phẩm) ==========
+            [
+                'name' => 'Bộ sách Harry Potter 7 tập',
+                'category' => 'Sách - Văn phòng phẩm',
+                'price' => 650000,
+                'original_price' => 1400000,
+                'description' => 'Bộ sách Harry Potter 7 tập bìa cứng tiếng Việt, nhà xuất bản Trẻ, còn mới 99%.',
+                'short_description' => 'Sách nguyên bộ, không rách, không ố vàng.',
+                'condition' => 'like_new',
+                'location' => 'Đống Đa, Hà Nội',
+                'seller_name' => 'Trương Gia Khánh',
+                'contact_phone' => '0911668899',
+                'contact_email' => 'giakhanh@example.com',
+                'contact_method' => 'phone',
+                'sku' => 'HP-SET-7VOLS',
+                'origin' => 'NXB Trẻ',
+                'warranty' => null,
+                'attachments' => 'Bọc plastic',
+                'additional_info' => 'Tặng kèm bookmark Harry Potter.',
+                'quantity' => 5,
+                'image' => 'images/product_9.png',
+                'status' => 'published',
+                'view_count' => 145,
                 'name' => 'Đầm maxi linen Hnoss màu be size M',
                 'category' => 'Thời trang',
                 'price' => 790000,
@@ -399,8 +554,18 @@ class ProductSeeder extends Seeder
                     'images/products/hnoss-maxi-linen-4.png',
                     'images/products/hnoss-maxi-linen-5.png',
                 ],
+
             ],
+            // ========== DANH MỤC 5: Xe cộ - Phụ tùng (3 sản phẩm) ==========
             [
+
+                'name' => 'Xe đạp Giant ATX 720 27.5"',
+                'category' => 'Xe cộ - Phụ tùng',
+                'price' => 4500000,
+                'original_price' => 9000000,
+                'description' => 'Xe đạp địa hình Giant ATX 720, khung nhôm siêu nhẹ, phanh đĩa dầu, số Shimano 24 cấp.',
+                'short_description' => 'Xe còn mới 85%, bảo dưỡng định kỳ.',
+                'condition' => 'good',
                 'name' => 'Giày sneaker Adidas Ultraboost 22 Trắng',
                 'category' => 'Thời trang',
                 'price' => 2200000,
@@ -412,6 +577,18 @@ class ProductSeeder extends Seeder
                 'seller_name' => 'Huỳnh Thảo Vy',
                 'contact_phone' => '0922664477',
                 'contact_email' => 'thaovy@example.com',
+
+                'contact_method' => 'phone',
+                'sku' => 'GIANT-ATX720-27.5',
+                'origin' => 'Giant Taiwan',
+                'warranty' => null,
+                'attachments' => 'Khóa xe, bơm, bộ dụng cụ sửa chữa',
+                'additional_info' => 'Tặng kèm mũ bảo hiểm và đèn xe.',
+                'quantity' => 1,
+                'image' => 'images/product_10.png',
+                'status' => 'published',
+                'view_count' => 187,
+
                 'contact_method' => 'zalo',
                 'sku' => 'ADI-UB22-42W',
                 'origin' => 'Adidas Vietnam',
@@ -638,12 +815,27 @@ class ProductSeeder extends Seeder
                 'view_count' => $data['view_count'],
             ]);
 
-            foreach ($data['images'] as $index => $imageUrl) {
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'url' => $imageUrl,
-                    'description' => 'Ảnh ' . ($index + 1) . ' cho ' . $data['name'],
-                ]);
+            $images = [];
+            foreach ($product->getImages() as $image) {
+                if (isset($data['images']) && is_array($data['images'])) {
+                    $images = array_values(array_filter($data['images']));
+                }
+
+                if (empty($images) && !empty($data['image'])) {
+                    $images = [$data['image']];
+                }
+
+                foreach ($images as $index => $imageUrl) {
+                    if (empty($imageUrl)) {
+                        continue;
+                    }
+
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'url' => $imageUrl,
+                        'description' => 'Ảnh ' . ($index + 1) . ' cho ' . $data['name'],
+                    ]);
+                }
             }
         }
     }
