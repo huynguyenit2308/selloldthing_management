@@ -119,6 +119,7 @@ class ProductController extends Controller
     public function show(Product $product): View
     {
         $product->load([
+            'user',
             'images' => function ($q) {
                 $q->orderBy('created_at');
             },
@@ -131,7 +132,8 @@ class ProductController extends Controller
         $averageRating = round((float) $product->reviews->avg('rating'), 1);
         $reviewsCount = $product->reviews->count();
 
-        $similarProducts = Product::with(['images' => function ($q) {
+        $similarProducts = Product::approved()
+            ->with(['images' => function ($q) {
             $q->orderBy('created_at');
         }])
             ->where('category_id', $product->category_id)

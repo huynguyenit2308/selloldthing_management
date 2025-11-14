@@ -25,12 +25,15 @@
                     <section class="product-gallery">
                         @php
                         $galleryImages = $product->images->take(4);
-                        if ($galleryImages->isEmpty()) {
-                        $galleryImages = collect([null]);
+                        $hasRealImages = $galleryImages->isNotEmpty();
+
+                        if (!$hasRealImages) {
+                            $galleryImages = collect([null]);
                         }
+
                         $primaryImageUrl = optional($galleryImages->first())->image_url ?? asset('images/product_1.png');
                         @endphp
-                        <div class="product-gallery-preview">
+                        <div class="product-gallery-preview {{ $hasRealImages ? '' : 'no-image' }}">
                             <img src="{{ $primaryImageUrl }}" alt="{{ $product->name }}" data-active-image>
                         </div>
 
@@ -92,9 +95,93 @@
                                 data-id="{{ $product->id }}"
                                 data-url="{{ route('favorites.toggle') }}"
                                 id="fav-btn-{{ $product->id }}">
-
                                 <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}" aria-hidden="true"></i>
                             </button>
+                        </div>
+
+                        <div class="product-seller-card">
+                            @php
+                            $seller = $product->user;
+                            $rawAvatar = $seller?->avatar;
+
+                            if ($rawAvatar) {
+                                $avatarUrl = \Illuminate\Support\Str::startsWith($rawAvatar, ['http://', 'https://'])
+                                    ? $rawAvatar
+                                    : asset('storage/' . ltrim($rawAvatar, '/'));
+                            } else {
+                                $avatarUrl = asset('images/avatar1.jpg');
+                            }
+                            @endphp
+
+                            <div class="product-seller-avatar">
+                                <img src="{{ $avatarUrl }}" alt="Avatar {{ $seller?->name ?? $product->seller_name ?? 'người bán' }}">
+                            </div>
+
+                            <div class="product-seller-info">
+                                <div class="product-seller-name">Tên người bán: {{ $seller?->name ?? data_get($product, 'seller_name', 'Đang cập nhật') }}</div>
+                                <div class="product-seller-meta">Số sao đánh giá: {{ $averageRating > 0 ? $averageRating : 'Chưa có' }}</div>
+                                <div class="product-seller-meta">Ngày gia nhập: {{ optional($product->created_at)->format('d/m/Y') }}</div>
+                            </div>
+
+                            @php
+                            $rawMethods = (string) ($product->contact_method ?? '');
+                            $methods = collect(explode(',', $rawMethods))
+                                ->map(fn ($m) => strtolower(trim($m)))
+                                ->filter()
+                                ->unique();
+
+                            $hasPhone = $methods->contains('phone') || $methods->contains('zalo');
+                            $hasEmail = $methods->contains('email');
+                            $hasChat  = $methods->contains('chat');
+                            $hasOther = $methods->contains('other');
+
+                            // Nếu không chọn gì, mặc định hiển thị cả gọi + nhắn
+                            if ($methods->isEmpty()) {
+                                $hasPhone = true;
+                                $hasChat = true;
+                            }
+
+                            // Nếu vì lý do nào đó không bắt được giá trị hợp lệ nào,
+                            // luôn hiển thị tối thiểu nút chat để người mua vẫn liên hệ được
+                            if (!$hasPhone && !$hasEmail && !$hasChat && !$hasOther) {
+                                $hasChat = true;
+                            }
+                            @endphp
+
+                            @php
+                            $displayPhone = $product->contact_phone ?: $seller?->phone;
+                            $displayEmail = $product->contact_email ?: $seller?->email;
+                            @endphp
+
+                            <div class="product-seller-actions">
+                                @if($hasPhone)
+                                <a href="{{ $displayPhone ? 'tel:' . $displayPhone : '#' }}" class="btn-outline btn-with-icon">
+                                    <i class="fa fa-phone" aria-hidden="true"></i>
+                                    <span>Gọi điện</span>
+                                </a>
+                                @endif
+
+                                @if($hasEmail)
+                                <a href="{{ $displayEmail ? 'mailto:' . $displayEmail : '#' }}" class="btn-outline btn-with-icon">
+                                    <i class="fa fa-envelope" aria-hidden="true"></i>
+                                    <span>Email</span>
+                                </a>
+                                @endif
+
+                                @if($hasChat)
+                                <button type="button" class="btn-outline btn-with-icon">
+                                    <i class="fa fa-comments" aria-hidden="true"></i>
+                                    <span>Chat trong ứng dụng</span>
+                                </button>
+                                @endif
+
+                                @if($hasOther)
+                                <button type="button" class="btn-outline btn-with-icon">
+                                    <i class="fa fa-ellipsis-h" aria-hidden="true"></i>
+                                    <span>Liên hệ khác</span>
+                                </button>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="product-summary-rating">
@@ -107,25 +194,6 @@
                             </div>
                         </div>
                     </section>
-
-                    <aside class="product-seller-card">
-                        <div class="product-seller-avatar" aria-hidden="true">Ảnh</div>
-                        <div class="product-seller-info">
-                            <div class="product-seller-name">Tên người bán: {{ data_get($product, 'seller_name', 'Đang cập nhật') }}</div>
-                            <div class="product-seller-meta">Số sao đánh giá: {{ $averageRating > 0 ? $averageRating : 'Chưa có' }}</div>
-                            <div class="product-seller-meta">Ngày gia nhập: {{ optional($product->created_at)->format('d/m/Y') }}</div>
-                        </div>
-                        <div class="product-seller-actions">
-                            <button type="button" class="btn-outline btn-with-icon">
-                                <i class="fa fa-phone" aria-hidden="true"></i>
-                                <span>Gọi điện</span>
-                            </button>
-                            <button type="button" class="btn-outline btn-with-icon">
-                                <i class="fa fa-comments" aria-hidden="true"></i>
-                                <span>Nhắn tin</span>
-                            </button>
-                        </div>
-                    </aside>
                 </div>
 
                 <section class="product-tabs">
