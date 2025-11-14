@@ -452,36 +452,59 @@
         @yield('content')
 
         <!-- Footer -->
+        @php
+            $footerCategories = \App\Models\Category::where('status', 1)
+                ->orderBy('name')
+                ->take(4)
+                ->get();
+        @endphp
 
-        <footer class="footer">
+        <footer class="footer" style="background:#fff; border-top:1px solid #eee; padding:40px 0 20px 0;">
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-6">
-                        <div
-                            class="footer_nav_container d-flex flex-sm-row flex-column align-items-center justify-content-lg-start justify-content-center text-center">
-                            <ul class="footer_nav">
-                                <li><a href="{{ route('categories.index') }}">Danh mục</a></li>
-                                <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
-                            </ul>
-                        </div>
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <h5 style="font-size:16px; font-weight:600; margin-bottom:10px;">Về chúng tôi</h5>
+                        <p style="font-size:13px; color:#777; margin:0;">
+                            Đồ cũ giá tốt - Nơi mua bán đồ cũ uy tín,
+                            chất lượng với giá cả phải chăng.
+                        </p>
                     </div>
-                    <div class="col-lg-6">
-                        <div
-                            class="footer_social d-flex flex-row align-items-center justify-content-lg-end justify-content-center">
-                            <ul>
-                                <li><a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
-                                <li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
-                                <li><a href="#"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
-                                <li><a href="#"><i class="fa fa-skype" aria-hidden="true"></i></a></li>
-                                <li><a href="#"><i class="fa fa-pinterest" aria-hidden="true"></i></a></li>
-                            </ul>
-                        </div>
+
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <h5 style="font-size:16px; font-weight:600; margin-bottom:10px;">Danh mục</h5>
+                        <ul style="list-style:none; padding:0; margin:0; font-size:13px; color:#555;">
+                            @forelse($footerCategories as $category)
+                                <li>
+                                    <a href="{{ route('categories.show', $category->id) }}" style="color:inherit; text-decoration:none;">
+                                        {{ $category->name }}
+                                    </a>
+                                </li>
+                            @empty
+                                <li><a href="{{ route('categories.index') }}" style="color:inherit; text-decoration:none;">Tất cả danh mục</a></li>
+                            @endforelse
+                        </ul>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <h5 style="font-size:16px; font-weight:600; margin-bottom:10px;">Hỗ trợ</h5>
+                        <ul style="list-style:none; padding:0; margin:0; font-size:13px; color:#555;">
+                            <li><a href="#" style="color:inherit; text-decoration:none;">Trung tâm hỗ trợ</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <h5 style="font-size:16px; font-weight:600; margin-bottom:10px;">Theo dõi chúng tôi</h5>
+                        <ul style="list-style:none; padding:0; margin:0; font-size:13px; color:#555;">
+                            <li><a href="#" style="color:inherit; text-decoration:none;">Google</a></li>
+                            <li><a href="#" style="color:inherit; text-decoration:none;">Zalo</a></li>
+                        </ul>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="footer_nav_container">
-                            <div class="cr">Được phát triển bởi <a href="https://themewagon.com">Nhóm I</a></div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="footer_nav_container" style="border-top:1px solid #f2f2f2; padding-top:10px;">
+                            <div class="cr" style="font-size:13px; color:#999;">Được phát triển bởi <a href="https://themewagon.com">Nhóm I</a></div>
                         </div>
                     </div>
                 </div>
