@@ -300,43 +300,54 @@
                                                     </a>
                                                 </li>
                                             @else
+                                                @php $isAdmin = Auth::user()->role === 'admin'; @endphp
                                                 <li>
                                                     <a class="dropdown-item" href="{{ route(name: 'account.info') }}">
                                                         <i class="fa fa-id-card" aria-hidden="true"></i> Thông Tin Tài Khoản
                                                     </a>
                                                 </li>
+                                                @unless($isAdmin)
                                                 <li>
                                                     <a class="dropdown-item" href="{{ route(name: 'account.inventory') }}">
                                                         <i class="fa fa-dashboard" aria-hidden="true"></i> Quản lý số lượng tồn kho
                                                     </a>
                                                 </li>
+                                                @endunless
                                                 <li>
                                                     <a class="dropdown-item" href="{{ route(name: 'profile.show') }}">
                                                         <i class="fa fa-user" aria-hidden="true"></i> Thông Tin Cá Nhân
                                                     </a>
                                                 </li>
+                                                @unless($isAdmin)
                                                 <li>
                                                     <a class="dropdown-item" href="{{ route('watchlist.index') }}">
                                                         <i class="fa fa-heart" aria-hidden="true"></i> Theo dõi danh mục
                                                     </a>
                                                 </li>
+                                                @endunless
                                                 <!-- của loi -->
+                                                @unless($isAdmin)
                                                 <li>
                                                     <a class="dropdown-item" href="{{ route('favorite.hienthi') }}">
                                                         <i class="fa fa-heart" aria-hidden="true"></i> Danh sách yêu thích
                                                     </a>
                                                 </li>
+                                                @endunless
+                                                @unless($isAdmin)
                                                 <li>
                                                     <a class="dropdown-item" href="#">
                                                         <i class="fa fa-history" aria-hidden="true"></i> Xem Lịch Sử Mua
                                                         Hàng
                                                     </a>
                                                 </li>
-                                                   <li>
+                                                @endunless
+                                                @unless($isAdmin)
+                                                <li>
                                                     <a class="dropdown-item" href="{{ route('products.manage') }}">
                                                         <i class="fa fa-archive" aria-hidden="true"></i> Sản phẩm của tôi
                                                     </a>
                                                 </li>
+                                                @endunless
 
                                                 <li>
                                                     <div class="dropdown-divider"></div> <!-- ngăn cách -->
@@ -370,6 +381,7 @@
                                 <div class="logo_container">
                                     <a href="{{ route('home') }}">Cửa hàng<span> đồ cũ</span></a>
                                 </div>
+                                <div>
                                 <form class="nav_search" action="{{ route('search.index') }}" method="GET">
                                     <label for="main-search" class="sr-only">Tìm kiếm sản phẩm</label>
                                     <input id="main-search" type="text" name="q"
@@ -379,6 +391,7 @@
                                         <i class="fa fa-search" aria-hidden="true"></i>
                                     </button>
                                 </form>
+                                </div>
                                 <nav class="navbar">
                                 <ul class="navbar_menu">
                                     <li><a href="{{ route('home') }}">Trang chủ</a></li>
