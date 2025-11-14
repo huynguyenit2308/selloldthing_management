@@ -75,16 +75,7 @@ class SearchController extends Controller
             ->filter(fn (string $item) => stripos($item, $query) !== false)
             ->values();
 
-        $dynamicMatches = Product::query()
-            ->select('name')
-            ->published()
-            ->where(function ($builder) use ($query) {
-                $like = '%' . $query . '%';
-                $builder->where('name', 'like', $like);
-            })
-            ->orderByDesc('view_count')
-            ->limit(6)
-            ->pluck('name');
+        $dynamicMatches = Product::suggestionQuery($query)->pluck('name');
 
         $merged = $staticMatches
             ->concat($dynamicMatches)
@@ -243,33 +234,9 @@ class SearchController extends Controller
 
         $page = (int) max(1, (int) $request->input('page', 1));
 
-        $query = Product::query()
-            ->published()
-            ->with(['images' => function ($q) {
-                $q->orderBy('sort_order')->orderBy('created_at');
-            }])
-            ->where(function ($builder) use ($keyword) {
-                $like = '%' . $keyword . '%';
-                $builder->where('name', 'like', $like);
+        $query = Product::searchQuery($keyword);
 
-                if (DB::getSchemaBuilder()->hasColumn('products', 'description')) {
-                    $builder->orWhere('description', 'like', $like);
-                }
-            });
-
-        $sortMappings = [
-            'relevance' => function ($builder) use ($keyword) {
-                $builder->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', [$keyword . '%'])
-                    ->orderByDesc('view_count')
-                    ->orderByDesc('created_at');
-            },
-            'price_asc' => fn ($builder) => $builder->orderBy('price', 'asc'),
-            'price_desc' => fn ($builder) => $builder->orderBy('price', 'desc'),
-            'newest' => fn ($builder) => $builder->orderByDesc('created_at'),
-        ];
-
-        $applySort = $sortMappings[$sort] ?? $sortMappings['relevance'];
-        $applySort($query);
+        Product::applySearchSort($query, $sort, $keyword);
 
         /** @var LengthAwarePaginator $products */
         $products = $query->paginate(4, ['*'], 'page', $page);

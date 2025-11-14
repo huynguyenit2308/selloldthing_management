@@ -16,44 +16,11 @@ class AdminProductController extends Controller
 {
     public function index(Request $request)
     {
-        $q = trim((string) $request->query('q', ''));
-        $status = $request->query('status');
-        $category_id = $request->query('category_id');
-        $approval_status = $request->query('approval_status');
-        
-        $productsQuery = Product::query()
-            ->with(['category', 'user', 'images', 'approver'])
-            ->select(['id', 'name', 'category_id', 'user_id', 'price', 'original_price', 'quantity', 'status', 'view_count', 'is_featured', 'is_approved', 'approved_at', 'approved_by', 'featured_until', 'expires_at', 'created_at']);
+        $filters = $request->only(['q', 'status', 'category_id', 'approval_status']);
 
-        if ($q !== '') {
-            $productsQuery->where('name', 'like', "%{$q}%");
-        }
-
-        $statusMap = [
-            'pending' => 'pending',
-            'published' => 'published',
-            'hidden' => 'hidden',
-            'sold' => 'sold',
-        ];
-
-        if (array_key_exists($status, $statusMap)) {
-            $productsQuery->where('status', $statusMap[$status]);
-        }
-
-        if ($category_id) {
-            $productsQuery->where('category_id', $category_id);
-        }
-
-        // Filter by approval status
-        if ($approval_status === 'pending') {
-            $productsQuery->where('is_approved', false)->where('status', 'pending');
-        } elseif ($approval_status === 'approved') {
-            $productsQuery->where('is_approved', true);
-        } elseif ($approval_status === 'featured') {
-            $productsQuery->featured();
-        }
-
-        $products = $productsQuery->orderByDesc('created_at')->paginate(10)->withQueryString();
+        $products = Product::adminListing($filters)
+            ->paginate(10)
+            ->withQueryString();
         $categories = Category::where('status', 1)->orderBy('name')->get();
 
         // Count pending products
@@ -62,10 +29,10 @@ class AdminProductController extends Controller
         return view('admin.products.index', [
             'products' => $products,
             'categories' => $categories,
-            'q' => $q,
-            'status' => $status,
-            'category_id' => $category_id,
-            'approval_status' => $approval_status,
+            'q' => $filters['q'] ?? '',
+            'status' => $filters['status'] ?? null,
+            'category_id' => $filters['category_id'] ?? null,
+            'approval_status' => $filters['approval_status'] ?? null,
             'pendingCount' => $pendingCount,
         ]);
     }

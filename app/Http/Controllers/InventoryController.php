@@ -34,13 +34,10 @@ class InventoryController extends Controller
         $sortOption = $request->input('sort', 'newest');
 
         $productsQuery = Product::query()
-            ->with(['images' => function ($query) {
-                $query->orderBy('created_at');
-            }])
+            ->withOrderedImages()
             ->where('user_id', $user->id);
 
-        [$sortColumn, $sortDirection] = $this->resolveSortOption($sortOption);
-        $productsQuery->orderBy($sortColumn, $sortDirection);
+        Product::applySort($productsQuery, $sortOption, Product::INVENTORY_SORTS);
 
         $products = $productsQuery->get();
 
@@ -349,20 +346,6 @@ class InventoryController extends Controller
         $exportFormat = $format === 'csv' ? ExcelFormat::CSV : ExcelFormat::XLSX;
 
         return Excel::download(new InventoryExport($products), $filename, $exportFormat);
-    }
-
-    private function resolveSortOption(string $option): array
-    {
-        $mapping = [
-            'newest' => ['created_at', 'desc'],
-            'oldest' => ['created_at', 'asc'],
-            'price_desc' => ['price', 'desc'],
-            'price_asc' => ['price', 'asc'],
-            'name_asc' => ['name', 'asc'],
-            'name_desc' => ['name', 'desc'],
-        ];
-
-        return $mapping[$option] ?? $mapping['newest'];
     }
 
     private function loadSoldCounts($productIds): array

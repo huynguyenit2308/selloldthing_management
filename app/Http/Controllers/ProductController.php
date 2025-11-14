@@ -27,41 +27,16 @@ class ProductController extends Controller
     {
         $categories = Category::orderBy('name')->get();
 
-        $baseQuery = Product::query()->where('status', 'published');
+        $filters = $request->only(['category', 'price_min', 'price_max', 'condition', 'location']);
 
-        $products = (clone $baseQuery)
-            ->with(['images' => function ($q) {
-                $q->orderBy('created_at');
-            }, 'category'])
-            ->when($request->filled('category'), function ($q) use ($request) {
-                $q->where('category_id', (int) $request->input('category'));
-            })
-            ->when($request->filled('price_min'), function ($q) use ($request) {
-                $q->where('price', '>=', (float) $request->input('price_min'));
-            })
-            ->when($request->filled('price_max'), function ($q) use ($request) {
-                $q->where('price', '<=', (float) $request->input('price_max'));
-            })
-            ->when($request->filled('condition') && Schema::hasColumn('products', 'condition'), function ($q) use ($request) {
-                $q->where('condition', $request->input('condition'));
-            })
-            ->when($request->filled('location') && Schema::hasColumn('products', 'location'), function ($q) use ($request) {
-                $q->where('location', $request->input('location'));
-            })
+        $products = Product::publicListing($filters)
             ->orderByDesc('created_at')
             ->paginate(12)
             ->withQueryString();
 
-
-        $priceBounds = (clone $baseQuery)
-            ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
-            ->first();
-        $conditionOptions = Schema::hasColumn('products', 'condition')
-            ? (clone $baseQuery)->whereNotNull('condition')->distinct()->orderBy('condition')->pluck('condition')
-            : collect();
-        $locationOptions = Schema::hasColumn('products', 'location')
-            ? (clone $baseQuery)->whereNotNull('location')->distinct()->orderBy('location')->pluck('location')
-            : collect();
+        $priceBounds = Product::publishedPriceBounds();
+        $conditionOptions = Product::availableConditions();
+        $locationOptions = Product::availableLocations();
         $userFavoriteIds = [];
         if (Auth::check()) {
             // Lấy TẤT CẢ ID yêu thích của user
@@ -131,10 +106,9 @@ class ProductController extends Controller
         $averageRating = round((float) $product->reviews->avg('rating'), 1);
         $reviewsCount = $product->reviews->count();
 
-        $similarProducts = Product::with(['images' => function ($q) {
-            $q->orderBy('created_at');
-        }])
-            ->where('category_id', $product->category_id)
+        $similarProducts = Product::publicListing([
+                'category' => $product->category_id,
+            ])
             ->where('id', '!=', $product->id)
             ->orderByDesc('created_at')
             ->take(4)
@@ -173,42 +147,13 @@ class ProductController extends Controller
         $sortOption = $request->input('sort', 'newest');
         $searchTerm = trim((string) $request->input('q'));
 
-        $baseQuery = Product::with(['images' => function ($q) {
-            $q->orderBy('created_at');
-        }, 'category'])
-            ->where('user_id', $user->id);
-
         $statusOptions = ['all', 'published', 'pending', 'hidden', 'sold'];
 
-        if (in_array($statusFilter, array_diff($statusOptions, ['all']), true)) {
-            $baseQuery->where('status', $statusFilter);
-        }
-
-        if ($searchTerm !== '') {
-            $baseQuery->where(function ($query) use ($searchTerm) {
-                $query->where('name', 'like', '%' . $searchTerm . '%');
-
-                if (Schema::hasColumn('products', 'description')) {
-                    $query->orWhere('description', 'like', '%' . $searchTerm . '%');
-                }
-            });
-        }
-
-        $sortMappings = [
-            'newest' => ['created_at', 'desc'],
-            'oldest' => ['created_at', 'asc'],
-            'name_asc' => ['name', 'asc'],
-            'name_desc' => ['name', 'desc'],
-            'price_asc' => ['price', 'asc'],
-            'price_desc' => ['price', 'desc'],
-            'views_desc' => ['view_count', 'desc'],
-            'views_asc' => ['view_count', 'asc'],
-        ];
-
-        [$sortColumn, $sortDirection] = $sortMappings[$sortOption] ?? $sortMappings['newest'];
-
-        $products = $baseQuery
-            ->orderBy($sortColumn, $sortDirection)
+        $products = Product::ownerListing($user->id, [
+                'status' => $statusFilter,
+                'search' => $searchTerm,
+                'sort' => $sortOption,
+            ])
             ->paginate(10)
             ->withQueryString();
 

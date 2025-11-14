@@ -22,25 +22,13 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
-        $products = Product::published()
-            ->with([
-                'images' => function ($query) {
-                    $query->orderBy('sort_order')->orderBy('created_at');
-                },
-                'category',
-            ])
+        $products = Product::publicListingBase()
             ->latest('created_at')
             ->take(12)
             ->get();
 
-        $topReviewedProducts = Product::published()
+        $topReviewedProducts = Product::publicListingBase()
             ->whereHas('reviews')
-            ->with([
-                'images' => function ($query) {
-                    $query->orderBy('sort_order')->orderBy('created_at');
-                },
-                'category',
-            ])
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
             ->orderByDesc('reviews_avg_rating')
