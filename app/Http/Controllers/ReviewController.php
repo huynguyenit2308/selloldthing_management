@@ -39,12 +39,13 @@ class ReviewController extends Controller
 
     public function showReviews($id)
     {
-        $product = Product::with(['reviews.user', 'images', 'category'])->findOrFail($id);
+        $product = Product::with(['reviews.user', 'images', 'category', 'user'])->findOrFail($id);
 
         $averageRating = round((float) $product->reviews->avg('rating'), 1);
         $reviewsCount = $product->reviews->count();
 
-        $similarProducts = Product::with('images')
+        $similarProducts = Product::approved()
+            ->with('images')
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->orderByDesc('created_at')
