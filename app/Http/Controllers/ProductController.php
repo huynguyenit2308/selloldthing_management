@@ -236,12 +236,22 @@ class ProductController extends Controller
         ]);
     }
 
-    public function edit(Request $request, Product $product): View
+    public function edit(Request $request, Product $product): View|RedirectResponse
     {
         $user = $request->user();
 
         abort_if(!$user instanceof User, 403);
         abort_if($product->user_id !== $user->id, 403, 'Bạn không có quyền chỉnh sửa sản phẩm này');
+
+        // Nếu sản phẩm đã được cập nhật sau khi tab danh sách mở, quay về trang quản lý
+        $clientVersion = (int) $request->query('version', 0);
+        $currentVersion = $product->updated_at ? $product->updated_at->getTimestamp() : 0;
+
+        if ($clientVersion > 0 && $currentVersion > 0 && $clientVersion < $currentVersion) {
+            return redirect()
+                ->route('products.manage')
+                ->with('product_sync_warning', 'Sản phẩm đã được cập nhật ở một tab khác. Vui lòng xem lại danh sách sản phẩm mới nhất.');
+        }
 
         $product->load(['images' => function ($query) {
             $query->orderBy('sort_order')->orderBy('created_at');
@@ -292,6 +302,16 @@ class ProductController extends Controller
             return back()->withErrors([
                 'general' => 'Không thể chỉnh sửa sản phẩm đã có người mua',
             ]);
+        }
+
+        // Optimistic locking: ngăn ghi đè thay đổi từ tab khác
+        $clientVersion = (int) $request->input('version', 0);
+        $currentVersion = $product->updated_at ? $product->updated_at->getTimestamp() : 0;
+
+        if ($clientVersion > 0 && $currentVersion > 0 && $clientVersion < $currentVersion) {
+            return back()
+                ->withInput()
+                ->with('product_sync_warning', 'Sản phẩm đã được cập nhật ở một tab khác. Vui lòng tải lại trang để xem và áp dụng thay đổi mới nhất.');
         }
 
         $validated = $this->validateProductUpdate($request, $product, $user);

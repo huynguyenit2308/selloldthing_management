@@ -135,7 +135,6 @@
                     @elseif ($syncWarning)
                         <div class="alert alert-warning" role="status">
                             <p>{{ $syncWarning }}</p>
-                            <button type="button" class="btn-secondary">Đồng bộ ngay</button>
                         </div>
                     @endif
 
@@ -244,7 +243,7 @@
                                                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M1.458 12C2.732 7.943 6.796 5 12 5s9.268 2.943 10.542 7c-1.274 4.057-5.338 7-10.542 7S2.732 16.057 1.458 12Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                             </button>
                                         </form>
-                                        <button type="button" class="action-btn btn-edit js-edit-product" data-edit-url="{{ route('products.edit', $product) }}" data-product-id="{{ $product->id }}" title="Chỉnh sửa" aria-label="Chỉnh sửa">
+                                        <button type="button" class="action-btn btn-edit js-edit-product" data-edit-url="{{ route('products.edit', ['product' => $product, 'version' => optional($product->updated_at)->getTimestamp()]) }}" data-product-id="{{ $product->id }}" title="Chỉnh sửa" aria-label="Chỉnh sửa">
                                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 15.5 15.5 4a2.121 2.121 0 1 1 3 3L7 18.5 3 19.5Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="m14.5 5.5 3 3" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                         </button>
                                         <button type="button" class="action-btn btn-delete js-delete-product" 
@@ -427,7 +426,7 @@
                         const row = form.closest('.table-row');
                         const statusTag = row.querySelector('.status-tag');
                         const isHidden = statusTag.classList.contains('status-hidden');
-                        
+
                         fetch(form.action, {
                             method: 'POST',
                             headers: {
@@ -436,12 +435,24 @@
                             },
                             body: new FormData(form)
                         })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 404) {
+                                showAlert('error', 'Sản phẩm không còn tồn tại. Trang sẽ được tải lại.');
+                                setTimeout(() => window.location.reload(), 1500);
+                                return null;
+                            }
+
+                            return response.json();
+                        })
                         .then(data => {
+                            if (!data) {
+                                return;
+                            }
+
                             if (data.success) {
                                 statusTag.textContent = isHidden ? 'Đang hiển thị' : 'Đã ẩn';
                                 statusTag.className = 'status-tag ' + (isHidden ? 'status-published' : 'status-hidden');
-                                
+
                                 const alert = document.createElement('div');
                                 alert.className = 'alert alert-success';
                                 alert.textContent = data.message;
@@ -501,12 +512,27 @@
                                 'Accept': 'application/json',
                             }
                         })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 404) {
+                                // Sản phẩm đã bị xóa ở tab khác
+                                button.style.opacity = '';
+                                button.style.pointerEvents = '';
+                                showAlert('error', 'Sản phẩm không còn tồn tại. Trang sẽ được tải lại.');
+                                setTimeout(() => window.location.reload(), 1500);
+                                return null;
+                            }
+
+                            return response.json();
+                        })
                         .then(data => {
+                            if (!data) {
+                                return;
+                            }
+
                             // Reset button state
                             button.style.opacity = '';
                             button.style.pointerEvents = '';
-                            
+
                             if (data.canDelete) {
                                 if (data.warnings && data.warnings.length > 0) {
                                     showWarningPopup(productName, data.warnings);
@@ -521,7 +547,7 @@
                             // Reset button state
                             button.style.opacity = '';
                             button.style.pointerEvents = '';
-                            
+
                             showErrorPopup(productName, ['Không thể kiểm tra điều kiện xóa. Vui lòng thử lại sau.']);
                         });
                     });
@@ -569,7 +595,7 @@
 
                 function performDelete() {
                     if (!currentDeleteData) return;
-                    
+
                     fetch(currentDeleteData.deleteUrl, {
                         method: 'DELETE',
                         headers: {
@@ -577,13 +603,26 @@
                             'Accept': 'application/json',
                         }
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 404) {
+                            // Sản phẩm đã bị xóa ở tab khác
+                            showAlert('error', 'Sản phẩm không còn tồn tại. Trang sẽ được tải lại.');
+                            setTimeout(() => window.location.reload(), 1500);
+                            return null;
+                        }
+
+                        return response.json();
+                    })
                     .then(data => {
+                        if (!data) {
+                            return;
+                        }
+
                         if (data.success) {
                             // Hide row with animation
                             currentDeleteData.row.style.opacity = '0.5';
                             currentDeleteData.row.style.pointerEvents = 'none';
-                            
+
                             setTimeout(() => {
                                 currentDeleteData.row.style.display = 'none';
                                 showSuccessToast(data.message, data.undoData);
