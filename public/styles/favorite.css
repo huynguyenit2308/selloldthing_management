@@ -264,6 +264,7 @@ body.favorites-page {
     justify-content: center;
     cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease;
+    z-index: 10; /* <-- THÊM DÒNG NÀY VÀO */
 }
 
 .favorite-remove:hover {
@@ -401,4 +402,7 @@ body.favorites-page {
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.favorite-button.favorited .fa-heart {
+    color: #ff0000; /* <-- CSS này cần class 'favorited' */
 }
