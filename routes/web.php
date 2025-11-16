@@ -54,8 +54,10 @@ Route::prefix('search')->group(function () {
 // ===== AUTH =====
 
 // Login
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login.form');
-Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
 // Logout
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
