@@ -1,203 +1,152 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('dashboard')
 
-<head>
-    <meta charset="UTF-8">
-    <title>Đăng Nhập</title>
+@section('content')
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .login-container {
-            background: #fff;
-            padding: 30px 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            width: 350px;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .input-group {
+        .input-group-custom {
             position: relative;
+            margin-bottom: 20px;
         }
 
-        input[type="text"],
-        input[type="password"] {
+        .input-group-custom input {
             width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
+            padding-right: 40px;
+            /* Chừa chỗ cho icon */
+            height: 45px;
+            /* chiều cao input chuẩn */
         }
 
-        .toggle-password {
+        .toggle-eye {
             position: absolute;
-            right: 12px;
             top: 50%;
+            right: 12px;
             transform: translateY(-50%);
+            font-size: 22px;
             cursor: pointer;
-            font-size: 16px;
-            color: #666;
+            z-index: 2;
         }
 
-        .forgot-password {
-            display: inline-block;
-            font-size: 13px;
-            color: #007bff;
-            text-decoration: none;
-            margin-bottom: 12px;
-        }
-
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
-
-        .btn-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-
-        button {
-            padding: 10px 16px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            background: #fff;
-        }
-
-        .btn-login {
-            background: #ee4d2d;
-            color: #fff;
-            border: none;
-        }
-
-        .btn-register {
-            background: #6c757d;
-            color: #fff;
-            border: none;
-        }
-
-        .or {
-            text-align: center;
-            margin: 10px 0;
-            font-size: 13px;
-            color: #999;
-        }
-
-        .social-login {
-            display: flex;
-            justify-content: space-between;
+        .card {
+            border-radius: 15px;
         }
 
         .btn-google {
-            background: #db4437;
-            color: #fff;
-            width: 48%;
-            border: none;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            color: #444;
+            font-weight: 600;
         }
 
         .btn-facebook {
-            background: #4267B2;
+            background: #1877f2;
             color: #fff;
-            width: 48%;
-            border: none;
+            font-weight: 600;
+        }
+
+        .input-group-custom input {
+            height: 45px;
+            padding-right: 40px;
+            /* Chừa chỗ cho icon */
+        }
+
+        .toggle-eye {
+            z-index: 2;
         }
     </style>
-</head>
 
-<body>
-    <div class="login-container">
-        <h2>Đăng Nhập</h2>
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh; margin-top: 100px;">
+        <div class="card shadow-lg p-4" style="width: 420px;">
 
-        {{-- ✅ Thông báo thành công --}}
-        @if(session('success'))
-            <div class="alert-success">{{ session('success') }}</div>
-        @endif
+            <h3 class="text-center mb-4 font-weight-bold">Đăng Nhập</h3>
 
-        {{-- ✅ Thông báo lỗi chung --}}
-        @if(session('error'))
-            <div class="alert-error">{{ session('error') }}</div>
-        @endif
+            {{-- Thông báo thành công --}}
+            @if(session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
 
-        {{-- ✅ Thông báo lỗi validate --}}
-        @if ($errors->any())
-            <div class="alert-error">
-                <ul style="margin:0; padding-left:18px;">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+            {{-- Thông báo lỗi --}}
+            @if(session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-            <input type="text" name="email" placeholder="Email, Số Điện Thoại" value="{{ old('email') }}" required>
+            {{-- Thông báo lỗi validate --}}
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0 pl-3">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-            <div class="input-group">
-                <input type="password" id="password" name="password" placeholder="Mật khẩu" required>
-                <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
-            </div>
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
 
-            <a href="{{ route('password.forgot') }}" class="forgot-password">Quên mật khẩu</a>
+                {{-- Email --}}
+                <div class="form-group">
+                    <label>Email hoặc Số Điện Thoại</label>
+                    <input type="text" name="email" class="form-control" placeholder="Nhập email hoặc SĐT"
+                        value="{{ old('email') }}" required>
+                </div>
 
-            <div class="btn-row">
-                <button type="button" class="btn-register" onclick="window.location.href='{{ route('register') }}'">Đăng
-                    Ký</button>
-                <button type="submit" class="btn-login">Đăng Nhập</button>
-            </div>
+                {{-- Password --}}
+                {{-- Password --}}
+                <div class="form-group"> {{-- Xóa class "input-group-custom" khỏi đây --}}
+                    <label>Mật khẩu</label>
+                    <div class="input-group-custom"> {{-- Thêm 1 div mới bao bọc input và icon --}}
+                        <input type="password" id="password" name="password" class="form-control"
+                            placeholder="Nhập mật khẩu" required>
+                        <span class="toggle-eye" id="eye-password"
+                            onclick="togglePassword('password', 'eye-password')">🙈</span>
+                    </div>
+                </div>
 
-            <div class="or">Hoặc</div>
+                <div class="mb-3 text-right">
+                    <a href="{{ route('password.forgot') }}">Quên mật khẩu?</a>
+                </div>
 
-            <div class="social-login">
-                <button type="button" class="btn-google"
-                    onclick="window.location.href='{{ url('auth/google') }}'">Google</button>
-                 <button type="button" class="btn-facebook"
-                    onclick="window.location.href='{{ url('auth/facebook') }}'">Facebook</button>
-            </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <a class="btn btn-outline-primary w-50 mr-2" href="{{ route('register') }}">Đăng Ký</a>
+                    <button type="submit" class="btn btn-primary w-50 ml-2">Đăng Nhập</button>
+                </div>
 
-        </form>
+                <div class="text-center my-3">
+                    <span class="text-muted">Hoặc</span>
+                </div>
+
+                {{-- Nút Google + Facebook --}}
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-google w-50 mr-2"
+                        onclick="window.location.href='{{ url('auth/google') }}'">
+                        <i class="fab fa-google mr-2" style="color:#DB4437;"></i> Google
+                    </button>
+
+                    <button type="button" class="btn btn-facebook w-50 ml-2"
+                        onclick="window.location.href='{{ url('auth/facebook') }}'">
+                        <i class="fab fa-facebook-f mr-2"></i> Facebook
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
-        function togglePassword(id) {
-            const input = document.getElementById(id);
-            input.type = input.type === "password" ? "text" : "password";
+        function togglePassword(inputId, eyeId) {
+            const input = document.getElementById(inputId);
+            const eye = document.getElementById(eyeId);
+
+            if (input.type === "password") {
+                input.type = "text";
+                eye.textContent = "👀"; // mắt mở
+            } else {
+                input.type = "password";
+                eye.textContent = "🙈"; // mắt nhắm
+            }
         }
     </script>
-</body>
 
-</html>
+@endsection
