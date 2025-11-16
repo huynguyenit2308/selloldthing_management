@@ -97,6 +97,7 @@
                 class="product-edit-form" data-autosave-url="{{ route('products.autosave', $product) }}" data-max-images="{{ $maxImages }}">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="version" value="{{ optional($product->updated_at)->getTimestamp() }}">
 
                 <fieldset {{ $isSold ? 'disabled' : '' }}>
                     <section class="form-section" aria-labelledby="basic-info-heading">
