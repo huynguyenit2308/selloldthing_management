@@ -261,7 +261,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="comment">Nhận xét:</label>
-                                        <textarea name="comment" id="comment" class="form-control" rows="4" required></textarea>
+                                        <textarea name="comment" id="comment" class="form-control" rows="4" required minlength="10" maxlength="1000"></textarea>
                                     </div>
                                     <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
                                 </form>
@@ -302,8 +302,7 @@
                                                         @csrf
                                                         <input type="hidden" name="parent_id" value=""> {{-- parent_id sẽ được điền bằng JS khi reply từ nút 'Phản hồi' --}}
                                                         <div class="input-group input-group-sm">
-                                                            <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
-                                                            <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                                            <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000"> <button class="btn btn-outline-primary" type="submit">Gửi</button>
                                                         </div>
                                                     </form>
                                                     @endauth
@@ -504,16 +503,50 @@
 
         @push('scripts')
         <script>
+            // =======================================================
+            // 1. HÀM VALIDATE (ĐÃ TÁCH RA)
+            // =======================================================
+            /**
+             * Kiểm tra nội dung bình luận theo yêu cầu
+             * @param {string} content - Nội dung bình luận
+             * @returns {string|null} - Trả về chuỗi lỗi nếu vi phạm, ngược lại trả về null
+             */
+            function validateComment(content) {
+                if (!content) {
+                    return "Nội dung bình luận không được để trống.";
+                }
+                const trimmedContent = content.trim();
+                if (trimmedContent === "") {
+                    return "Nội dung bình luận không được để trống.";
+                }
+                if (trimmedContent.length < 10 || trimmedContent.length > 1000) {
+                    return "Bình luận phải từ 10 đến 1000 ký tự.";
+                }
+                return null; // Hợp lệ
+            }
+
+            /**
+             * [MỚI] Kiểm tra số sao
+             * @param {string|null} rating - Giá trị số sao (hoặc null)
+             * @returns {string|null} - Trả về chuỗi lỗi nếu vi phạm, ngược lại trả về null
+             */
+            function validateRating(rating) {
+                if (!rating) {
+                    return "Vui lòng chọn số sao để đánh giá sản phẩm.";
+                }
+                return null; // Hợp lệ
+            }
+
+
             document.addEventListener('DOMContentLoaded', function() {
                 var tabButtons = document.querySelectorAll('.product-tab[data-tab-target]');
                 var tabPanels = document.querySelectorAll('.product-tab-section[data-tab-panel]');
                 var previewImage = document.querySelector('.product-gallery-preview img[data-active-image]');
                 var galleryButtons = document.querySelectorAll('.product-gallery-thumb[data-image]');
 
-
+                // Xử lý Tabs
                 tabButtons.forEach(function(button) {
                     button.addEventListener('click', function(e) {
-                        //e.preventDefault(); // Ngăn reload trang
                         e.preventDefault();
                         var targetId = button.getAttribute('data-tab-target');
                         if (!targetId) return;
@@ -531,19 +564,17 @@
                     });
                 });
 
+                // Xử lý Gallery
                 galleryButtons.forEach(function(button) {
                     if (button.disabled) {
                         return;
                     }
-
                     button.addEventListener('click', function() {
                         var imageSrc = button.getAttribute('data-image');
                         if (!imageSrc || !previewImage) {
                             return;
                         }
-
                         previewImage.src = imageSrc;
-
                         galleryButtons.forEach(function(btn) {
                             var isActive = btn === button;
                             btn.classList.toggle('active', isActive);
@@ -552,15 +583,39 @@
                     });
                 });
             });
+
+            // =======================================================
+            // 2. XỬ LÝ FORM ĐÁNH GIÁ CHÍNH (ĐÃ THÊM VALIDATE SỐ SAO)
+            // =======================================================
             document.addEventListener('DOMContentLoaded', function() {
                 const reviewForm = document.getElementById('review-form');
                 const reviewList = document.getElementById('review-list');
 
+                if (!reviewForm) return;
+
                 reviewForm.addEventListener('submit', function(e) {
-                    e.preventDefault(); // Ngăn reload trang
+                    e.preventDefault();
 
                     const formData = new FormData(reviewForm);
                     const actionUrl = reviewForm.getAttribute('action');
+
+                    // --- [ĐÃ CẬP NHẬT] THÊM VALIDATION SỐ SAO ---
+                    const ratingValue = formData.get('rating');
+                    const ratingError = validateRating(ratingValue);
+                    if (ratingError) {
+                        alert(ratingError); // Hiển thị thông báo lỗi
+                        return; // Dừng gửi form
+                    }
+                    // --- KẾT THÚC VALIDATION SỐ SAO ---
+
+                    // --- VALIDATION BÌNH LUẬN ---
+                    const commentText = formData.get('comment');
+                    const commentError = validateComment(commentText);
+                    if (commentError) {
+                        alert(commentError); // Hiển thị thông báo lỗi
+                        return; // Dừng gửi form
+                    }
+                    // --- KẾT THÚC VALIDATION BÌNH LUẬN ---
 
                     fetch(actionUrl, {
                             method: 'POST',
@@ -574,9 +629,8 @@
                         .then(data => {
                             if (data.success) {
                                 const review = data.review;
-                                const userName = review.user?.name || 'Người dùng ẩn danh'; // Dùng tên user
+                                const userName = review.user?.name || 'Người dùng ẩn danh';
 
-                                // 1. [MỚI] Helper để tạo HTML cho các ngôi sao
                                 let starsHtml = '';
                                 for (let i = 1; i <= 5; i++) {
                                     if (i <= review.rating) {
@@ -586,64 +640,56 @@
                                     }
                                 }
 
-                                // 2. [MỚI] Lấy CSRF token và URL cho form phản hồi Cấp 1
                                 const csrfToken = formData.get('_token');
-                                const commentStoreUrl = `/reviews/${review.id}/comments`; // Trỏ đến route 'comments.store'
+                                const commentStoreUrl = `/reviews/${review.id}/comments`;
 
-                                // 3. [MỚI] Đây là toàn bộ HTML chính xác
                                 const reviewHtml = `
-                            <div class="card mb-3 position-relative" id="review-${review.id}">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1 fw-bold">${userName}</h6>
-                                            
-                                            <div class="review-stars mb-1">
-                                                ${starsHtml}
+                        <div class="card mb-3 position-relative" id="review-${review.id}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">${userName}</h6>
+                                        <div class="review-stars mb-1">
+                                            ${starsHtml}
+                                        </div>
+                                        <p class="mb-0">${review.comment}</p>
+                                        <small class="text-muted">Vừa xong</small>
+                                        <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
+                                        <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST">
+                                            <input type="hidden" name="_token" value="${csrfToken}">
+                                            <input type="hidden" name="parent_id" value="">
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
+                                                <button class="btn btn-outline-primary" type="submit">Gửi</button>
                                             </div>
-
-                                            <p class="mb-0">${review.comment}</p>
-
-                                            <small class="text-muted">Vừa xong</small>
-
-                                            <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
-
-                                            <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST">
-                                                <input type="hidden" name="_token" value="${csrfToken}">
-                                                <input type="hidden" name="parent_id" value="">
-                                                <div class="input-group input-group-sm">
-                                                    <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
-                                                    <button class="btn btn-outline-primary" type="submit">Gửi</button>
-                                                </div>
-                                            </form>
-
-                                            <div class="replies-root mt-4"></div> 
-                                        </div>
-
-                                        <div class="dropdown">
-                                            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="bi bi-three-dots-vertical"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
-                                                        ✏️ Sửa
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
-                                                        🗑️ Xóa
-                                                    </button>
-                                                </li>
-                                            </ul>
-                                        </div>
+                                        </form>
+                                        <div class="replies-root mt-4"></div> 
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
+                                                    ✏️ Sửa
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
+                                                    🗑️ Xóa
+                                                </button>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
-                            </div>`;
+                            </div>
+                        </div>`;
 
-                                reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
+                                if (reviewList) {
+                                    reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
+                                }
                                 reviewForm.reset();
-
                             } else {
                                 alert('❌ Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại.'));
                             }
@@ -655,36 +701,168 @@
                 });
             });
 
+            // =======================================================
+            // 3. XỬ LÝ FORM PHẢN HỒI (ĐÃ THÊM VALIDATE)
+            // =======================================================
+            document.addEventListener('submit', async function(e) {
+                const form = e.target.closest('.reply-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const action = form.getAttribute('action');
+
+                // --- VALIDATION BÌNH LUẬN PHẢN HỒI ---
+                const contentText = formData.get('content');
+                const validationError = validateComment(contentText);
+
+                if (validationError) {
+                    alert(validationError); // Hiển thị thông báo lỗi
+                    return; // Dừng gửi form
+                }
+                // --- KẾT THÚC VALIDATION ---
+
+                const submitButton = form.querySelector('[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.textContent = 'Đang gửi...';
+
+                try {
+                    const res = await fetch(action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        const newComment = document.createElement('div');
+                        newComment.classList.add('comment-item', 'mb-2');
+                        newComment.id = `comment-${data.id}`;
+                        newComment.dataset.parentId = data.parent_id_db;
+
+                        const MARGIN_STEP = 20;
+                        let newMarginLeft = MARGIN_STEP;
+
+                        const parentFormId = form.id;
+                        if (parentFormId.startsWith('reply-form-comment-')) {
+                            const parentCommentId = parentFormId.split('-').pop();
+                            const parentComment = document.getElementById(`comment-${parentCommentId}`);
+                            if (parentComment) {
+                                const currentMargin = parseInt(parentComment.style.marginLeft) || 0;
+                                newMarginLeft = currentMargin + MARGIN_STEP;
+                            }
+                        }
+                        newComment.style.cssText = `margin-left: ${newMarginLeft}px; display: block;`;
+
+                        newComment.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <div>
+                        <strong>${data.user || 'Người dùng ẩn danh'}:</strong>
+                        <div class="comment-content-wrapper" id="comment-content-wrapper-${data.id}">
+                            <p class="mb-1" data-comment-content>${data.content}</p>
+                            <form id="edit-form-comment-${data.id}" class="comment-edit-form d-none mt-2" 
+                                  onsubmit="event.preventDefault(); saveCommentEdit(${data.id});">
+                                <textarea class="form-control form-control-sm" name="content" required>${data.content}</textarea>
+                                <div class="mt-2">
+                                    <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" 
+                                            onclick="toggleCommentEditForm(${data.id})">❌ Hủy</button>
+                                </div>
+                            </form>
+                        </div>
+                        <small class="text-muted">
+                            Vừa xong 
+                            · <button class="btn btn-link btn-sm text-decoration-none p-0" 
+                                onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
+                            · <button class="btn btn-link btn-sm text-decoration-none p-0 text-primary" 
+                                    onclick="toggleCommentEditForm(${data.id})">✏️ Sửa</button>
+                            · <button class="btn btn-link btn-sm text-decoration-none p-0 text-danger" 
+                                    onclick="deleteComment(${data.id})">🗑️ Xóa</button>
+                        </small>
+                        <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" 
+                              action="/comments/${data.id}/reply" method="POST">
+                            <input type="hidden" name="_token" value="${formData.get('_token')}">
+                            <input type="hidden" name="parent_id" value="${data.id}">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
+                                <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                            </div>
+                        </form>
+                        <div class="replies mt-2"></div> 
+                    </div>
+                </div>
+                `;
+
+                        let container = null;
+                        if (parentFormId.startsWith('reply-form-comment-')) {
+                            const parentCommentId = parentFormId.split('-').pop();
+                            container = document.getElementById(`comment-${parentCommentId}`).querySelector('.replies');
+                        } else if (parentFormId.startsWith('reply-form-review-')) {
+                            const parentReviewId = parentFormId.split('-').pop();
+                            container = document.getElementById(`review-${parentReviewId}`).querySelector('.replies-root');
+                        }
+
+                        if (container) {
+                            container.appendChild(newComment);
+                        } else {
+                            console.error('Không tìm thấy container để chèn comment mới.');
+                        }
+
+                        form.reset();
+                        form.classList.add('d-none');
+                    } else {
+                        alert('❌ Gửi phản hồi thất bại: ' + (data.message || 'Lỗi không xác định.'));
+                    }
+                } catch (err) {
+                    console.error('Lỗi Fetch/AJAX:', err);
+                    alert('⚠️ Lỗi kết nối máy chủ khi gửi phản hồi.');
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Gửi';
+                }
+            });
+
+            // =======================================================
+            // 4. CÁC HÀM TIỆN ÍCH KHÁC (GIỮ NGUYÊN)
+            // =======================================================
+
             function editReview(id, rating, comment) {
                 const reviewDiv = document.getElementById(`review-${id}`);
+                if (!reviewDiv) return;
 
-                // Lưu HTML gốc để có thể khôi phục nếu hủy
                 reviewDiv.dataset.original = reviewDiv.innerHTML;
 
-                // Hiển thị form sửa tại chỗ
                 reviewDiv.innerHTML = `
-                <form onsubmit="return saveReview(${id})">
-                    <div class="rating-stars mb-2">
-                        ${[1,2,3,4,5].map(i => `
-                            <i class="${i <= rating ? 'fas' : 'far'} fa-star text-warning" 
-                            data-value="${i}" 
-                            style="cursor:pointer; font-size:20px;" 
-                            onclick="setStar(${id}, ${i})"></i>
-                        `).join('')}
-                        <input type="hidden" id="edit-rating-${id}" value="${rating}">
-                    </div>
-                    <textarea id="edit-comment-${id}" class="form-control mb-2">${comment}</textarea>
-                    <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${id})">❌ Hủy</button>
-                </form>
-            `;
+        <form onsubmit="event.preventDefault(); saveReview(${id});">
+            <div class="rating-stars mb-2">
+                ${[1,2,3,4,5].map(i => `
+                    <i class="${i <= rating ? 'fas' : 'far'} fa-star text-warning" 
+                    data-value="${i}" 
+                    style="cursor:pointer; font-size:20px;" 
+                    onclick="setStar(${id}, ${i})"></i>
+                `).join('')}
+                <input type="hidden" id="edit-rating-${id}" value="${rating}">
+            </div>
+            <textarea id="edit-comment-${id}" class="form-control mb-2" required minlength="10" maxlength="1000">${comment}</textarea>
+            <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${id})">❌ Hủy</button>
+        </form>
+        `;
             }
 
-            // Chọn sao
             function setStar(id, value) {
                 const container = document.querySelector(`#review-${id} .rating-stars`);
+                if (!container) return;
                 const stars = container.querySelectorAll('.fa-star');
-                document.getElementById(`edit-rating-${id}`).value = value;
+                const ratingInput = document.getElementById(`edit-rating-${id}`);
+                if (ratingInput) {
+                    ratingInput.value = value;
+                }
 
                 stars.forEach((star, i) => {
                     if (i < value) {
@@ -697,22 +875,37 @@
                 });
             }
 
-            // Hủy sửa
             function cancelEdit(id) {
                 const reviewDiv = document.getElementById(`review-${id}`);
-                reviewDiv.innerHTML = reviewDiv.dataset.original;
+                if (reviewDiv && reviewDiv.dataset.original) {
+                    reviewDiv.innerHTML = reviewDiv.dataset.original;
+                    delete reviewDiv.dataset.original;
+                }
             }
 
-            // Lưu sửa
             function saveReview(id) {
                 const rating = document.getElementById(`edit-rating-${id}`).value;
                 const comment = document.getElementById(`edit-comment-${id}`).value;
+
+                // VALIDATION CHO FORM SỬA
+                const ratingError = validateRating(rating);
+                if (ratingError) {
+                    alert(ratingError);
+                    return false;
+                }
+
+                const commentError = validateComment(comment);
+                if (commentError) {
+                    alert(commentError);
+                    return false;
+                }
 
                 fetch(`/reviews/${id}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             rating,
@@ -723,78 +916,27 @@
                     .then(data => {
                         if (data.success) {
                             const review = data.review;
-                            const userName = review.user?.name || 'Người dùng ẩn danh'; // Dùng tên user
-
-                            // 1. [MỚI] Helper để tạo HTML cho các ngôi sao
+                            const userName = review.user?.name || 'Người dùng ẩn danh';
                             let starsHtml = '';
                             for (let i = 1; i <= 5; i++) {
-                                if (i <= review.rating) {
-                                    starsHtml += '<i class="bi bi-star-fill text-warning"></i>';
-                                } else {
-                                    starsHtml += '<i class="bi bi-star text-secondary"></i>';
-                                }
+                                starsHtml += `<i class="bi ${i <= review.rating ? 'bi-star-fill text-warning' : 'bi-star text-secondary'}"></i>`;
                             }
 
-                            // 2. [MỚI] Lấy CSRF token và URL cho form phản hồi Cấp 1
-                            const csrfToken = formData.get('_token');
-                            const commentStoreUrl = `/reviews/${review.id}/comments`; // Trỏ đến route 'comments.store'
+                            cancelEdit(id);
 
-                            // 3. [MỚI] Đây là toàn bộ HTML chính xác
-                            const reviewHtml = `
-                            <div class="card mb-3 position-relative" id="review-${review.id}">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1 fw-bold">${userName}</h6>
-                                            
-                                            <div class="review-stars mb-1">
-                                                ${starsHtml}
-                                            </div>
+                            const reviewCard = document.getElementById(`review-${id}`);
+                            if (reviewCard) {
+                                reviewCard.querySelector('.review-stars').innerHTML = starsHtml;
+                                reviewCard.querySelector('p.mb-0').textContent = review.comment;
+                                reviewCard.querySelector('.text-muted').textContent = 'Vừa cập nhật';
 
-                                            <p class="mb-0">${review.comment}</p>
-
-                                            <small class="text-muted">Vừa xong</small>
-
-                                            <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
-
-                                            <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST">
-                                                <input type="hidden" name="_token" value="${csrfToken}">
-                                                <input type="hidden" name="parent_id" value="">
-                                                <div class="input-group input-group-sm">
-                                                    <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
-                                                    <button class="btn btn-outline-primary" type="submit">Gửi</button>
-                                                </div>
-                                            </form>
-
-                                            <div class="replies-root mt-4"></div> 
-                                        </div>
-
-                                        <div class="dropdown">
-                                            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="bi bi-three-dots-vertical"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
-                                                        ✏️ Sửa
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
-                                                        🗑️ Xóa
-                                                    </button>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>`;
-
-                            reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
-                            reviewForm.reset();
-
+                                const editButton = reviewCard.querySelector(`button[onclick^="editReview"]`);
+                                if (editButton) {
+                                    editButton.setAttribute('onclick', `editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')`);
+                                }
+                            }
                         } else {
-                            alert('❌ Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại.'));
+                            alert('❌ Lưu thất bại: ' + (data.message || 'Lỗi.'));
                         }
                     })
                     .catch(() => alert('⚠️ Có lỗi khi gửi dữ liệu lên server.'));
@@ -808,7 +950,8 @@
                 fetch(`/reviews/${id}`, {
                         method: 'DELETE',
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
                         }
                     })
                     .then(res => res.json())
@@ -824,193 +967,41 @@
                     .catch(err => console.error(err));
             }
 
-            function toggleReplyForm(id) {
-                const form = document.getElementById(`reply-form-${id}`);
-                form.classList.toggle('d-none');
-            }
-
-
-            // ================= COMMENT REPLY (AJAX) =================
-            // Toggle form reply
-            window.toggleReplyForm = function(id) { // id truyền vào là 'review-123' hoặc 'comment-456'
+            window.toggleReplyForm = function(id) {
                 const form = document.getElementById(`reply-form-${id}`);
                 if (!form) return;
 
                 form.classList.toggle('d-none');
 
-                // --- ĐÂY LÀ PHẦN SỬA LỖI QUAN TRỌNG ---
                 const parentIdInput = form.querySelector('input[name="parent_id"]');
+                if (!parentIdInput) return;
 
                 if (id.startsWith('review-')) {
-                    // 1. Nếu là phản hồi cho REVIEW (tạo Cấp 1)
-                    // Chúng ta phải set parent_id = rỗng (NULL)
                     parentIdInput.value = '';
                 } else if (id.startsWith('comment-')) {
-                    // 2. Nếu là phản hồi cho COMMENT (tạo Cấp 2+)
-                    // Chúng ta set parent_id = ID của comment cha
                     const parentId = id.split('-').pop();
                     parentIdInput.value = parentId;
                 }
             };
 
-            // Hàm tính toán cấp độ mới
-            function calculateNewLevel(parentId) {
-                const MARGIN_STEP = 20; // Thụt lề mỗi cấp là 20px
-
-                // 1. Nếu là phản hồi cho REVIEW (cha là Review ID, không phải Comment ID)
-                // Review ID có thể là số, nhưng ta chỉ tìm margin từ element cha đã tồn tại.
-                const parentReview = document.getElementById(`review-${parentId}`);
-                if (parentReview) {
-                    // Đây là cấp độ 1 của comments (con của review), bắt đầu margin từ 0.
-                    return MARGIN_STEP; // Cấp 1 có margin là 20px
-                }
-
-                // 2. Nếu là phản hồi cho COMMENT (cha là Comment ID)
-                const parentComment = document.getElementById(`comment-${parentId}`);
-                if (parentComment) {
-                    const currentMargin = parseInt(parentComment.style.marginLeft) || 0;
-                    return currentMargin + MARGIN_STEP;
-                }
-
-                // Fallback (chưa xác định cha, có thể là lỗi hoặc comment gốc)
-                return 0;
+            window.toggleCommentEditForm = function(commentId) {
+                const wrapper = document.getElementById(`comment-content-wrapper-${commentId}`);
+                if (!wrapper) return;
+                wrapper.querySelector('[data-comment-content]').classList.toggle('d-none');
+                wrapper.querySelector('.comment-edit-form').classList.toggle('d-none');
             }
 
-            /**
-             * Chèn Comment (PHẢN HỒI) mới vào DOM
-             * @param {Object} data - Dữ liệu comment mới (id, parent_id, user, content, v.v.)
-             */
-
-            // Xử lý sự kiện Submit Form (AJAX) - Chỉ dành cho các form phản hồi con
-            document.addEventListener('submit', async function(e) {
-                const form = e.target.closest('.reply-form');
+            window.saveCommentEdit = function(commentId) {
+                const form = document.getElementById(`edit-form-comment-${commentId}`);
                 if (!form) return;
+                const content = form.querySelector('textarea[name="content"]').value;
 
-                e.preventDefault();
-
-                const submitButton = form.querySelector('[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.textContent = 'Đang gửi...';
-
-                const formData = new FormData(form);
-                const action = form.getAttribute('action');
-
-                try {
-                    const res = await fetch(action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    });
-
-                    const data = await res.json();
-
-                    if (data.success) {
-                        // ------------ LOGIC CHÈN MỚI THAY CHO insertNewComment ------------
-
-                        const newComment = document.createElement('div');
-                        newComment.classList.add('comment-item', 'mb-2');
-                        newComment.id = `comment-${data.id}`;
-                        newComment.dataset.parentId = data.parent_id_db; // Dùng parent_id từ CSDL (nếu có)
-
-                        // 1. Tính toán thụt lề (Margin)
-                        const MARGIN_STEP = 20;
-                        let newMarginLeft = MARGIN_STEP; // Mặc định là Cấp 1
-
-                        // Lấy ID của form cha (ví dụ: 'reply-form-comment-456')
-                        const parentFormId = form.id;
-                        if (parentFormId.startsWith('reply-form-comment-')) {
-                            const parentCommentId = parentFormId.split('-').pop();
-                            const parentComment = document.getElementById(`comment-${parentCommentId}`);
-                            if (parentComment) {
-                                const currentMargin = parseInt(parentComment.style.marginLeft) || 0;
-                                newMarginLeft = currentMargin + MARGIN_STEP;
-                            }
-                        }
-                        newComment.style.cssText = `margin-left: ${newMarginLeft}px; display: block;`;
-
-                        // 2. Tạo HTML cho comment mới
-                        newComment.innerHTML = `
-                        <div class="d-flex align-items-start">
-                            <div>
-                                <strong>${data.user || 'Người dùng ẩn danh'}:</strong>
-
-                                <div class="comment-content-wrapper" id="comment-content-wrapper-${data.id}">
-                                    
-                                    <p class="mb-1" data-comment-content>${data.content}</p>
-
-                                    <form id="edit-form-comment-${data.id}" class="comment-edit-form d-none mt-2" 
-                                          onsubmit="event.preventDefault(); saveCommentEdit(${data.id});">
-                                        <textarea class="form-control form-control-sm" name="content" required>${data.content}</textarea>
-                                        <div class="mt-2">
-                                            <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
-                                            <button type="button" class="btn btn-secondary btn-sm" 
-                                                    onclick="toggleCommentEditForm(${data.id})">❌ Hủy</button>
-                                        </div>
-                                    </form>
-                                </div>
-                                <small class="text-muted">
-                                    Vừa xong 
-                                    · <button class="btn btn-link btn-sm text-decoration-none p-0" 
-                                        onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
-
-                                    · <button class="btn btn-link btn-sm text-decoration-none p-0 text-primary" 
-                                          onclick="toggleCommentEditForm(${data.id})">✏️ Sửa</button>
-                                    · <button class="btn btn-link btn-sm text-decoration-none p-0 text-danger" 
-                                          onclick="deleteComment(${data.id})">🗑️ Xóa</button>
-                                </small>
-
-                                <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" 
-                                      action="/comments/${data.id}/reply" method="POST"> {{-- Trỏ đúng route 'reply' --}}
-                                    <input type="hidden" name="_token" value="${formData.get('_token')}">
-                                    <input type="hidden" name="parent_id" value="${data.id}">
-                                    <div class="input-group input-group-sm">
-                                        <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
-                                        <button class="btn btn-outline-primary" type="submit">Gửi</button>
-                                    </div>
-                                </form>
-                                
-                                <div class="replies mt-2"></div> 
-                            </div>
-                        </div>
-                        `;
-
-                        // 3. Tìm đúng container để chèn
-                        let container = null;
-                        if (parentFormId.startsWith('reply-form-comment-')) {
-                            // Đây là Cấp 2+, chèn vào '.replies' của comment cha
-                            const parentCommentId = parentFormId.split('-').pop();
-                            container = document.getElementById(`comment-${parentCommentId}`).querySelector('.replies');
-                        } else if (parentFormId.startsWith('reply-form-review-')) {
-                            // Đây là Cấp 1, chèn vào '.replies-root' của review cha
-                            const parentReviewId = parentFormId.split('-').pop();
-                            container = document.getElementById(`review-${parentReviewId}`).querySelector('.replies-root');
-                        }
-
-                        // 4. Chèn vào DOM
-                        if (container) {
-                            container.appendChild(newComment);
-                        } else {
-                            console.error('Không tìm thấy container để chèn comment mới.');
-                        }
-
-                        // 5. Dọn dẹp
-                        form.reset();
-                        form.classList.add('d-none');
-
-                    } else {
-                        alert('❌ Gửi phản hồi thất bại: ' + (data.message || 'Lỗi không xác định.'));
-                    }
-                } catch (err) {
-                    console.error('Lỗi Fetch/AJAX:', err);
-                    alert('⚠️ Lỗi kết nối máy chủ khi gửi phản hồi.');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Gửi';
+                const validationError = validateComment(content);
+                if (validationError) {
+                    alert(validationError);
+                    return;
                 }
-            });
+            };
             document.querySelectorAll('.favorite-button').forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault(); // Ngăn hành vi mặc định của button
@@ -1067,5 +1058,53 @@
                         });
                 });
             });
+
+                fetch(`/comments/${commentId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            content: content
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const wrapper = document.getElementById(`comment-content-wrapper-${commentId}`);
+                            wrapper.querySelector('[data-comment-content]').textContent = data.comment.content;
+                            toggleCommentEditForm(commentId);
+                        } else {
+                            alert('Lỗi khi lưu chỉnh sửa.');
+                        }
+                    })
+                    .catch(() => alert('Lỗi kết nối khi lưu comment.'));
+
+            window.deleteComment = function(commentId) {
+                if (!confirm('Bạn có chắc muốn xóa bình luận này?')) return;
+
+                fetch(`/comments/${commentId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const commentEl = document.getElementById(`comment-${commentId}`);
+                            if (commentEl) {
+                                commentEl.remove();
+                            }
+                        } else {
+                            alert('Lỗi khi xóa bình luận: ' + data.message);
+                        }
+                    })
+                    .catch(() => alert('Lỗi kết nối khi xóa comment.'));
+            }
+
         </script>
         @endpush
