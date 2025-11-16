@@ -169,8 +169,9 @@ class AdminProductController extends Controller
                     ->get();
 
                 foreach ($imagesToDelete as $image) {
-                    if (Storage::disk('public')->exists($image->image_path)) {
-                        Storage::disk('public')->delete($image->image_path);
+                    $path = trim((string) $image->image_path);
+                    if ($path !== '' && Storage::disk('public')->exists($path)) {
+                        Storage::disk('public')->delete($path);
                     }
                     $image->delete();
                 }
@@ -224,8 +225,9 @@ class AdminProductController extends Controller
 
             // Delete product images
             foreach ($product->images as $image) {
-                if (Storage::disk('public')->exists($image->image_path)) {
-                    Storage::disk('public')->delete($image->image_path);
+                $path = trim((string) $image->image_path);
+                if ($path !== '' && Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
                 }
                 $image->delete();
             }
