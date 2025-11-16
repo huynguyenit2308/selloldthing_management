@@ -35,8 +35,8 @@ class CategoryController extends Controller
         }
 
         $categories = $categoriesQuery->orderByDesc('created_at')->paginate(10)->withQueryString();
-        
 
+        $categories = Category::all();
         return view('admin.categories.index', [
             'categories' => $categories,
             'q' => $q,
@@ -70,7 +70,7 @@ class CategoryController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('CATEGORY_LIST_ERROR: ' . $e->getMessage());
-            
+
             return view('admin.categories.index_category', [
                 'categories' => collect([]),
                 'watchedCategoryIds' => [],
@@ -104,11 +104,11 @@ class CategoryController extends Controller
 
             // Lấy tất cả danh mục để hiển thị sidebar
             $allCategories = Category::where('status', 1)->orderBy('name')->get();
-            
+
             // Lấy các tham số lọc và sắp xếp từ request
             $sort = $request->query('sort', 'newest');
             $filter = $request->query('filter', 'all');
-            
+
             // Query sản phẩm theo danh mục
             $productsQuery = Product::published()
                 ->where('category_id', $category->id)
@@ -118,13 +118,13 @@ class CategoryController extends Controller
                     },
                     'category',
                 ]);
-            
+
             // Áp dụng bộ lọc
             if ($filter === 'discount') {
                 $productsQuery->whereColumn('original_price', '>', 'price')
                     ->whereNotNull('original_price');
             }
-            
+
             // Áp dụng sắp xếp
             switch ($sort) {
                 case 'oldest':
@@ -140,10 +140,10 @@ class CategoryController extends Controller
                     $productsQuery->latest('created_at');
                     break;
             }
-            
+
             // Phân trang sản phẩm (6 sản phẩm mỗi trang)
             $products = $productsQuery->paginate(6)->withQueryString();
-            
+
             return view('admin.categories.show_category', [
                 'category' => $category,
                 'products' => $products,
@@ -154,7 +154,7 @@ class CategoryController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('CATEGORY_SHOW_ERROR: ' . $e->getMessage());
-            
+
             return view('admin.categories.show_category', [
                 'category' => $category ?? null,
                 'products' => collect([]),

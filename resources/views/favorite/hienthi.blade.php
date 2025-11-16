@@ -1,255 +1,234 @@
+{{-- BẮT ĐẦU FILE BLADE ĐÃ HỢP NHẤT --}}
+
 @extends('dashboard')
 
+@section('body-class', 'favorites-page')
+
 @push('styles')
-<!-- Sử dụng chung CSS với trang quản lý sản phẩm -->
-<link rel="stylesheet" href="{{ asset('styles/my_products.css') }}">
+{{-- THAY ĐỔI 1: Giữ nguyên CSS của Giao diện 1 (lưới) mà bạn muốn --}}
 <link rel="stylesheet" href="{{ asset('styles/favorite.css') }}">
+{{-- Nếu cần, bạn có thể nạp thêm file favorite.css của Giao diện 2 --}}
 @endpush
 
-@section('body-class', 'account-favorites-page') <!-- Thay đổi class -->
+@push('scripts')
+{{-- Để trống, chúng ta sẽ push script ở dưới cùng --}}
+@endpush
 
 @section('content')
-@php
-// Biến $sortLabels và $sortOption sẽ được truyền từ FavoriteController
-@endphp
-
-<div class="account-products-wrapper">
+<div class="favorites-page-wrapper">
     <div class="container">
-        <nav class="account-breadcrumb" aria-label="breadcrumb">
-            <ol>
-                <li><a href="{{ url('/') }}">Trang chủ</a></li>
-                <li><span>Tài khoản</span></li>
-                <li aria-current="page"><span>Sản phẩm yêu thích</span></li> <!-- Thay đổi breadcrumb -->
-            </ol>
+        <nav class="favorites-breadcrumb" aria-label="breadcrumb">
+            <a href="{{ route('home') }}">Trang chủ</a>
+            <span>/</span>
+            <a href="{{ route('account.info') }}">Tài khoản</a>
+            <span>/</span>
+            <span>Sản phẩm yêu thích</span>
         </nav>
 
-        <div class="account-products-header">
-            <h1>Sản phẩm yêu thích</h1> <!-- Thay đổi tiêu đề -->
-            <!-- Không cần nút "Đăng sản phẩm mới" ở đây -->
-        </div>
 
-        <div class="account-products-content">
-            <!-- XÓA BỎ THANH THỐNG KÊ (ASIDE) VÌ KHÔNG ÁP DỤNG CHO TRANG YÊU THÍCH -->
 
-            <!-- Panel chính, thêm style để nó chiếm toàn bộ chiều rộng -->
-            <section class="account-products-panel" style="grid-column: 1 / -1;">
-                <header class="account-products-toolbar">
-                    <form method="GET" action="{{ route('favorite.hienthi') }}" class="toolbar-form">
-                        <!-- Preserve other parameters -->
-                        @if(request('search'))
-                        <input type="hidden" name="search" value="{{ request('search') }}">
-                        @endif
+        <div class="favorites-layout">
+            <aside class="favorites-sidebar">
+                <section class="favorites-panel">
+                    <h3 class="favorites-panel-title">Bộ lọc</h3>
+                    <ul class="favorites-filter-list">
+                        <li>
+                            <a class="favorites-filter-link {{ !request('filter_type') ? 'is-active' : '' }}" href="{{ route('favorite.hienthi', request()->except(['filter_type', 'page'])) }}">
+                                Tất cả sản phẩm
+                            </a>
+                        </li>
+                        <li>
+                            <a class="favorites-filter-link {{ request('filter_type') === 'recently_viewed' ? 'is-active' : '' }}" href="{{ route('favorite.hienthi', array_merge(request()->except('page'), ['filter_type' => 'recently_viewed'])) }}">
+                                Đã xem gần đây
+                            </a>
+                        </li>
+                        <li>
+                            <a class="favorites-filter-link {{ request('filter_type') === 'on_sale' ? 'is-active' : '' }}" href="{{ route('favorite.hienthi', array_merge(request()->except('page'), ['filter_type' => 'on_sale'])) }}">
+                                Đang giảm giá
+                            </a>
+                        </li>
+                    </ul>
+                </section>
 
-                        <div class="toolbar-filters">
-                            <div class="toolbar-group">
-                                <label for="sort">Sắp xếp theo</label>
-                                <select id="sort" name="sort">
-                                    @foreach ($sortLabels as $value => $label)
-                                    <option value="{{ $value }}" @selected($sortOption===$value)>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </form>
+                <section class="favorites-panel">
+                    <h3 class="favorites-panel-title">Danh mục</h3>
+                    <ul class="favorites-category-list">
+                        {{-- THAY ĐỔI 2: Đảm bảo Controller của bạn truyền biến $categories --}}
+                        {{-- Logic này yêu cầu $categories từ Controller, giống như Giao diện 1 --}}
+                        @forelse ($categories as $category)
+                        <li class="favorites-category-item {{ (string) request('category') === (string) $category->id ? 'is-selected' : '' }}" data-category-id="{{ $category->id }}">
+                            <span>{{ $category->name }}</span>
+                            <i class="fa fa-chevron-right"></i>
+                        </li>
+                        @empty
+                        <li class="favorites-category-empty">Chưa có danh mục khả dụng</li>
+                        @endforelse
+                    </ul>
+                </section>
+
+                <section class="favorites-panel">
+                    <h3 class="favorites-panel-title">Thao tác</h3>
+                    <button type="button" class="favorites-panel-btn" id="addAllToCartBtn">Thêm tất cả vào giỏ hàng</button>
+                    <button type="button" class="favorites-panel-btn outline" id="sidebarClearAll">Xóa tất cả yêu thích</button>
+                </section>
+            </aside>
+
+            <section class="favorites-main">
+                <header class="favorites-header">
+                    <h1>Sản phẩm yêu thích</h1>
+                    @php
+
+                    $favoritesCount = $products instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
+                    ? $products->total()
+                    : $products->count();
+                    @endphp
+                    <span class="favorites-count"><span class="favorites-count-number">{{ $favoritesCount }}</span> sản phẩm</span>
                 </header>
 
-                <!-- Hiển thị các thông báo (nếu có) -->
-                @if (session('success'))
-                <div class="alert alert-success" role="status">{{ session('success') }}</div>
-                @endif
-                @if (session('error'))
-                <div class="alert alert-error" role="alert">{{ session('error') }}</div>
-                @endif
+                <div class="favorites-controls">
+                    <div class="favorites-sort">
+                        {{-- THAY ĐỔI 4: Dùng logic Sort của Giao diện 2 --}}
+                        <form method="GET" action="{{ route('favorite.hienthi') }}" class="toolbar-form" id="sortForm">
+                            @if(request('search'))
+                            <input type="hidden" name="search" value="{{ request('search') }}">
+                            @endif
+                            {{-- Giữ lại các filter khác nếu có --}}
+                            @if(request('filter_type'))
+                            <input type="hidden" name="filter_type" value="{{ request('filter_type') }}">
+                            @endif
+                            @if(request('category'))
+                            <input type="hidden" name="category" value="{{ request('category') }}">
+                            @endif
 
-
-                <div class="products-table-wrapper" role="region" aria-label="Danh sách sản phẩm yêu thích">
-                    <div class="products-table" role="table">
-                        <div class="table-header" role="row">
-                            <div class="cell stt" role="columnheader">STT</div>
-                            <div class="cell image" role="columnheader">Hình ảnh</div>
-                            <div class="cell info" role="columnheader">Tên sản phẩm</div>
-                            <div class="cell price" role="columnheader">Giá</div>
-                            <div class="cell views" role="columnheader">Lượt xem</div>
-                            <!-- Xóa cột Kho và Trạng thái -->
-                            <div class="cell actions" role="columnheader">Thao tác</div>
-                        </div>
-
-                        <!-- Sửa: Lặp qua $products (được truyền từ controller, chính là $favorites) -->
-                        @forelse ($products as $product)
-                        @php
-                        $firstImage = $product->images->first();
-                        $primaryImage = $firstImage ? $firstImage->image_url : null;
-                        $hasPrimaryImage = $firstImage && !empty($firstImage->url);
-                        $priceText = $product->price ? number_format($product->price, 0, ',', '.') . ' VND' : 'Chưa đặt giá';
-                        $placeholderText = \Illuminate\Support\Str::limit($product->name ?? 'Sản phẩm', 15, '');
-                        @endphp
-                        <div class="table-row" role="row" id="product-row-{{ $product->id }}">
-                            <div class="cell stt" role="cell">
-                                <span class="row-number">{{ ($products->firstItem() ?? 0) + $loop->index }}</span>
-                            </div>
-                            <div class="cell image" role="cell">
-                                <div class="product-thumbnail {{ $hasPrimaryImage ? 'has-image' : 'is-placeholder' }}" data-product-name="{{ $product->name }}">
-                                    @if ($hasPrimaryImage && $primaryImage)
-                                    <img src="{{ $primaryImage }}" alt="{{ $product->name }}" onerror="window.handleProductImageError && window.handleProductImageError(this);">
-                                    @endif
-                                    <span class="product-placeholder" aria-hidden="{{ $hasPrimaryImage ? 'true' : 'false' }}">{{ $placeholderText }}</span>
-                                </div>
-                            </div>
-                            <div class="cell info" role="cell">
-                                <div class="product-info">
-                                    <!-- Sửa: link đến products.show -->
-                                    <h3 class="product-title"><a href="{{ route('products.show', $product) }}">{{ $product->name }}</a></h3>
-                                </div>
-                            </div>
-                            <div class="cell price" role="cell">
-                                <span class="price-value">{{ $priceText }}</span>
-                            </div>
-                            <div class="cell views" role="cell">
-                                <span class="views-value">{{ number_format($product->view_count ?? 0) }}</span>
-                            </div>
-                            <!-- Xóa cell stock và status -->
-                            <div class="cell actions" role="cell">
-                                <div class="action-buttons">
-
-                                    <!-- [THAY THẾ TOÀN BỘ NÚT BẰNG NÚT YÊU THÍCH] -->
-                                    @php
-                                    $isFavorited = isset($userFavoriteIds) && in_array($product->id, $userFavoriteIds);
-                                    @endphp
-                                    <button type="button"
-                                        class="action-btn btn-delete favorite-button {{ $isFavorited ? 'favorited' : '' }}"
-                                        aria-label="Bỏ yêu thích"
-                                        title="Bỏ yêu thích"
-                                        data-id="{{ $product->id }}"
-                                        data-url="{{ route('favorites.toggle') }}"
-                                        id="fav-btn-{{ $product->id }}">
-                                        <!-- Sử dụng icon trái tim đầy (vì đây là danh sách yêu thích) -->
-                                        <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}" aria-hidden="true"></i>
-                                    </button>
-
-                                    <!-- Thêm nút xem chi tiết nếu muốn -->
-                                    <a href="{{ route('products.show', $product) }}" class="action-btn btn-edit" title="Xem chi tiết" aria-label="Xem chi tiết">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path d="M1.458 12C2.732 7.943 6.796 5 12 5s9.268 2.943 10.542 7c-1.274 4.057-5.338 7-10.542 7S2.732 16.057 1.458 12Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </a>
-
-                                </div>
-                            </div>
-                        </div>
-                        @empty
-                        <div class="table-empty" role="row">
-                            <div class="empty-content">
-                                <div class="empty-icon">❤️</div>
-                                <h3>Bạn chưa có sản phẩm yêu thích nào</h3>
-                                <p>Hãy khám phá thêm các sản phẩm và nhấn trái tim để lưu lại nhé</p>
-                                <a class="btn-primary" href="{{ route('products.index') }}">Xem tất cả sản phẩm</a>
-                            </div>
-                        </div>
-                        @endforelse
+                            <label for="sortSelect">Sắp xếp theo:</label>
+                            {{-- Dùng ID 'sortSelect' của Giao diện 1, nhưng lặp mảng $sortLabels của Giao diện 2 --}}
+                            <select id="sortSelect" name="sort">
+                                @foreach ($sortLabels as $value => $label)
+                                <option value="{{ $value }}" @selected($sortOption===$value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
+                    <div class="favorites-control-buttons">
+                        <button type="button" id="refreshBtn" class="favorites-control-btn">Làm mới</button>
+                        <button type="button" id="clearAllBtn" class="favorites-control-btn danger">Xóa tất cả</button>
                     </div>
                 </div>
+
+                {{-- THAY ĐỔI 5: Dùng @forelse và biến $products (từ Giao diện 2) --}}
+                @if ($products->count() > 0)
+                <div class="favorites-grid">
+                    @foreach ($products as $product)
+                    {{-- Không cần @php $product = $favorite->product; @endphp nữa --}}
+                    @if ($product)
+                    {{-- Thêm ID cho card để JS có thể xóa --}}
+                    <article class="favorite-card" id="favorite-card-{{ $product->id }}">
+                        {{-- THAY ĐỔI 6: Thêm class 'favorite-button' để JS của Giao diện 2 bắt sự kiện --}}
+                        <button type="button"
+                            class="favorite-remove remove-favorite favorite-button"
+                            data-id="{{ $product->id }}"
+                            data-url="{{ route('favorites.toggle') }}"
+                            aria-label="Bỏ khỏi yêu thích">×</button>
+
+                        <div class="favorite-image">
+                            <a href="{{ route('products.show', $product->id) }}">
+                                {{-- THAY ĐỔI 7: Dùng logic ảnh tốt hơn của Giao diện 2 --}}
+                                @php
+                                $firstImage = $product->images->first();
+                                $primaryImage = $firstImage ? $firstImage->image_url : null;
+                                @endphp
+                                @if ($primaryImage)
+                                <img src="{{ $primaryImage }}" alt="{{ $product->name }}" onerror="window.handleProductImageError && window.handleProductImageError(this);">
+                                @else
+                                <img src="{{ asset('images/product_1.png') }}" alt="{{ $product->name }}">
+                                @endif
+                            </a>
+                        </div>
+                        <div class="favorite-info">
+                            <div class="favorite-price">
+                                <span class="current">{{ number_format($product->price, 0, ',', '.') }} VND</span>
+                                @if ($product->original_price && $product->original_price > $product->price)
+                                <span class="original">{{ number_format($product->original_price, 0, ',', '.') }} VND</span>
+                                @endif
+                            </div>
+                            <ul class="favorite-details">
+                                <li>{{ $product->name }}</li>
+                                <li>Giá gốc: {{ $product->original_price ? number_format($product->original_price, 0, ',', '.') . ' VND' : 'Đang cập nhật' }}</li>
+                                <li>Tình trạng: {{ $product->condition ? ucfirst($product->condition) : 'Đang cập nhật' }}</li>
+                                <li>Địa điểm: {{ $product->location ?? 'Đang cập nhật' }}</li>
+                            </ul>
+                            <div class="favorite-actions">
+                                <a href="{{ route('products.show', $product->id) }}" class="favorite-btn outline">Xem chi tiết</a>
+                                <button type="button" class="favorite-btn solid add-to-cart" data-product-id="{{ $product->id }}">Mua ngay</button>
+                            </div>
+                        </div>
+                    </article>
+                    @endif
+                    @endforeach
+                </div>
+
+                <div class="favorites-pagination">
+                    {{-- THAY ĐỔI 8: Dùng $products cho phân trang --}}
+                    {{ $products->appends(request()->query())->links() }}
+                </div>
+                @else
+                {{-- Giữ nguyên Empty State của Giao diện 1 --}}
+                <div class="favorites-empty-state">
+                    <div class="icon"><i class="fa fa-heart-o"></i></div>
+                    <h3>Chưa có sản phẩm yêu thích</h3>
+                    <p>Hãy thêm những sản phẩm bạn yêu thích và quay lại sau.</p>
+                    <a href="{{ route('products.index') }}" class="favorite-btn solid">
+                        <i class="fa fa-search"></i> Khám phá sản phẩm
+                    </a>
+                </div>
+                @endif
             </section>
         </div>
+    </div>
 
-        @if ($products->count() > 0)
-        <!-- [SỬA LỖI 1] THAY THẾ PHÂN TRANG BẰNG HTML CHI TIẾT -->
-        <div class="account-products-pagination">
-            <nav aria-label="Pagination">
-                <ul class="pagination">
-                    <li class="pagination-item {{ $products->onFirstPage() ? 'is-disabled' : '' }}">
-                        <a href="{{ $products->previousPageUrl() ?? '#' }}" aria-disabled="{{ $products->onFirstPage() ? 'true' : 'false' }}">&lt;</a>
-                    </li>
+    {{-- Giữ nguyên các Modal của Giao diện 1 --}}
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+        {{-- ... nội dung modal ... --}}
+    </div>
 
-                    @if ($products->hasPages())
-                    @foreach ($products->getUrlRange(1, $products->lastPage()) as $page => $url)
-                    <li class="pagination-item {{ $page === $products->currentPage() ? 'is-active' : '' }}">
-                        <a href="{{ $url }}">{{ $page }}</a>
-                    </li>
-                    @endforeach
-                    @endif
-
-                    <li class="pagination-item {{ $products->hasMorePages() ? '' : 'is-disabled' }}">
-                        <a href="{{ $products->nextPageUrl() ?? '#' }}" aria-disabled="{{ $products->hasMorePages() ? 'false' : 'true' }}">&gt;</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-        @endif
-
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        {{-- ... nội dung modal ... --}}
     </div>
 </div>
-
-<!-- Xóa bỏ toàn bộ popup Overlay (Delete, Warning, Error) -->
 @endsection
+
+
+
 
 @push('scripts')
 <script>
     (function() {
-        // ----- HÀM XỬ LÝ LỖI ẢNH (GIỮ NGUYÊN) -----
-        const updateThumbnailState = (container) => {
-            if (!container) return;
-            const hasImage = !!container.querySelector('img');
-            const placeholder = container.querySelector('.product-placeholder');
-            container.classList.toggle('has-image', hasImage);
-            container.classList.toggle('is-placeholder', !hasImage);
-            if (placeholder) {
-                placeholder.setAttribute('aria-hidden', hasImage ? 'true' : 'false');
-            }
-        };
-
+        // ----- HÀM XỬ LÝ LỖI ẢNH -----
         window.handleProductImageError = function(img) {
             if (!img) return;
-            const container = img.closest('.product-thumbnail');
-            if (container && img.parentNode === container) {
-                container.removeChild(img);
-            }
-            updateThumbnailState(container);
+            img.src = "{{ asset('images/product_1.png') }}"; // Thay bằng ảnh mặc định
+            img.onerror = null; // Ngăn lặp vô hạn
         };
 
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.product-thumbnail').forEach(function(container) {
-                const img = container.querySelector('img');
-                if (!img) {
-                    updateThumbnailState(container);
-                    return;
-                }
-                const handleErrorOnce = () => {
-                    window.handleProductImageError(img);
-                };
-                if (!img.complete) {
-                    img.addEventListener('load', () => updateThumbnailState(container), {
-                        once: true
-                    });
-                    img.addEventListener('error', handleErrorOnce, {
-                        once: true
-                    });
-                    return;
-                }
-                if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-                    handleErrorOnce();
-                    return;
-                }
-                updateThumbnailState(container);
-            });
-
-            // ----- HÀM TỰ SUBMIT SORT (GIỮ NGUYÊN) -----
-            const sortSelect = document.getElementById('sort');
+            // ----- HÀM TỰ SUBMIT SORT -----
+            const sortSelect = document.getElementById('sortSelect'); // Dùng ID của giao diện lưới
             if (sortSelect) {
                 sortSelect.addEventListener('change', function() {
                     this.closest('form').submit();
                 });
             }
 
-            // ----- [THÊM MỚI] JAVASCRIPT CHO NÚT YÊU THÍCH -----
+            // ----- JAVASCRIPT CHO NÚT YÊU THÍCH -----
             document.querySelectorAll('.favorite-button').forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
+
                     const buttonElement = this;
                     const productId = buttonElement.dataset.id;
                     const toggleUrl = buttonElement.dataset.url;
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    const icon = buttonElement.querySelector('i.fa');
 
                     fetch(toggleUrl, {
                             method: 'POST',
@@ -262,44 +241,44 @@
                                 product_id: productId
                             })
                         })
-                        .then(response => {
-                            if (!response.ok) {
-                                if (response.status === 401) {
-                                    alert('Bạn cần đăng nhập để thực hiện việc này.');
-                                    window.location.href = '/login';
-                                }
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
+                        .then(response => response.json())
                         .then(data => {
-                            if (data.status === 'added') {
-                                // Thêm lại
-                                buttonElement.classList.add('favorited');
-                                icon.classList.remove('fa-heart-o');
-                                icon.classList.add('fa-heart');
-                            } else if (data.status === 'removed') {
-                                // Xóa khỏi danh sách
-                                buttonElement.classList.remove('favorited');
-                                icon.classList.remove('fa-heart');
-                                icon.classList.add('fa-heart-o');
+                            if (data.status === 'removed') {
 
-                                // TÌM DÒNG VÀ XÓA NÓ
-                                const row = buttonElement.closest('.table-row');
-                                if (row) {
-                                    row.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
-                                    row.style.opacity = '0';
-                                    row.style.transform = 'translateX(50px)';
+                                // [SỬA LỖI] Tìm đúng .favorite-card thay vì .table-row
+                                const card = buttonElement.closest('article.favorite-card');
+
+                                if (card) {
+                                    // Thêm hiệu ứng fade-out và co lại
+                                    card.style.transition = 'all 0.4s ease';
+                                    card.style.opacity = '0';
+                                    card.style.transform = 'scale(0.9)';
+                                    card.style.maxHeight = '0px';
+                                    card.style.padding = '0';
+                                    card.style.margin = '0';
+
                                     setTimeout(() => {
-                                        row.remove();
-                                        // Cập nhật lại STT nếu cần (bỏ qua để đơn giản)
-                                    }, 300);
+                                        card.remove();
+
+                                        // Cập nhật lại số lượng
+                                        const countEl = document.querySelector('.favorites-count-number');
+                                        if (countEl) {
+                                            let currentCount = parseInt(countEl.textContent) || 0;
+                                            if (currentCount > 0) {
+                                                countEl.textContent = currentCount - 1;
+                                            }
+                                        }
+
+                                        // Kiểm tra nếu hết sản phẩm thì reload
+                                        const grid = document.querySelector('.favorites-grid');
+                                        if (grid && !grid.querySelector('article.favorite-card')) {
+                                            window.location.reload();
+                                        }
+                                    }, 400);
                                 }
                             }
                         })
-                        .catch(error => {
-                            console.error('Có lỗi xảy ra:', error);
-                        });
+                        .catch(error => console.error('Có lỗi xảy ra:', error));
                 });
             });
 
