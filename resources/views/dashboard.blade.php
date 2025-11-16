@@ -279,7 +279,8 @@
                                     <li class="account">
                                         <a href="#">
                                             @auth
-                                                {{ Auth::user()->name }}
+                                                {{-- Kiểm tra nếu có fullname thì hiển thị, nếu không thì hiển thị name (email) --}}
+                                                {{ !empty(Auth::user()->fullname) ? Auth::user()->username : Auth::user()->name }}
                                             @else
                                                 Tài khoản của tôi
                                             @endauth

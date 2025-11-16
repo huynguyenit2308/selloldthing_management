@@ -5,6 +5,10 @@ namespace App\Services;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Rules\NoFullWidthSpace;
+use App\Rules\NotEmptyOrSpace;
+use App\Rules\HasAtLeastOneChar;
+use App\Rules\NoHTML;
 
 class AccountService
 {
@@ -22,6 +26,10 @@ class AccountService
     public function updatePassword(Request $request)
     {
         $request->validate([
+                new NoFullWidthSpace(),
+                new NotEmptyOrSpace(),
+                new HasAtLeastOneChar(),
+                new NoHTML(),
             'current_password' => 'required',
             'new_password' => [
                 'required',

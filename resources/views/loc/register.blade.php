@@ -1,151 +1,114 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('dashboard')
 
-<head>
-    <meta charset="UTF-8">
-    <title>Đăng Ký</title>
+@section('content')
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .register-container {
+        .register-box {
+            max-width: 450px;
+            margin: 50px auto;
+            padding: 30px;
             background: #fff;
-            padding: 30px 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
-        h2 {
-            margin-bottom: 20px;
-            font-size: 20px;
+        .register-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #007bff;
             font-weight: bold;
-            color: #333;
         }
 
-        .input-group {
+        .input-group-custom {
             position: relative;
-            margin: 8px 0;
+            margin-bottom: 20px;
         }
 
-        input[type="text"],
-        input[type="password"],
-        input[type="email"],
-        input[type="tel"] {
+        .input-group-custom input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
+            padding-right: 40px;
+            padding-left: 15px;
+            /* <-- Thêm dòng này */
+            /* Chừa chỗ cho icon */
+            height: 45px;
         }
 
-        .toggle-password {
+        .toggle-eye {
             position: absolute;
-            right: 12px;
             top: 50%;
+            right: 10px;
             transform: translateY(-50%);
             cursor: pointer;
-            font-size: 16px;
-            color: #666;
-        }
-
-        .link-login {
-            font-size: 14px;
-            margin: 10px 0;
-        }
-
-        .link-login a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .link-login a:hover {
-            text-decoration: underline;
+            font-size: 22px;
         }
 
         .btn-row {
             display: flex;
             justify-content: space-between;
-            margin-top: 15px;
         }
 
-        button {
-            padding: 10px 16px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            background: #fff;
+        .btn-register,
+        .btn-back {
             width: 48%;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
         }
 
         .btn-register {
-            background: #ee4d2d;
+            background-color: #007bff;
             color: #fff;
             border: none;
-        }
-
-        .btn-back {
-            background: #999;
-            color: #fff;
-            border: none;
-        }
-
-        .btn-back {
-            display: inline-block;
-            text-align: center;
-            padding: 10px 16px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            background: #fff;
-            color: #333;
-            width: 40%;
+            /* <-- Thêm dòng này */
+        }
+
+        .btn-back {
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            text-align: center;
+            /* <-- Thêm dòng này để căn giữa */
             text-decoration: none;
-            transition: 0.3s;
+            /* <-- Thêm dòng này để bỏ gạch chân */
         }
 
+        /* Thêm đoạn này để khi rê chuột vào, chữ vẫn màu trắng và không gạch chân */
         .btn-back:hover {
-            background: #f2f2f2;
+            color: #fff;
+            text-decoration: none;
         }
 
-        .alert {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
+        .link-login {
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
         }
 
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
+            background: #ffe5e5;
+            border-left: 4px solid #ff4d4d;
+            padding: 10px 15px;
+            border-radius: 6px;
+            color: #b30000;
+            margin-bottom: 15px;
         }
     </style>
-</head>
 
-<body>
-    <div class="register-container">
+    <div class="register-box" style="margin-top:150px;">
         <h2>Đăng Ký</h2>
 
-        <!-- Hiển thị thông báo -->
+        {{-- Success --}}
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        {{-- Errors --}}
         @if ($errors->any())
-            <div class="alert alert-error">
-                <ul>
+            <div class="alert-error">
+                <ul style="margin:0; padding-left: 18px;">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -155,22 +118,28 @@
 
         <form method="POST" action="{{ route('register') }}">
             @csrf
-            <div class="input-group">
+
+            {{-- Email --}}
+            <div class="input-group-custom">
                 <input type="email" name="email" placeholder="Nhập Email" required>
             </div>
 
-            <div class="input-group">
+            {{-- Password --}}
+            <div class="input-group-custom">
                 <input type="password" id="password" name="password" placeholder="Nhập Mật Khẩu" required>
-                <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+                <span class="toggle-eye" id="eye-password" onclick="togglePassword('password', 'eye-password')">🙈</span>
             </div>
 
-            <div class="input-group">
+            {{-- Confirm Password --}}
+            <div class="input-group-custom">
                 <input type="password" id="password_confirmation" name="password_confirmation"
                     placeholder="Nhập Lại Mật Khẩu" required>
-                <span class="toggle-password" onclick="togglePassword('password_confirmation')">👁️</span>
+                <span class="toggle-eye" id="eye-password_confirmation"
+                    onclick="togglePassword('password_confirmation', 'eye-password_confirmation')">🙈</span>
             </div>
 
-            <div class="input-group">
+            {{-- Phone --}}
+            <div class="input-group-custom">
                 <input type="tel" name="phone" placeholder="Nhập Số Điện Thoại" required>
             </div>
 
@@ -186,10 +155,18 @@
     </div>
 
     <script>
-        function togglePassword(id) {
-            const input = document.getElementById(id);
-            input.type = input.type === "password" ? "text" : "password";
+        function togglePassword(inputId, eyeId) {
+            const input = document.getElementById(inputId);
+            const eye = document.getElementById(eyeId);
+
+            if (input.type === "password") {
+                input.type = "text";
+                eye.textContent = "👀"; // mắt mở
+            } else {
+                input.type = "password";
+                eye.textContent = "🙈"; // mắt nhắm
+            }
         }
     </script>
-</body>
-</html>
+
+@endsection
