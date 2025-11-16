@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChatHistory;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use OpenAI;
 
 class ChatBotController extends Controller
@@ -43,6 +45,12 @@ class ChatBotController extends Controller
         ]);
 
         $reply = $response->choices[0]->message->content ?? "Xin lỗi, tôi chưa hiểu câu hỏi.";
+
+        ChatHistory::create([
+            'user_id'      => Auth::id(),
+            'user_message' => $userMessage,
+            'bot_reply'    => $reply,
+        ]);
 
         return response()->json(['reply' => $reply]);
     }
