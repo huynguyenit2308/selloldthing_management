@@ -125,10 +125,12 @@
                     <article class="favorite-card" id="favorite-card-{{ $product->id }}">
                         {{-- THAY ĐỔI 6: Thêm class 'favorite-button' để JS của Giao diện 2 bắt sự kiện --}}
                         <button type="button"
-                            class="favorite-remove remove-favorite favorite-button"
+                            class="favorite-remove remove-favorite favorite-button favorited"
                             data-id="{{ $product->id }}"
                             data-url="{{ route('favorites.toggle') }}"
-                            aria-label="Bỏ khỏi yêu thích">×</button>
+                            aria-label="Bỏ khỏi yêu thích">
+                            <i class="fa fa-heart" aria-hidden="true"></i>
+                        </button>
 
                         <div class="favorite-image">
                             <a href="{{ route('products.show', $product->id) }}">
