@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Storage; // [MỚI] Thêm thư viện Storage
 
 class ReviewService
 {
@@ -19,16 +20,31 @@ class ReviewService
         // 1. Kiểm tra sản phẩm tồn tại
         $product = Product::findOrFail($productId);
 
-        // 2. Tạo review
+        $imagePath = null;
+
+        // 2. [MỚI] Kiểm tra và lưu file ảnh
+        // $data['image'] được truyền từ Controller (Bước 1)
+        if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
+            // Lưu file vào 'storage/app/public/reviews'
+            // $imagePath sẽ là 'reviews/ten_file_moi_ngau_nhien.jpg'
+            $imagePath = $data['image']->store('reviews', 'public');
+        }
+
+        // 3. [MỚI] Tạo review với đường dẫn ảnh (nếu có)
         $review = Review::create([
             'product_id' => $product->id,
             'user_id'    => $user->id,
             'rating'     => $data['rating'],
             'comment'    => $data['comment'],
+            'media'      => $imagePath, // [SỬA] Đổi 'image_path' thành 'media'
         ]);
 
-        // 3. Load user
+        // 4. Load user
         $review->load('user');
+        
+        // 5. Trả về review
+        // $review sẽ tự động có 'image_url' (nhờ Bước 3)
+        // mà JavaScript đang chờ.
         return $review;
     }
 
@@ -38,7 +54,7 @@ class ReviewService
     public function getProductPageData(int $productId): array
     {
         // 1. Lấy sản phẩm và các quan hệ
-        $product = Product::with(['reviews.user', 'images', 'category'])
+        $product = Product::with(['reviews.user', 'reviews.comments', 'images', 'category']) // [SỬA] Thêm 'reviews.comments'
             ->findOrFail($productId);
 
         // 2. Tính toán
@@ -84,6 +100,9 @@ class ReviewService
             throw new AuthorizationException('Bạn không có quyền sửa đánh giá này.');
         }
 
+        // [MỚI] Tạm thời chưa xử lý update ảnh, vì JS chưa gửi lên
+        // (Nếu bạn muốn update cả ảnh ở đây, logic sẽ phức tạp hơn)
+
         // Cập nhật
         $review->update([
             'rating'  => $data['rating'],
@@ -106,6 +125,19 @@ class ReviewService
             throw new AuthorizationException('Bạn không có quyền xóa đánh giá này.');
         }
 
+        // [MỚI] Xóa file ảnh cũ khỏi storage nếu có
+        if ($review->media) { // [SỬA] Đổi 'image_path' thành 'media'
+            Storage::disk('public')->delete($review->media); // [SỬA] Đổi 'image_path' thành 'media'
+        }
+
+        // [MỚI] Tương tự, xóa ảnh của tất cả comment con (nếu có)
+        // (Điều này yêu cầu bạn phải làm tương tự cho Model Comment)
+        foreach ($review->comments as $comment) {
+             if ($comment->media) { // [SỬA] Giả sử Comment cũng dùng 'media'
+                 Storage::disk('public')->delete($comment->media); // [SỬA] Giả sử Comment cũng dùng 'media'
+             }
+        }
+        
         // Xóa (Review model nên có onDelete('cascade') cho comments)
         $review->delete();
     }
