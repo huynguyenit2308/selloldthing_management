@@ -8,6 +8,7 @@ use App\Models\Review;
 use App\Services\ReviewService; // ✅ Thêm service
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller
 {
@@ -27,29 +28,34 @@ class ReviewController extends Controller
     // }
 
     // 🟦 LƯU REVIEW MỚI
-    public function store(Request $request, $id)
+    public function store(Request $request, $productId)
     {
-        // 1. Validate (Controller)
+        // 1. Validate request (thêm 'image')
         $validatedData = $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'required|string|max:1000',
+            'rating'  => 'required|integer|min:1|max:5',
+            'comment' => 'required|string|min:10|max:1000',
+            'image'   => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048', // [MỚI] Tối đa 2MB
         ]);
 
-        try {
-            // 2. Gọi Service (Service)
-            $review = $this->reviewService->createReview(
-                $id, // product id
-                auth()->user(),
-                $validatedData
-            );
+        // 2. [QUAN TRỌNG] Gộp file vào mảng data để gửi cho Service
+        $data = [
+            'rating'  => $validatedData['rating'],
+            'comment' => $validatedData['comment'],
+            'image'   => $request->hasFile('image') ? $request->file('image') : null, // [MỚI]
+        ];
 
-            // 3. Trả về JSON (Controller)
-            return response()->json([
-                'success' => true,
-                'review' => $review,
-            ]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Sản phẩm không tồn tại.'], 404);
+        try {
+            // 3. Gọi Service với mảng data đã có file
+            $review = $this->reviewService->createReview($productId, Auth::user(), $data);
+
+            // 4. Trả về JSON
+            // Nhờ Model (bạn đã sửa), $review sẽ tự động có 'image_url'
+            // mà JavaScript đang chờ.
+            return response()->json(['success' => true, 'review' => $review]);
+
+        } catch (\Exception $e) {
+            // Log lỗi nếu cần: Log::error($e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 

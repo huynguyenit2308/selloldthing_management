@@ -28,7 +28,7 @@
                         $hasRealImages = $galleryImages->isNotEmpty();
 
                         if (!$hasRealImages) {
-                            $galleryImages = collect([null]);
+                        $galleryImages = collect([null]);
                         }
 
                         $primaryImageUrl = optional($galleryImages->first())->image_url ?? asset('images/product_1.png');
@@ -105,11 +105,11 @@
                             $rawAvatar = $seller?->avatar;
 
                             if ($rawAvatar) {
-                                $avatarUrl = \Illuminate\Support\Str::startsWith($rawAvatar, ['http://', 'https://'])
-                                    ? $rawAvatar
-                                    : asset('storage/' . ltrim($rawAvatar, '/'));
+                            $avatarUrl = \Illuminate\Support\Str::startsWith($rawAvatar, ['http://', 'https://'])
+                            ? $rawAvatar
+                            : asset('storage/' . ltrim($rawAvatar, '/'));
                             } else {
-                                $avatarUrl = asset('images/avatar1.jpg');
+                            $avatarUrl = asset('images/avatar1.jpg');
                             }
                             @endphp
 
@@ -126,25 +126,25 @@
                             @php
                             $rawMethods = (string) ($product->contact_method ?? '');
                             $methods = collect(explode(',', $rawMethods))
-                                ->map(fn ($m) => strtolower(trim($m)))
-                                ->filter()
-                                ->unique();
+                            ->map(fn ($m) => strtolower(trim($m)))
+                            ->filter()
+                            ->unique();
 
                             $hasPhone = $methods->contains('phone') || $methods->contains('zalo');
                             $hasEmail = $methods->contains('email');
-                            $hasChat  = $methods->contains('chat');
+                            $hasChat = $methods->contains('chat');
                             $hasOther = $methods->contains('other');
 
                             // Nếu không chọn gì, mặc định hiển thị cả gọi + nhắn
                             if ($methods->isEmpty()) {
-                                $hasPhone = true;
-                                $hasChat = true;
+                            $hasPhone = true;
+                            $hasChat = true;
                             }
 
                             // Nếu vì lý do nào đó không bắt được giá trị hợp lệ nào,
                             // luôn hiển thị tối thiểu nút chat để người mua vẫn liên hệ được
                             if (!$hasPhone && !$hasEmail && !$hasChat && !$hasOther) {
-                                $hasChat = true;
+                            $hasChat = true;
                             }
                             @endphp
 
@@ -241,10 +241,15 @@
                             </dl>
                         </div>
 
+                        {{-- ======================================================= --}}
+                        {{-- BẮT ĐẦU PHẦN REVIEW ĐÃ CHỈNH SỬA --}}
+                        {{-- ======================================================= --}}
                         <div class="product-tab-section" id="tab-reviews" data-tab-panel role="tabpanel" aria-labelledby="tab-button-reviews" hidden>
                             <div class="container mt-5">
                                 <h2>Đánh giá sản phẩm: {{ $product->name }}</h2>
-                                <form id="review-form" action="{{ route('reviews.store', $product->id) }}" method="POST">
+
+                                {{-- [MỚI] Thêm enctype="multipart/form-data" cho form chính --}}
+                                <form id="review-form" action="{{ route('reviews.store', $product->id) }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <div class="form-group">
                                         <label for="rating">Số sao (1-5):</label>
@@ -263,7 +268,20 @@
                                         <label for="comment">Nhận xét:</label>
                                         <textarea name="comment" id="comment" class="form-control" rows="4" required minlength="10" maxlength="1000"></textarea>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+
+                                    {{-- [MỚI] Thêm phần upload ảnh cho review chính --}}
+                                    <div class="form-group mt-3">
+                                        <label for="review-image-upload" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-image"></i> Tải ảnh lên (tùy chọn)
+                                        </label>
+                                        {{-- Input file ẩn --}}
+                                        <input type="file" name="image" id="review-image-upload" class="d-none" accept="image/*" onchange="previewImage(this, 'review-image-preview')">
+                                        {{-- Khu vực xem trước --}}
+                                        <div id="review-image-preview" class="mt-2" style="max-width: 100px;"></div>
+                                    </div>
+                                    {{-- [KẾT THÚC MỚI] --}}
+
+                                    <button type="submit" class="btn btn-primary mt-3">Gửi đánh giá</button>
                                 </form>
                                 <hr>
 
@@ -277,7 +295,6 @@
                                                 <div>
                                                     <h6 class="mb-1 fw-bold">{{ $review->user->name ?? 'Người dùng ẩn danh' }}</h6>
 
-                                                    <!-- Hiển thị số sao -->
                                                     <div class="review-stars mb-1">
                                                         @for ($i = 1; $i <= 5; $i++) @if ($i <=$review->rating)
                                                             <i class="bi bi-star-fill text-warning"></i>
@@ -287,27 +304,43 @@
                                                             @endfor
                                                     </div>
 
-                                                    <!-- Nội dung bình luận -->
                                                     <p class="mb-0">{{ $review->comment }}</p>
 
-                                                    <!-- Thời gian -->
+                                                    {{-- [MỚI] Hiển thị ảnh của review (nếu có) --}}
+                                                    @if($review->image_url)
+                                                    <a href="{{ $review->image_url }}" data-bs-toggle="tooltip" title="Xem ảnh đầy đủ" target="_blank">
+                                                        <img src="{{ $review->image_url }}" class="img-fluid rounded mt-2" style="max-height: 150px; cursor: pointer;">
+                                                    </a>
+                                                    @endif
+
                                                     <small class="text-muted">{{ $review->created_at->diffForHumans() }}</small>
-                                                    <!-- Form phan hoi ẩn -->
                                                     @auth
                                                     <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-{{ $review->id }}')">💬 Phản hồi</button>
 
 
-                                                    {{-- Form Phản hồi cho Review (có thể dùng route('comments.store', $review->id)) --}}
-                                                    <form id="reply-form-review-{{ $review->id }}" class="reply-form d-none mt-2" action="{{ route('comments.store', $review->id) }}" method="POST">
+                                                    {{-- [MỚI] Thêm enctype cho form phản hồi review --}}
+                                                    <form id="reply-form-review-{{ $review->id }}" class="reply-form d-none mt-2" action="{{ route('comments.store', $review->id) }}" method="POST" enctype="multipart/form-data">
                                                         @csrf
-                                                        <input type="hidden" name="parent_id" value=""> {{-- parent_id sẽ được điền bằng JS khi reply từ nút 'Phản hồi' --}}
+                                                        <input type="hidden" name="parent_id" value="">
                                                         <div class="input-group input-group-sm">
-                                                            <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000"> <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                                            <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
+
+                                                            {{-- [MỚI] Nút icon tải ảnh cho reply --}}
+                                                            <label for="reply-image-review-{{ $review->id }}" class="btn btn-outline-secondary mb-0">
+                                                                <i class="bi bi-image"></i>
+                                                            </label>
+                                                            <input type="file" name="image" id="reply-image-review-{{ $review->id }}" class="d-none" accept="image/*" onchange="previewImage(this, 'reply-preview-review-{{ $review->id }}')">
+                                                            {{-- [KẾT THÚC MỚI] --}}
+
+                                                            <button class="btn btn-outline-primary" type="submit">Gửi</button>
                                                         </div>
+
+                                                        {{-- [MỚI] Khu vực preview cho reply --}}
+                                                        <div id="reply-preview-review-{{ $review->id }}" class="mt-2" style="max-width: 80px;"></div>
                                                     </form>
                                                     @endauth
 
-                                                    {{-- **BƯỚC QUAN TRỌNG NHẤT:** Tạo container .replies --}}
+                                                    {{-- Container .replies --}}
                                                     <div class="replies-root mt-4">
                                                         @foreach($review->comments as $comment)
                                                         {{-- Thẻ div .comment-item cho CẤP 1 --}}
@@ -316,13 +349,20 @@
                                                                 <div>
                                                                     <strong>{{ $comment->user->name ?? 'Người dùng' }}:</strong>
 
-                                                                    {{-- [MỚI] Thêm Wrapper cho Cấp 1 --}}
+                                                                    {{-- Wrapper cho Cấp 1 --}}
                                                                     <div class="comment-content-wrapper" id="comment-content-wrapper-{{ $comment->id }}">
 
-                                                                        {{-- 1. Nội dung gốc (hiện mặc định) --}}
+                                                                        {{-- 1. Nội dung gốc --}}
                                                                         <p class="mb-1" data-comment-content>{{ $comment->content }}</p>
 
-                                                                        {{-- 2. [MỚI] Form sửa (ẩn mặc định) --}}
+                                                                        {{-- [MỚI] Hiển thị ảnh của comment Cấp 1 (nếu có) --}}
+                                                                        @if($comment->image_url)
+                                                                        <a href="{{ $comment->image_url }}" data-bs-toggle="tooltip" title="Xem ảnh đầy đủ" target="_blank">
+                                                                            <img src="{{ $comment->image_url }}" class="img-fluid rounded mt-2" style="max-height: 100px; cursor: pointer;">
+                                                                        </a>
+                                                                        @endif
+
+                                                                        {{-- 2. Form sửa (ẩn) --}}
                                                                         @auth
                                                                         <form id="edit-form-comment-{{ $comment->id }}" class="comment-edit-form d-none mt-2" onsubmit="event.preventDefault(); saveCommentEdit({{ $comment->id }});">
                                                                             <textarea class="form-control form-control-sm" name="content" required>{{ $comment->content }}</textarea>
@@ -343,7 +383,7 @@
                                                                         @auth
                                                                         · <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="toggleReplyForm('comment-{{ $comment->id }}')">💬 Phản hồi</button>
 
-                                                                        {{-- [MỚI] Thêm Nút Sửa/Xóa cho Cấp 1 --}}
+                                                                        {{-- Nút Sửa/Xóa cho Cấp 1 --}}
                                                                         @if(auth()->id() === $comment->user_id)
                                                                         · <button class="btn btn-link btn-sm text-decoration-none p-0 text-primary" onclick="toggleCommentEditForm({{ $comment->id }})">✏️ Sửa</button>
                                                                         · <button class="btn btn-link btn-sm text-decoration-none p-0 text-danger" onclick="deleteComment({{ $comment->id }})">🗑️ Xóa</button>
@@ -354,22 +394,35 @@
 
                                                                     {{-- 4. Form phản hồi (cho comment CẤP 1) --}}
                                                                     @auth
-                                                                    <form id="reply-form-comment-{{ $comment->id }}" class="reply-form d-none mt-1" action="{{ route('comments.reply', $comment->id) }}" {{-- SỬA LẠI: Trỏ đến route 'reply' --}} method="POST">
+                                                                    {{-- [MỚI] Thêm enctype cho form phản hồi comment --}}
+                                                                    <form id="reply-form-comment-{{ $comment->id }}" class="reply-form d-none mt-1" action="{{ route('comments.reply', $comment->id) }}" method="POST" enctype="multipart/form-data">
                                                                         @csrf
                                                                         <input type="hidden" name="parent_id" value="{{ $comment->id }}">
                                                                         <div class="input-group input-group-sm">
                                                                             <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required>
+
+                                                                            {{-- [MỚI] Nút icon tải ảnh cho reply Cấp 1 --}}
+                                                                            <label for="reply-image-comment-{{ $comment->id }}" class="btn btn-outline-secondary mb-0">
+                                                                                <i class="bi bi-image"></i>
+                                                                            </label>
+                                                                            <input type="file" name="image" id="reply-image-comment-{{ $comment->id }}" class="d-none" accept="image/*" onchange="previewImage(this, 'reply-preview-comment-{{ $comment->id }}')">
+                                                                            {{-- [KẾT THÚC MỚI] --}}
+
                                                                             <button class="btn btn-outline-primary" type="submit">Gửi</button>
                                                                         </div>
+
+                                                                        {{-- [MỚI] Khu vực preview cho reply Cấp 1 --}}
+                                                                        <div id="reply-preview-comment-{{ $comment->id }}" class="mt-2" style="max-width: 80px;"></div>
                                                                     </form>
                                                                     @endauth
 
-                                                                    {{-- 5. Container gọi đệ quy Cấp 2+ (ĐÃ SỬA DẤU PHẨY) --}}
+                                                                    {{-- 5. Container gọi đệ quy Cấp 2+ --}}
                                                                     <div class="replies mt-2">
+                                                                        {{-- [LƯU Ý] Bạn cũng cần cập nhật file 'phanhoi.phanhoi' để thêm enctype, nút tải ảnh và preview tương tự như form "reply-form-comment" ở trên --}}
                                                                         @include('phanhoi.phanhoi', [
                                                                         'comments' => $comment->replies,
                                                                         'level' => 2,
-                                                                        'review_id' => $review->id // Truyền review_id xuống
+                                                                        'review_id' => $review->id
                                                                         ])
                                                                     </div>
 
@@ -379,25 +432,10 @@
                                                         @endforeach
                                                     </div>
 
-                                                    <!-- Form sửa ẩn -->
-                                                    <div class="edit-form d-none mt-2">
-                                                        <div class="mb-2">
-                                                            <label>Số sao:</label>
-                                                            <select class="form-control edit-rating">
-                                                                @for($i = 1; $i <= 5; $i++) <option value="{{ $i }}" {{ $i == $review->rating ? 'selected' : '' }}>{{ $i }}</option>
-                                                                    @endfor
-                                                            </select>
-                                                        </div>
-                                                        <div class="mb-2">
-                                                            <textarea class="form-control edit-comment">{{ $review->comment }}</textarea>
-                                                        </div>
-                                                        <button class="btn btn-sm btn-primary" onclick="saveEdit({{ $review->id }})">💾 Lưu</button>
-                                                        <button class="btn btn-sm btn-secondary" onclick="cancelEdit({{ $review->id }})">❌ Hủy</button>
-                                                    </div>
                                                 </div>
 
+                                                {{-- Dropdown Sửa/Xóa Review --}}
                                                 @if(auth()->check() && auth()->id() === $review->user_id)
-                                                <!-- Dropdown -->
                                                 <div class="dropdown">
                                                     <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                         <i class="bi bi-three-dots-vertical"></i>
@@ -414,7 +452,6 @@
                                                             </button>
                                                         </li>
                                                     </ul>
-
                                                 </div>
                                                 @endif
 
@@ -428,9 +465,10 @@
                                     @endif
                                 </div>
                             </div>
-
                         </div>
-
+                        {{-- ======================================================= --}}
+                        {{-- KẾT THÚC PHẦN REVIEW ĐÃ CHỈNH SỬA --}}
+                        {{-- ======================================================= --}}
                         <div class="product-tab-section" id="tab-shipping" data-tab-panel role="tabpanel" aria-labelledby="tab-button-shipping" hidden>
                             <h2>Vận chuyển &amp; Thanh toán</h2>
                             <p>Hỗ trợ giao hàng toàn quốc. Vui lòng liên hệ người bán để thống nhất phí vận chuyển.</p>
@@ -504,8 +542,50 @@
         @push('scripts')
         <script>
             // =======================================================
-            // 1. HÀM VALIDATE (ĐÃ TÁCH RA)
+            // 1. HÀM VALIDATE VÀ HÀM PREVIEW (MỚI)
             // =======================================================
+
+            /**
+             * [MỚI] Hàm preview ảnh khi người dùng chọn file
+             * @param {HTMLInputElement} input - Thẻ input[type=file]
+             * @param {string} previewId - ID của div chứa ảnh preview
+             */
+            function previewImage(input, previewId) {
+                const preview = document.getElementById(previewId);
+                if (!preview) {
+                    console.warn('Không tìm thấy vùng preview:', previewId);
+                    return;
+                }
+
+                preview.innerHTML = ""; // Xóa preview cũ
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '100px'; // Kích thước preview
+                        img.style.height = 'auto';
+                        img.style.borderRadius = '4px';
+
+                        // Thêm nút xóa preview
+                        const removeBtn = document.createElement('button');
+                        removeBtn.innerHTML = '&times;'; // Nút 'x'
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'btn btn-sm btn-danger p-0 px-1 ms-1';
+                        removeBtn.style.fontSize = '10px';
+                        removeBtn.setAttribute('aria-label', 'Xóa ảnh');
+                        removeBtn.onclick = function() {
+                            input.value = ""; // Xóa file đã chọn
+                            preview.innerHTML = ""; // Xóa ảnh preview
+                        };
+
+                        preview.appendChild(img);
+                        preview.appendChild(removeBtn);
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+
             /**
              * Kiểm tra nội dung bình luận theo yêu cầu
              * @param {string} content - Nội dung bình luận
@@ -541,7 +621,7 @@
             document.addEventListener('DOMContentLoaded', function() {
                 var tabButtons = document.querySelectorAll('.product-tab[data-tab-target]');
                 var tabPanels = document.querySelectorAll('.product-tab-section[data-tab-panel]');
-                var previewImage = document.querySelector('.product-gallery-preview img[data-active-image]');
+                var previewImageEl = document.querySelector('.product-gallery-preview img[data-active-image]');
                 var galleryButtons = document.querySelectorAll('.product-gallery-thumb[data-image]');
 
                 // Xử lý Tabs
@@ -571,10 +651,10 @@
                     }
                     button.addEventListener('click', function() {
                         var imageSrc = button.getAttribute('data-image');
-                        if (!imageSrc || !previewImage) {
+                        if (!imageSrc || !previewImageEl) { // [SỬA] Đổi tên biến 'previewImage' thành 'previewImageEl' để tránh xung đột
                             return;
                         }
-                        previewImage.src = imageSrc;
+                        previewImageEl.src = imageSrc;
                         galleryButtons.forEach(function(btn) {
                             var isActive = btn === button;
                             btn.classList.toggle('active', isActive);
@@ -585,7 +665,7 @@
             });
 
             // =======================================================
-            // 2. XỬ LÝ FORM ĐÁNH GIÁ CHÍNH (ĐÃ THÊM VALIDATE SỐ SAO)
+            // 2. XỬ LÝ FORM ĐÁNH GIÁ CHÍNH (ĐÃ CẬP NHẬT CHO FILE UPLOAD)
             // =======================================================
             document.addEventListener('DOMContentLoaded', function() {
                 const reviewForm = document.getElementById('review-form');
@@ -599,12 +679,12 @@
                     const formData = new FormData(reviewForm);
                     const actionUrl = reviewForm.getAttribute('action');
 
-                    // --- [ĐÃ CẬP NHẬT] THÊM VALIDATION SỐ SAO ---
+                    // --- VALIDATION SỐ SAO ---
                     const ratingValue = formData.get('rating');
                     const ratingError = validateRating(ratingValue);
                     if (ratingError) {
-                        alert(ratingError); // Hiển thị thông báo lỗi
-                        return; // Dừng gửi form
+                        alert(ratingError);
+                        return;
                     }
                     // --- KẾT THÚC VALIDATION SỐ SAO ---
 
@@ -612,18 +692,20 @@
                     const commentText = formData.get('comment');
                     const commentError = validateComment(commentText);
                     if (commentError) {
-                        alert(commentError); // Hiển thị thông báo lỗi
-                        return; // Dừng gửi form
+                        alert(commentError);
+                        return;
                     }
                     // --- KẾT THÚC VALIDATION BÌNH LUẬN ---
 
+                    // [SỬA] Bỏ 'Content-Type: application/json' khi gửi FormData (vì có file)
                     fetch(actionUrl, {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': formData.get('_token'),
                                 'Accept': 'application/json'
+                                // KHÔNG set Content-Type, browser sẽ tự làm
                             },
-                            body: formData
+                            body: formData // Gửi thẳng FormData
                         })
                         .then(res => res.json())
                         .then(data => {
@@ -641,55 +723,76 @@
                                 }
 
                                 const csrfToken = formData.get('_token');
-                                const commentStoreUrl = `/reviews/${review.id}/comments`;
+                                const commentStoreUrl = data.comment_store_url || `/reviews/${review.id}/comments`; // [MỚI] Lấy URL động
 
+                                // [MỚI] Hiển thị ảnh của review (nếu có)
+                                const reviewImageHtml = review.image_url ?
+                                    `<a href="${review.image_url}" target="_blank" class="mt-2 d-block"><img src="${review.image_url}" class="img-fluid rounded" style="max-height: 150px;"></a>` :
+                                    '';
+
+                                // [CẬP NHẬT] reviewHtml để thêm ảnh và form upload ảnh
                                 const reviewHtml = `
-                        <div class="card mb-3 position-relative" id="review-${review.id}">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1 fw-bold">${userName}</h6>
-                                        <div class="review-stars mb-1">
-                                            ${starsHtml}
+                    <div class="card mb-3 position-relative" id="review-${review.id}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">${userName}</h6>
+                                    <div class="review-stars mb-1">
+                                        ${starsHtml}
+                                    </div>
+                                    <p class="mb-0">${review.comment}</p>
+                                    ${reviewImageHtml} <small class="text-muted">Vừa xong</small>
+                                    <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
+                                    
+                                    <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST" enctype="multipart/form-data">
+                                        <input type="hidden" name="_token" value="${csrfToken}">
+                                        <input type="hidden" name="parent_id" value="">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
+                                            
+                                            <label for="reply-image-review-${review.id}" class="btn btn-outline-secondary mb-0" aria-label="Đính kèm ảnh">
+                                                <i class="bi bi-image"></i>
+                                            </label>
+                                            <input type="file" name="image" id="reply-image-review-${review.id}" class="d-none" accept="image/*" onchange="previewImage(this, 'reply-preview-review-${review.id}')">
+                                            
+                                            <button class="btn btn-outline-primary" type="submit">Gửi</button>
                                         </div>
-                                        <p class="mb-0">${review.comment}</p>
-                                        <small class="text-muted">Vừa xong</small>
-                                        <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
-                                        <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST">
-                                            <input type="hidden" name="_token" value="${csrfToken}">
-                                            <input type="hidden" name="parent_id" value="">
-                                            <div class="input-group input-group-sm">
-                                                <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
-                                                <button class="btn btn-outline-primary" type="submit">Gửi</button>
-                                            </div>
-                                        </form>
-                                        <div class="replies-root mt-4"></div> 
-                                    </div>
-                                    <div class="dropdown">
-                                        <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
-                                                    ✏️ Sửa
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
-                                                    🗑️ Xóa
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                        <div id="reply-preview-review-${review.id}" class="mt-2" style="max-width: 80px;"></div>
+                                    </form>
+                                    <div class="replies-root mt-4"></div> 
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
+                                                ✏️ Sửa
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
+                                                🗑️ Xóa
+                                            </button>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
-                        </div>`;
+                        </div>
+                    </div>`;
 
                                 if (reviewList) {
                                     reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
                                 }
                                 reviewForm.reset();
+
+                                // [MỚI] Xóa preview ảnh sau khi gửi
+                                const previewDiv = document.getElementById('review-image-preview'); // Bạn cần đảm bảo div preview của form chính có ID này
+                                if (previewDiv) {
+                                    previewDiv.innerHTML = "";
+                                }
+
                             } else {
                                 alert('❌ Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại.'));
                             }
@@ -702,7 +805,7 @@
             });
 
             // =======================================================
-            // 3. XỬ LÝ FORM PHẢN HỒI (ĐÃ THÊM VALIDATE)
+            // 3. XỬ LÝ FORM PHẢN HỒI (ĐÃ CẬP NHẬT CHO FILE UPLOAD)
             // =======================================================
             document.addEventListener('submit', async function(e) {
                 const form = e.target.closest('.reply-form');
@@ -718,8 +821,8 @@
                 const validationError = validateComment(contentText);
 
                 if (validationError) {
-                    alert(validationError); // Hiển thị thông báo lỗi
-                    return; // Dừng gửi form
+                    alert(validationError);
+                    return;
                 }
                 // --- KẾT THÚC VALIDATION ---
 
@@ -728,12 +831,14 @@
                 submitButton.textContent = 'Đang gửi...';
 
                 try {
+                    // [SỬA] Bỏ 'Content-Type: application/json' khi gửi FormData
                     const res = await fetch(action, {
                         method: 'POST',
-                        body: formData,
+                        body: formData, // Gửi thẳng FormData
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            // KHÔNG set Content-Type
                         }
                     });
 
@@ -759,14 +864,23 @@
                         }
                         newComment.style.cssText = `margin-left: ${newMarginLeft}px; display: block;`;
 
+                        // [MỚI] Hiển thị ảnh của comment (nếu có)
+                        const commentImageHtml = data.image_url ?
+                            `<a href="${data.image_url}" target="_blank" class="mt-2 d-block"><img src="${data.image_url}" class="img-fluid rounded" style="max-height: 100px;"></a>` :
+                            '';
+
+                        // [MỚI] Lấy URL động (nếu backend trả về)
+                        const replyActionUrl = data.reply_url || `/comments/${data.id}/reply`;
+
+                        // [CẬP NHẬT] innerHTML để thêm ảnh và form upload ảnh
                         newComment.innerHTML = `
                 <div class="d-flex align-items-start">
                     <div>
                         <strong>${data.user || 'Người dùng ẩn danh'}:</strong>
                         <div class="comment-content-wrapper" id="comment-content-wrapper-${data.id}">
                             <p class="mb-1" data-comment-content>${data.content}</p>
-                            <form id="edit-form-comment-${data.id}" class="comment-edit-form d-none mt-2" 
-                                  onsubmit="event.preventDefault(); saveCommentEdit(${data.id});">
+                            ${commentImageHtml} <form id="edit-form-comment-${data.id}" class="comment-edit-form d-none mt-2" 
+                                    onsubmit="event.preventDefault(); saveCommentEdit(${data.id});">
                                 <textarea class="form-control form-control-sm" name="content" required>${data.content}</textarea>
                                 <div class="mt-2">
                                     <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
@@ -778,20 +892,28 @@
                         <small class="text-muted">
                             Vừa xong 
                             · <button class="btn btn-link btn-sm text-decoration-none p-0" 
-                                onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
+                                    onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
                             · <button class="btn btn-link btn-sm text-decoration-none p-0 text-primary" 
                                     onclick="toggleCommentEditForm(${data.id})">✏️ Sửa</button>
                             · <button class="btn btn-link btn-sm text-decoration-none p-0 text-danger" 
                                     onclick="deleteComment(${data.id})">🗑️ Xóa</button>
                         </small>
+
                         <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" 
-                              action="/comments/${data.id}/reply" method="POST">
+                                action="${replyActionUrl}" method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="_token" value="${formData.get('_token')}">
                             <input type="hidden" name="parent_id" value="${data.id}">
                             <div class="input-group input-group-sm">
                                 <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
+                                
+                                <label for="reply-image-comment-${data.id}" class="btn btn-outline-secondary mb-0" aria-label="Đính kèm ảnh">
+                                    <i class="bi bi-image"></i>
+                                </label>
+                                <input type="file" name="image" id="reply-image-comment-${data.id}" class="d-none" accept="image/*" onchange="previewImage(this, 'reply-preview-comment-${data.id}')">
+
                                 <button class="btn btn-outline-primary" type="submit">Gửi</button>
                             </div>
+                            <div id="reply-preview-comment-${data.id}" class="mt-2" style="max-width: 80px;"></div>
                         </form>
                         <div class="replies mt-2"></div> 
                     </div>
@@ -813,6 +935,17 @@
                             console.error('Không tìm thấy container để chèn comment mới.');
                         }
 
+                        // [MỚI] Xóa preview của form vừa gửi
+                        const fileInput = form.querySelector('input[type="file"]');
+                        if (fileInput && fileInput.id) {
+                            // Suy ra ID của preview từ ID của input
+                            const previewId = 'reply-preview-' + fileInput.id.split('-').slice(2).join('-');
+                            const previewDiv = document.getElementById(previewId);
+                            if (previewDiv) {
+                                previewDiv.innerHTML = "";
+                            }
+                        }
+
                         form.reset();
                         form.classList.add('d-none');
                     } else {
@@ -828,7 +961,7 @@
             });
 
             // =======================================================
-            // 4. CÁC HÀM TIỆN ÍCH KHÁC (GIỮ NGUYÊN)
+            // 4. CÁC HÀM TIỆN ÍCH KHÁC (ĐÃ SẮP XẾP LẠI)
             // =======================================================
 
             function editReview(id, rating, comment) {
@@ -838,21 +971,21 @@
                 reviewDiv.dataset.original = reviewDiv.innerHTML;
 
                 reviewDiv.innerHTML = `
-        <form onsubmit="event.preventDefault(); saveReview(${id});">
-            <div class="rating-stars mb-2">
-                ${[1,2,3,4,5].map(i => `
-                    <i class="${i <= rating ? 'fas' : 'far'} fa-star text-warning" 
-                    data-value="${i}" 
-                    style="cursor:pointer; font-size:20px;" 
-                    onclick="setStar(${id}, ${i})"></i>
-                `).join('')}
-                <input type="hidden" id="edit-rating-${id}" value="${rating}">
-            </div>
-            <textarea id="edit-comment-${id}" class="form-control mb-2" required minlength="10" maxlength="1000">${comment}</textarea>
-            <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${id})">❌ Hủy</button>
-        </form>
-        `;
+    <form onsubmit="event.preventDefault(); saveReview(${id});">
+        <div class="rating-stars mb-2">
+            ${[1,2,3,4,5].map(i => `
+                <i class="${i <= rating ? 'fas' : 'far'} fa-star text-warning" 
+                data-value="${i}" 
+                style="cursor:pointer; font-size:20px;" 
+                onclick="setStar(${id}, ${i})"></i>
+            `).join('')}
+            <input type="hidden" id="edit-rating-${id}" value="${rating}">
+        </div>
+        <textarea id="edit-comment-${id}" class="form-control mb-2" required minlength="10" maxlength="1000">${comment}</textarea>
+        <button type="submit" class="btn btn-primary btn-sm">💾 Lưu</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${id})">❌ Hủy</button>
+    </form>
+    `;
             }
 
             function setStar(id, value) {
@@ -991,6 +1124,7 @@
                 wrapper.querySelector('.comment-edit-form').classList.toggle('d-none');
             }
 
+            // [SỬA] Gộp logic fetch vào hàm saveCommentEdit
             window.saveCommentEdit = function(commentId) {
                 const form = document.getElementById(`edit-form-comment-${commentId}`);
                 if (!form) return;
@@ -1001,64 +1135,8 @@
                     alert(validationError);
                     return;
                 }
-            };
-            document.querySelectorAll('.favorite-button').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault(); // Ngăn hành vi mặc định của button
 
-                    const buttonElement = this;
-                    const productId = buttonElement.dataset.id;
-                    const toggleUrl = buttonElement.dataset.url;
-
-                    // Lấy CSRF token từ thẻ meta
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                    // Lấy icon bên trong nút
-                    const icon = buttonElement.querySelector('i.fa');
-
-                    // Gửi request đến server bằng Fetch API
-                    fetch(toggleUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken // Gửi kèm CSRF token
-                            },
-                            body: JSON.stringify({
-                                product_id: productId
-                            })
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            // Server sẽ trả về trạng thái mới ('added' hoặc 'removed')
-                            if (data.status === 'added') {
-                                // Thêm class 'favorited' vào nút
-                                buttonElement.classList.add('favorited');
-                                // Đổi icon thành 'fa-heart' (đầy)
-                                icon.classList.remove('fa-heart-o');
-                                icon.classList.add('fa-heart');
-                                console.log('Đã thêm vào yêu thích');
-                            } else if (data.status === 'removed') {
-                                // Xóa class 'favorited' khỏi nút
-                                buttonElement.classList.remove('favorited');
-                                // Đổi icon thành 'fa-heart-o' (viền)
-                                icon.classList.remove('fa-heart');
-                                icon.classList.add('fa-heart-o');
-                                console.log('Đã xóa khỏi yêu thích');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Có lỗi xảy ra:', error);
-                            alert('Đã xảy ra lỗi. Vui lòng thử lại.');
-                        });
-                });
-            });
-
+                // Logic fetch được chuyển vào đây
                 fetch(`/comments/${commentId}`, {
                         method: 'PUT',
                         headers: {
@@ -1081,10 +1159,14 @@
                         }
                     })
                     .catch(() => alert('Lỗi kết nối khi lưu comment.'));
+            }; // Kết thúc saveCommentEdit
 
+
+            // [SỬA] Gộp logic fetch vào hàm deleteComment
             window.deleteComment = function(commentId) {
                 if (!confirm('Bạn có chắc muốn xóa bình luận này?')) return;
 
+                // Logic fetch được chuyển vào đây
                 fetch(`/comments/${commentId}`, {
                         method: 'DELETE',
                         headers: {
@@ -1104,7 +1186,57 @@
                         }
                     })
                     .catch(() => alert('Lỗi kết nối khi xóa comment.'));
-            }
+            }; // Kết thúc deleteComment
 
+
+            document.querySelectorAll('.favorite-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const buttonElement = this;
+                    const productId = buttonElement.dataset.id;
+                    const toggleUrl = buttonElement.dataset.url;
+
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const icon = buttonElement.querySelector('i.fa');
+
+                    fetch(toggleUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({
+                                product_id: productId
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.status === 'added') {
+                                buttonElement.classList.add('favorited');
+                                icon.classList.remove('fa-heart-o');
+                                icon.classList.add('fa-heart');
+                                console.log('Đã thêm vào yêu thích');
+                            } else if (data.status === 'removed') {
+                                buttonElement.classList.remove('favorited');
+                                icon.classList.remove('fa-heart');
+                                icon.classList.add('fa-heart-o');
+                                console.log('Đã xóa khỏi yêu thích');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Có lỗi xảy ra:', error);
+                            alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+                        });
+                });
+            });
+
+            // [ĐÃ XÓA] Các đoạn fetch lơ lửng đã được chuyển vào hàm
         </script>
         @endpush
