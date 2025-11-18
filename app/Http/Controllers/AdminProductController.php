@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductImage;
+use App\Services\NotificationService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -277,6 +278,15 @@ class AdminProductController extends Controller
                 'rejection_reason' => null,
             ]);
 
+            // Gửi thông báo cho user khi sản phẩm được duyệt
+            try {
+                $notificationService = app(NotificationService::class);
+                $notificationService->notifyProductApproval($product);
+            } catch (\Exception $e) {
+                Log::error('Lỗi khi gửi thông báo duyệt sản phẩm: ' . $e->getMessage());
+                // Không ảnh hưởng đến việc duyệt sản phẩm
+            }
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
@@ -316,6 +326,15 @@ class AdminProductController extends Controller
                 'status' => 'hidden',
                 'rejection_reason' => $validated['rejection_reason'],
             ]);
+
+            // Gửi thông báo cho user khi sản phẩm bị từ chối
+            try {
+                $notificationService = app(NotificationService::class);
+                $notificationService->notifyProductRejection($product, $validated['rejection_reason']);
+            } catch (\Exception $e) {
+                Log::error('Lỗi khi gửi thông báo từ chối sản phẩm: ' . $e->getMessage());
+                // Không ảnh hưởng đến việc từ chối sản phẩm
+            }
 
             if ($request->expectsJson()) {
                 return response()->json([

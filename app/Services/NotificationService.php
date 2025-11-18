@@ -83,6 +83,77 @@ class NotificationService
     }
 
     /**
+     * Gửi thông báo cho user khi sản phẩm được duyệt
+     */
+    public function notifyProductApproval(Product $product)
+    {
+        try {
+            // Tạo thông báo cho người đăng sản phẩm
+            Notification::create([
+                'user_id' => $product->user_id,
+                'type' => 'product_approved',
+                'title' => 'Sản phẩm đã được duyệt',
+                'message' => "Sản phẩm \"{$product->name}\" của bạn đã được duyệt và hiển thị trên trang chủ.",
+                'data' => [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'product_price' => $product->price,
+                ],
+                'link' => route('products.show', $product->id),
+            ]);
+
+            Log::info('Đã tạo thông báo duyệt sản phẩm', [
+                'product_id' => $product->id,
+                'user_id' => $product->user_id
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tạo thông báo duyệt sản phẩm', [
+                'product_id' => $product->id,
+                'user_id' => $product->user_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
+     * Gửi thông báo cho user khi sản phẩm bị từ chối
+     */
+    public function notifyProductRejection(Product $product, $reason)
+    {
+        try {
+            // Tạo thông báo cho người đăng sản phẩm
+            Notification::create([
+                'user_id' => $product->user_id,
+                'type' => 'product_rejected',
+                'title' => 'Sản phẩm bị từ chối',
+                'message' => "Sản phẩm \"{$product->name}\" của bạn đã bị từ chối. Lý do: {$reason}",
+                'data' => [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'rejection_reason' => $reason,
+                ],
+                'link' => route('products.manage'),
+            ]);
+
+            Log::info('Đã tạo thông báo từ chối sản phẩm', [
+                'product_id' => $product->id,
+                'user_id' => $product->user_id,
+                'reason' => $reason
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tạo thông báo từ chối sản phẩm', [
+                'product_id' => $product->id,
+                'user_id' => $product->user_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
      * Xóa thông báo cũ (chạy định kỳ)
      */
     public function cleanupOldNotifications($days = 30)
