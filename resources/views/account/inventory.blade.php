@@ -40,6 +40,17 @@
                 </div>
             </header>
 
+            @if ($errors->any())
+                <div class="alert alert-error" role="alert">
+                    <strong>Không thể tải danh sách sản phẩm.</strong>
+                    @foreach ($errors->all() as $error)
+                        <p class="mb-0">- {{ $error }}</p>
+                    @endforeach
+                    <p class="mt-2">Vui lòng quay lại trang đầu hoặc nhập lại số trang hợp lệ.</p>
+                    <a class="btn-outline" href="{{ route('account.inventory') }}">Quay về trang 1</a>
+                </div>
+            @endif
+
             <section class="inventory-overview" aria-label="Tổng quan tồn kho">
                 <div class="overview-grid">
                     @foreach ($statCards as $card)

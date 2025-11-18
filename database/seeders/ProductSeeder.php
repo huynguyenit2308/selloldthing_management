@@ -22,6 +22,10 @@ class ProductSeeder extends Seeder
             return;
         }
 
+        // Get seller user ID for assigning first 12 products
+        $seller = User::where('email', 'seller@example.com')->first();
+        $sellerId = $seller ? $seller->id : null;
+
         $products = [
             [
                 'name' => 'iPhone 15 Pro Max 256GB Titan Xanh',
@@ -77,19 +81,36 @@ class ProductSeeder extends Seeder
                     'images/products/samsung-galaxy-z-fold5-1.jpg',
                     'images/products/samsung-galaxy-z-fold5-2.jpg',
                     'images/products/samsung-galaxy-z-fold5-3.jpg',
-                    'images/products/samsung-galaxy-z-fold5-4.jpg',
-                    'images/products/samsung-galaxy-z-fold5-5.jpg',
                 ],
             ],
             [
-
                 'name' => 'MacBook Pro 14" M1 Pro 16GB/512GB',
                 'category' => 'Laptop',
                 'price' => 12990000,
                 'original_price' => 15990000,
-                'description' => 'Xiaomi 12T Pro chip Snapdragon 8+ Gen 1, camera 200MP, hỗ trợ sạc nhanh 120W.',
-                'short_description' => 'Máy chính hãng, kích hoạt 2 tháng, còn seal phụ kiện.',
+                'description' => 'MacBook Pro 14" M1 Pro, RAM 16GB, SSD 512GB, màn hình Liquid Retina XDR.',
+                'short_description' => 'Máy 95%, pin 95%, đầy đủ hộp sạc và phụ kiện.',
                 'condition' => 'good',
+                'location' => 'Cầu Giấy, Hà Nội',
+                'seller_name' => 'Trần Văn Laptop',
+                'contact_phone' => '0912345678',
+                'contact_email' => 'laptop@example.com',
+                'contact_method' => 'phone',
+                'sku' => 'APL-MBP14-M1P-16-512',
+                'origin' => 'Apple VN/A',
+                'warranty' => '6 tháng',
+                'attachments' => 'Hộp, sạc 67W, cáp USB-C, sách hướng dẫn',
+                'additional_info' => 'Máy mới 99%, chưa trầy xước, bảo hành Apple Care.',
+                'quantity' => 1,
+                'status' => 'published',
+                'view_count' => 234,
+                'images' => [
+                    'images/products/macbook-pro-14-1.jpg',
+                    'images/products/macbook-pro-14-2.jpg',
+                    'images/products/macbook-pro-14-3.jpg',
+                ],
+            ],
+            [
                 'name' => 'Google Pixel 8 Pro 128GB Xanh Biển',
                 'category' => 'Điện tử - Điện thoại',
                 'price' => 22490000,
@@ -358,19 +379,11 @@ class ProductSeeder extends Seeder
                 'description' => 'Bộ vest Aristino dòng Premium màu xanh navy, chất vải wool blend, may đo chuẩn.',
                 'short_description' => 'Vest mặc 1 lần dự tiệc, chưa qua giặt hấp.',
                 'condition' => 'like_new',
-
                 'location' => 'Nam Từ Liêm, Hà Nội',
                 'seller_name' => 'Phan Thanh Bình',
                 'contact_phone' => '0905123456',
                 'contact_email' => 'binhphan@example.com',
                 'contact_method' => 'zalo',
-                'sku' => 'XM-12TPRO-256-BL',
-                'origin' => 'Xiaomi VN',
-                'warranty' => '10 tháng',
-                'attachments' => 'Hộp, sạc 120W, ốp lưng, kính cường lực',
-                'additional_info' => 'Tặng gói bảo hành rơi vỡ 3 tháng.',
-                'quantity' => 6,
-                'image' => 'images/product_3.png',
                 'sku' => 'ARI-VEST-52-NAVY',
                 'origin' => 'Aristino Vietnam',
                 'warranty' => null,
@@ -378,13 +391,10 @@ class ProductSeeder extends Seeder
                 'additional_info' => 'Bao chỉnh sửa form miễn phí tại showroom Aristino.',
                 'quantity' => 1,
                 'status' => 'published',
-                'view_count' => 107,
+                'view_count' => 156,
                 'images' => [
-                    'images/products/aristino-vest-navy-1.png',
-                    'images/products/aristino-vest-navy-2.png',
-                    'images/products/aristino-vest-navy-3.png',
-                    'images/products/aristino-vest-navy-4.png',
-                    'images/products/aristino-vest-navy-5.png',
+                    'images/products/aristino-vest-1.jpg',
+                    'images/products/aristino-vest-2.jpg',
                 ],
             ],
             [
@@ -441,7 +451,6 @@ class ProductSeeder extends Seeder
             ],
             // ========== DANH MỤC 5: Xe cộ - Phụ tùng (3 sản phẩm) ==========
             [
-
                 'name' => 'Xe đạp Giant ATX 720 27.5"',
                 'category' => 'Xe cộ - Phụ tùng',
                 'price' => 4500000,
@@ -449,6 +458,26 @@ class ProductSeeder extends Seeder
                 'description' => 'Xe đạp địa hình Giant ATX 720, khung nhôm siêu nhẹ, phanh đĩa dầu, số Shimano 24 cấp.',
                 'short_description' => 'Xe còn mới 85%, bảo dưỡng định kỳ.',
                 'condition' => 'good',
+                'location' => 'Hà Đông, Hà Nội',
+                'seller_name' => 'Nguyễn Văn Xe',
+                'contact_phone' => '0908776655',
+                'contact_email' => 'xedap@example.com',
+                'contact_method' => 'phone',
+                'sku' => 'GNT-ATX720-275',
+                'origin' => 'Giant Taiwan',
+                'warranty' => '12 tháng',
+                'attachments' => 'Xe, túi đồ, bình nước, bộ dụng cụ sửa chữa',
+                'additional_info' => 'Bảo hành khung sườn 2 năm, phụ kiện 6 tháng.',
+                'quantity' => 1,
+                'status' => 'published',
+                'view_count' => 189,
+                'images' => [
+                    'images/products/giant-atx-720-1.jpg',
+                    'images/products/giant-atx-720-2.jpg',
+                    'images/products/giant-atx-720-3.jpg',
+                ],
+            ],
+            [
                 'name' => 'Giày sneaker Adidas Ultraboost 22 Trắng',
                 'category' => 'Thời trang',
                 'price' => 2200000,
@@ -467,24 +496,12 @@ class ProductSeeder extends Seeder
                 'attachments' => 'Khóa xe, bơm, bộ dụng cụ sửa chữa',
                 'additional_info' => 'Tặng kèm mũ bảo hiểm và đèn xe.',
                 'quantity' => 1,
-                'image' => 'images/product_10.png',
                 'status' => 'published',
                 'view_count' => 187,
-                'contact_method' => 'zalo',
-                'sku' => 'ADI-UB22-42W',
-                'origin' => 'Adidas Vietnam',
-                'warranty' => null,
-                'attachments' => 'Hộp, dây giày dự phòng, phiếu bảo hành',
-                'additional_info' => 'Tặng kèm vớ thể thao Adidas.',
-                'quantity' => 1,
-                'status' => 'published',
-                'view_count' => 121,
                 'images' => [
-                    'images/products/adidas-ultraboost-22-1.png',
-                    'images/products/adidas-ultraboost-22-2.png',
-                    'images/products/adidas-ultraboost-22-3.png',
-                    'images/products/adidas-ultraboost-22-4.png',
-                    'images/products/adidas-ultraboost-22-5.png',
+                    'images/products/adidas-ultraboost-22-1.jpg',
+                    'images/products/adidas-ultraboost-22-2.jpg',
+                    'images/products/adidas-ultraboost-22-3.jpg',
                 ],
             ],
             [
@@ -663,14 +680,19 @@ class ProductSeeder extends Seeder
             ],
         ];
 
-        foreach ($products as $data) {
+        foreach ($products as $index => $data) {
             $categoryId = $categoryMap[$data['category']] ?? null;
 
             if (!$categoryId) {
                 continue;
             }
 
-            $userId = $data['user_id'] ?? $userIds[array_rand($userIds)];
+            // Assign first 12 products to seller, others randomly
+            if ($index < 12 && $sellerId) {
+                $userId = $sellerId;
+            } else {
+                $userId = $data['user_id'] ?? $userIds[array_rand($userIds)];
+            }
 
             $product = Product::create([
                 'user_id' => $userId,

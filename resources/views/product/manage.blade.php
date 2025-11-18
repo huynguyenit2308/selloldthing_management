@@ -161,17 +161,24 @@
                     @endif
                     @if ($productBulkError)
                         <div class="alert alert-error" role="alert">{{ $productBulkError }}</div>
+                        @if (isset($productBulkErrors) && is_array($productBulkErrors))
+                            <ul class="alert-detail">
+                                @foreach ($productBulkErrors as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
                     @endif
-                    @if ($productBulkErrors && is_array($productBulkErrors) && count($productBulkErrors) > 0)
-                        <ul class="alert-detail">
-                            @foreach ($productBulkErrors as $bulkMessage)
-                                <li>{{ $bulkMessage }}</li>
+                    @if ($errors->any())
+                        <div class="alert alert-error" role="alert">
+                            @foreach ($errors->all() as $error)
+                                <p>{{ $error }}</p>
                             @endforeach
-                        </ul>
+                        </div>
                     @endif
-                    @if ($conflictPayload)
+                    @if ($accountRestricted)
                         <div class="alert alert-warning" role="status">
-                            <p>Dữ liệu mới nhất đã thay đổi. Vui lòng kiểm tra và chọn phiên bản phù hợp.</p>
+                            <p>Tài khoản của bạn đang bị hạn chế. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.</p>
                         </div>
                     @endif
 
