@@ -489,9 +489,9 @@ class ProductController extends Controller
         ]);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'between:10,200', 'regex:/^[^<>|]+$/u'],
+            'name' => ['required', 'string', 'between:1,30', 'regex:/^[^<>|]+$/u'],
             'category_id' => ['required', Rule::exists('categories', 'id')],
-            'description' => ['required', 'string', 'between:50,3000'],
+            'description' => ['required', 'string', 'between:1,3000'],
             'short_description' => ['nullable', 'string', 'max:255'],
             'images' => ['required', 'array', 'min:1', 'max:5'],
             'images.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp', 'max:8192'],
@@ -510,6 +510,9 @@ class ProductController extends Controller
             'images.*.mimetypes' => 'File không đúng định dạng (chỉ chấp nhận JPG, PNG, WebP)',
             'images.*.max' => 'Kích thước file vượt quá 8MB',
             'condition.in' => 'Vui lòng chọn tình trạng sản phẩm hợp lệ',
+            'original_price.integer' => 'Giá gốc phải là số nguyên',
+            'original_price.min' => 'Giá gốc phải từ :min VND trở lên',
+            'original_price.max' => 'Giá gốc không được lớn hơn :max',
             'contact_methods.required' => 'Vui lòng chọn hình thức liên hệ',
         ]);
 
@@ -543,9 +546,9 @@ class ProductController extends Controller
         $this->normalizeRequestPrices($request);
 
         $rules = [
-            'name' => ['required', 'string', 'between:10,200', 'regex:/^[^<>|]+$/u'],
+            'name' => ['required', 'string', 'between:1,30', 'regex:/^[^<>|]+$/u'],
             'category_id' => ['required', Rule::exists('categories', 'id')],
-            'description' => ['required', 'string', 'between:50,3000'],
+            'description' => ['required', 'string', 'between:1,3000'],
             'condition' => ['required', Rule::in(array_keys($this->conditionOptions()))],
             'price' => ['required', 'integer', 'min:1000', 'max:999999999'],
             'original_price' => ['nullable', 'integer', 'min:1000', 'max:999999999'],
@@ -570,6 +573,9 @@ class ProductController extends Controller
             'contact_methods.required' => 'Vui lòng chọn hình thức liên hệ',
             'images.*.mimetypes' => 'Chỉ chấp nhận file JPG, PNG, WebP',
             'images.*.max' => 'Kích thước file không được vượt quá 5MB',
+            'original_price.integer' => 'Giá gốc phải là số nguyên',
+            'original_price.min' => 'Giá gốc phải từ :min VND trở lên',
+            'original_price.max' => 'Giá gốc không được lớn hơn :max',
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);

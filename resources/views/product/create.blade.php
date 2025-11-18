@@ -60,7 +60,7 @@
                     <div class="form-grid two-columns">
                         <div class="form-field">
                             <label for="name">Tên sản phẩm <span class="required">*</span></label>
-                            <input id="name" name="name" type="text" value="{{ old('name') }}" required maxlength="200">
+                            <input id="name" name="name" type="text" value="{{ old('name') }}" required>
                             @error('name')
                                 <p class="field-error">{{ $message }}</p>
                             @enderror
@@ -81,7 +81,7 @@
                         </div>
                         <div class="form-field wide">
                             <label for="description">Mô tả sản phẩm <span class="required">*</span></label>
-                            <textarea id="description" name="description" rows="6" required minlength="50" maxlength="3000">{{ old('description') }}</textarea>
+                            <textarea id="description" name="description" rows="6" required>{{ old('description') }}</textarea>
                             @error('description')
                                 <p class="field-error">{{ $message }}</p>
                             @enderror
@@ -106,7 +106,7 @@
                             </div>
                         </div>
                         <div id="image-preview" class="image-preview-grid" aria-live="polite"></div>
-                        <p class="field-note">Chỉ hỗ trợ JPG, PNG, WebP, mỗi ảnh tối đa 8MB.</p>
+                        <p class="field-note">Chỉ hỗ trợ JPG, PNG, mỗi ảnh tối đa 8MB.</p>
                         @error('images')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
