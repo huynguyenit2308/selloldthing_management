@@ -11,6 +11,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -23,8 +24,22 @@ use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        // Validate price filter inputs
+        try {
+            $this->validatePriceFilter($request);
+            $this->validateCategoryFilter($request);
+            $this->validatePageFilter($request);
+        } catch (ValidationException $e) {
+            // Clear invalid page parameter when redirecting
+            $input = $request->except(['page']);
+            return redirect()
+                ->route('products.index')
+                ->withInput($input)
+                ->withErrors($e->errors());
+        }
+
         $categories = Category::orderBy('name')->get();
 
         $baseQuery = Product::query()->where('status', 'published');
@@ -779,6 +794,73 @@ class ProductController extends Controller
                 'url' => $imageUrl,
                 'sort_order' => $sortOrder++,
             ]);
+        }
+    }
+
+    protected function validateCategoryFilter(Request $request): void
+    {
+        $categoryId = $request->input('category');
+        
+        if ($categoryId !== null && $categoryId !== '') {
+            if (!Category::where('id', $categoryId)->exists()) {
+                throw ValidationException::withMessages([
+                    'category' => 'Danh mục không tồn tại',
+                ]);
+            }
+        }
+    }
+
+    protected function validatePageFilter(Request $request): void
+    {
+        $page = $request->input('page');
+        
+        if ($page !== null && $page !== '') {
+            if (!is_numeric($page) || (int)$page < 1) {
+                throw ValidationException::withMessages([
+                    'page' => 'Số trang không hợp lệ',
+                ]);
+            }
+        }
+    }
+
+    protected function validatePriceFilter(Request $request): void
+    {
+        $priceMin = $request->input('price_min');
+        $priceMax = $request->input('price_max');
+
+        // Check if one field is filled but the other is empty
+        if (($priceMin !== null && $priceMin !== '' && ($priceMax === null || $priceMax === '')) ||
+            ($priceMax !== null && $priceMax !== '' && ($priceMin === null || $priceMin === ''))) {
+            throw ValidationException::withMessages([
+                'price_filter' => 'Vui lòng nhập đầy đủ khoảng giá',
+            ]);
+        }
+
+        // If both fields are filled, validate them
+        if ($priceMin !== null && $priceMin !== '' && $priceMax !== null && $priceMax !== '') {
+            // Check if inputs are numeric
+            if (!is_numeric($priceMin) || !is_numeric($priceMax)) {
+                throw ValidationException::withMessages([
+                    'price_filter' => 'Vui lòng nhập giá hợp lệ',
+                ]);
+            }
+
+            $minPrice = (float) $priceMin;
+            $maxPrice = (float) $priceMax;
+
+            // Check for negative values
+            if ($minPrice < 0 || $maxPrice < 0) {
+                throw ValidationException::withMessages([
+                    'price_filter' => 'Giá không được nhỏ hơn 0',
+                ]);
+            }
+
+            // Check if "from" price is greater than "to" price
+            if ($minPrice > $maxPrice) {
+                throw ValidationException::withMessages([
+                    'price_filter' => 'Giá \'Từ\' không được lớn hơn giá \'Đến\'',
+                ]);
+            }
         }
     }
 
