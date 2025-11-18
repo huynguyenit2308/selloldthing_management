@@ -116,7 +116,7 @@
                 </div>
 
                 {{-- THAY ĐỔI 5: Dùng @forelse và biến $products (từ Giao diện 2) --}}
-                @if ($products->count() > 0)
+                @if ($products->total() > 0)
                 <div class="favorites-grid">
                     @foreach ($products as $product)
                     {{-- Không cần @php $product = $favorite->product; @endphp nữa --}}
@@ -130,6 +130,14 @@
                             data-url="{{ route('favorites.toggle') }}"
                             aria-label="Bỏ khỏi yêu thích">
                             <i class="fa fa-heart" aria-hidden="true"></i>
+                        </button>
+
+                        <button type="button"
+                            class="favorite-cart add-to-cart-icon"
+                            data-product-id="{{ $product->id }}"
+                            data-cart-url="{{ route('search.cart.add', $product) }}"
+                            aria-label="Thêm vào giỏ hàng">
+                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                         </button>
 
                         <div class="favorite-image">
@@ -161,7 +169,9 @@
                             </ul>
                             <div class="favorite-actions">
                                 <a href="{{ route('products.show', $product->id) }}" class="favorite-btn outline">Xem chi tiết</a>
-                                <button type="button" class="favorite-btn solid add-to-cart" data-product-id="{{ $product->id }}">Mua ngay</button>
+                                <button type="button" class="favorite-btn solid add-to-cart"
+                                    data-product-id="{{ $product->id }}"
+                                    data-cart-url="{{ route('search.cart.add', $product) }}">Mua ngay</button>
                             </div>
                         </div>
                     </article>
@@ -221,6 +231,9 @@
                 });
             }
 
+            const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
             // ----- JAVASCRIPT CHO NÚT YÊU THÍCH -----
             document.querySelectorAll('.favorite-button').forEach(button => {
                 button.addEventListener('click', function(e) {
@@ -230,7 +243,6 @@
                     const buttonElement = this;
                     const productId = buttonElement.dataset.id;
                     const toggleUrl = buttonElement.dataset.url;
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
                     fetch(toggleUrl, {
                             method: 'POST',
@@ -281,6 +293,183 @@
                             }
                         })
                         .catch(error => console.error('Có lỗi xảy ra:', error));
+                });
+            });
+
+            const categoryItems = document.querySelectorAll('.favorites-category-item');
+            if (categoryItems.length > 0) {
+                const baseUrl = new URL("{{ route('favorite.hienthi') }}", window.location.origin);
+                categoryItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const categoryId = this.dataset.categoryId || '';
+                        const params = new URLSearchParams(window.location.search);
+                        if (categoryId) {
+                            params.set('category', categoryId);
+                        } else {
+                            params.delete('category');
+                        }
+                        params.delete('page');
+                        baseUrl.search = params.toString();
+                        window.location.href = baseUrl.toString();
+                    });
+                });
+            }
+
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    window.location.href = "{{ route('favorite.hienthi') }}";
+                });
+            }
+
+            const clearAllButtons = [];
+            const sidebarClearAll = document.getElementById('sidebarClearAll');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            if (sidebarClearAll) clearAllButtons.push(sidebarClearAll);
+            if (clearAllBtn) clearAllButtons.push(clearAllBtn);
+
+            clearAllButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!confirm('Bạn có chắc muốn xóa tất cả sản phẩm yêu thích?')) {
+                        return;
+                    }
+                    btn.disabled = true;
+                    fetch("{{ route('favorites.clearAll') }}", {
+                            method: 'DELETE',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(() => {
+                            window.location.href = "{{ route('favorite.hienthi') }}";
+                        })
+                        .catch(() => {
+                            btn.disabled = false;
+                        });
+                });
+            });
+
+            const addAllToCartBtn = document.getElementById('addAllToCartBtn');
+            if (addAllToCartBtn && csrfToken) {
+                addAllToCartBtn.addEventListener('click', function() {
+                    const addButtons = Array.from(document.querySelectorAll('.favorite-actions .add-to-cart'));
+                    const cartButtons = addButtons.filter(btn => btn.dataset.cartUrl);
+                    if (cartButtons.length === 0) {
+                        return;
+                    }
+                    addAllToCartBtn.disabled = true;
+                    const requests = cartButtons.map(btn => {
+                        return fetch(btn.dataset.cartUrl, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                quantity: 1
+                            })
+                        }).then(res => res.ok ? res.json() : Promise.reject(res));
+                    });
+                    Promise.all(requests)
+                        .then(responses => {
+                            const lastResponse = responses[responses.length - 1];
+                            if (lastResponse && typeof lastResponse.cart_count !== 'undefined') {
+                                const cartCounter = document.getElementById('checkout_items');
+                                if (cartCounter) {
+                                    cartCounter.textContent = lastResponse.cart_count;
+                                }
+                            }
+                            window.location.href = "{{ route('orders.list') }}";
+                        })
+                        .catch(() => {
+                            addAllToCartBtn.disabled = false;
+                        });
+                });
+            }
+
+            // Xử lý click cho icon giỏ hàng riêng lẻ
+            document.querySelectorAll('.add-to-cart-icon').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const cartUrl = this.dataset.cartUrl;
+                    if (!cartUrl) {
+                        return;
+                    }
+
+                    fetch(cartUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            quantity: 1
+                        })
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        console.log('Response ok:', response.ok);
+                        
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                console.log('Error response:', text);
+                                throw new Error(`HTTP ${response.status}: ${text}`);
+                            });
+                        }
+                        
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Success data:', data);
+                        console.log('Current button:', this);
+                        console.log('Button classes:', this.className);
+
+                        // Cập nhật lại số lượng giỏ hàng ở header nếu backend trả về cart_count
+                        if (typeof data.cart_count !== 'undefined') {
+                            const cartCounter = document.getElementById('checkout_items');
+                            if (cartCounter) {
+                                cartCounter.textContent = data.cart_count;
+                                console.log('Updated cart counter to:', data.cart_count);
+                            }
+                        }
+
+                        const icon = this.querySelector('i');
+                        console.log('Found icon:', icon);
+                        console.log('Icon classes before:', icon ? icon.className : 'No icon found');
+
+                        if (data.success) {
+                            // Thay đổi icon để hiển thị đã thêm thành công
+                            if (icon) {
+                                icon.className = 'fa fa-check';
+                                console.log('Icon classes after change:', icon.className);
+
+                                this.classList.add('success');
+                                console.log('Button classes after success:', this.className);
+
+                                // Reset lại icon sau 2 giây
+                                setTimeout(() => {
+                                    icon.className = 'fa fa-shopping-cart';
+                                    this.classList.remove('success');
+                                    console.log('Icon reset after timeout');
+                                }, 2000);
+                            } else {
+                                console.error('Cannot find icon element inside button');
+                            }
+                        } else {
+                            console.error('Server returned error:', data);
+                            alert('Lỗi: ' + (data.message || 'Không thể thêm vào giỏ hàng'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi thêm vào giỏ hàng:', error);
+                        alert('Lỗi khi thêm vào giỏ hàng: ' + error.message);
+                    });
                 });
             });
 

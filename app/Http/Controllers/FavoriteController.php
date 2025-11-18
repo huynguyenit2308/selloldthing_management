@@ -31,11 +31,13 @@ class FavoriteController extends Controller
     {
         // 1. Lấy các biến từ request
         $sortOption = $request->input('sort', 'newest');
+        $filterType = $request->input('filter_type');
+        $categoryId = $request->filled('category') ? (int) $request->input('category') : null;
         $user = Auth::user();
 
         // 2. Gọi Service để lấy toàn bộ dữ liệu
         // Service sẽ lo: query, sort, paginate, lấy categories, v.v.
-        $data = $this->favoriteService->getFavoritesPageData($user, $sortOption);
+        $data = $this->favoriteService->getFavoritesPageData($user, $sortOption, $filterType, $categoryId);
 
         // 3. Trả về view
         return view('favorite.hienthi', $data);
@@ -75,5 +77,20 @@ class FavoriteController extends Controller
             // 5. Bắt lỗi nếu Service ném ra
             return response()->json(['error' => 'Lỗi server: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function clearAll(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        DB::table('favorites')->where('user_id', $user->id)->delete();
+
+        return response()->json([
+            'status' => 'cleared',
+        ]);
     }
 }
