@@ -79,7 +79,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            z-index: 10;
+            z-index: 1;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
@@ -392,7 +392,7 @@
                                     onclick="toggleWatchlist(event, {{ $category->id }})"
                                     data-category-id="{{ $category->id }}"
                                     title="{{ in_array($category->id, $watchedCategoryIds ?? []) ? 'Bỏ theo dõi' : 'Theo dõi danh mục' }}">
-                                    <i class="fas fa-heart"></i>
+                                    <i class="fa fa-heart"></i>
                                 </button>
                             @endauth
                             <a href="{{ route('categories.show', $category->id) }}" style="text-decoration: none; color: inherit;">
@@ -449,7 +449,7 @@
         
         // Kiểm tra authentication
         @guest
-            window.location.href = '{{ route("login.form") }}';
+            window.location.href = '{{ route("login") }}';
             return;
         @endguest
 
@@ -503,7 +503,7 @@
         
         switch(data.error) {
             case 'UNAUTHORIZED':
-                window.location.href = '{{ route("login.form") }}';
+                window.location.href = '{{ route("login") }}';
                 break;
             case 'WATCHLIST_LIMIT_REACHED':
                 message = 'Bạn đã đạt giới hạn theo dõi. Vui lòng xóa bớt để thêm mới.';
@@ -533,7 +533,7 @@
         const toast = document.createElement('div');
         toast.className = `toast-notification toast-${type}`;
         toast.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <i class="fa fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
             <span>${message}</span>
         `;
         
