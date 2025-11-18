@@ -108,8 +108,8 @@
                         <div class="form-grid two-columns">
                             <div class="form-field wide">
                                 <label for="name">Tên sản phẩm <span class="required">*</span></label>
-                                <input id="name" name="name" type="text" value="{{ old('name', $product->name) }}" required maxlength="200">
-                                <p class="field-note">Tên sản phẩm nên từ 10 - 200 ký tự.</p>
+                                <input id="name" name="name" type="text" value="{{ old('name', $product->name) }}" required>
+                                <p class="field-note">Tên sản phẩm giới hạn từ 1 - 30 ký tự.</p>
                                 @error('name')
                                     <p class="field-error">{{ $message }}</p>
                                 @enderror
@@ -130,7 +130,7 @@
                             </div>
                             <div class="form-field wide">
                                 <label for="description">Mô tả sản phẩm <span class="required">*</span></label>
-                                <textarea id="description" name="description" rows="8" required minlength="50" maxlength="3000">{{ old('description', $product->description) }}</textarea>
+                                <textarea id="description" name="description" rows="8" required>{{ old('description', $product->description) }}</textarea>
                                 <p class="field-note">Hãy mô tả rõ tình trạng, khuyết điểm (nếu có) và phụ kiện kèm theo.</p>
                                 @error('description')
                                     <p class="field-error">{{ $message }}</p>
@@ -174,7 +174,7 @@
 
                                 <div class="new-image-preview" id="new-image-preview"></div>
                                 <div id="remove-image-container"></div>
-                                <p class="field-note">Chỉ chấp nhận JPG, PNG, WebP. Mỗi ảnh tối đa 5MB. Kéo thả để thay đổi thứ tự.</p>
+                                <p class="field-note">Chỉ chấp nhận JPG, PNG. Mỗi ảnh tối đa 8MB. Kéo thả để thay đổi thứ tự.</p>
                                 @error('images')
                                     <p class="field-error">{{ $message }}</p>
                                 @enderror
@@ -500,11 +500,27 @@
             if (fileInput) {
                 fileInput.addEventListener('change', () => {
                     const selected = Array.from(fileInput.files || []);
-                    const remainingSlots = maxImages - (existingGrid ? existingGrid.querySelectorAll('.image-item').length : 0);
-                    if (selected.length > remainingSlots) {
-                        alert(`Bạn chỉ có thể thêm tối đa ${remainingSlots} ảnh mới.`);
+                    const existingCount = existingGrid ? existingGrid.querySelectorAll('.image-item').length : 0;
+                    const maxNewAllowed = Math.max(0, maxImages - existingCount);
+
+                    if (maxNewAllowed <= 0) {
+                        alert(`Bạn chỉ có thể có tối đa ${maxImages} ảnh. Vui lòng xóa bớt ảnh hiện tại trước khi thêm ảnh mới.`);
+                        fileInput.value = '';
+                        return;
                     }
-                    state.newFiles = state.newFiles.concat(selected).slice(0, maxImages);
+
+                    if (selected.length === 0) {
+                        return;
+                    }
+
+                    let combined = state.newFiles.concat(selected);
+
+                    if (combined.length > maxNewAllowed) {
+                        alert(`Bạn chỉ có thể thêm tối đa ${maxNewAllowed} ảnh mới. Chỉ giữ ${maxNewAllowed} ảnh đầu tiên.`);
+                        combined = combined.slice(0, maxNewAllowed);
+                    }
+
+                    state.newFiles = combined;
                     syncNewFileInput();
                     renderNewPreviews();
                     updateImageCountNote();
@@ -565,12 +581,12 @@
                     }
                     const value = input.value.trim();
                     clearFieldError(input);
-                    if (value.length < 10) {
-                        showFieldError(input, 'Tên sản phẩm phải từ 10 ký tự trở lên');
+                    if (value.length < 1) {
+                        showFieldError(input, 'Tên sản phẩm phải có ít nhất 1 ký tự');
                         return false;
                     }
-                    if (value.length > 200) {
-                        showFieldError(input, 'Tên sản phẩm không được vượt quá 200 ký tự');
+                    if (value.length > 30) {
+                        showFieldError(input, 'Tên sản phẩm không được vượt quá 30 ký tự');
                         return false;
                     }
                     return true;
