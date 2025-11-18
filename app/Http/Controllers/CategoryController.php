@@ -35,7 +35,6 @@ class CategoryController extends Controller
         }
 
         $categories = $categoriesQuery->orderByDesc('created_at')->paginate(10)->withQueryString();
-        
 
         return view('admin.categories.index', [
             'categories' => $categories,
