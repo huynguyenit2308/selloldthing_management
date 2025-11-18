@@ -176,8 +176,20 @@ class ProductController extends Controller
         ]);
     }
 
-    public function manage(Request $request): View
+    public function manage(Request $request): View|RedirectResponse
     {
+        // Validate page parameter
+        try {
+            $this->validatePageFilter($request);
+        } catch (ValidationException $e) {
+            // Clear invalid page parameter when redirecting
+            $input = $request->except(['page']);
+            return redirect()
+                ->route('products.manage')
+                ->withInput($input)
+                ->withErrors($e->errors());
+        }
+
         $user = $request->user();
 
         if (!$user instanceof User) {
@@ -228,6 +240,22 @@ class ProductController extends Controller
             ->orderBy($sortColumn, $sortDirection)
             ->paginate(10)
             ->withQueryString();
+
+        $requestedPage = (int) $request->input('page', 1);
+        $totalProducts = $products->total();
+        $lastPage = max(1, $products->lastPage());
+
+        if (($totalProducts === 0 && $requestedPage > 1) || ($totalProducts > 0 && $requestedPage > $lastPage)) {
+            $input = $request->except(['page']);
+            $errorMessage = $totalProducts > 0
+                ? "Số trang không tồn tại. Trang cuối cùng hiện tại là {$lastPage}."
+                : 'Không có dữ liệu cho trang đã yêu cầu. Đã chuyển bạn về trang đầu.';
+
+            return redirect()
+                ->route('products.manage', $input)
+                ->withInput(array_merge($input, ['page' => min($lastPage, 1)]))
+                ->withErrors(['page' => $errorMessage]);
+        }
 
         $statusCounts = Product::select('status', DB::raw('COUNT(*) as total'))
             ->where('user_id', $user->id)
@@ -823,6 +851,7 @@ class ProductController extends Controller
         }
     }
 
+
     protected function validatePriceFilter(Request $request): void
     {
         $priceMin = $request->input('price_min');
@@ -863,6 +892,7 @@ class ProductController extends Controller
             }
         }
     }
+
 
     protected function normalizePrice($value): ?int
     {

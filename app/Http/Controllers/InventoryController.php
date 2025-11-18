@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\ValidationException;
 use App\Exports\InventoryExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
@@ -24,8 +25,19 @@ class InventoryController extends Controller
     private const LOW_STOCK_THRESHOLD = 5;
     private const MAX_STOCK_QUANTITY = 10000;
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        try {
+            $this->validatePageParameter($request);
+        } catch (ValidationException $e) {
+            $input = $request->except(['page']);
+
+            return redirect()
+                ->route('account.inventory')
+                ->withInput($input)
+                ->withErrors($e->errors());
+        }
+
         $user = $request->user();
 
         if (!$user) {
@@ -86,8 +98,23 @@ class InventoryController extends Controller
         })->values();
 
         $perPage = 5;
-        $currentPage = max(1, (int) $request->input('page', 1));
+        $requestedPage = (int) $request->input('page', 1);
+        $currentPage = max(1, $requestedPage);
         $total = $filteredProducts->count();
+        $maxPage = max(1, (int) ceil($total / $perPage));
+
+        if (($total === 0 && $requestedPage > 1) || ($total > 0 && $requestedPage > $maxPage)) {
+            $input = $request->except(['page']);
+            $errorMessage = $total > 0
+                ? "Số trang không tồn tại. Trang cuối cùng hiện tại là {$maxPage}."
+                : 'Không có dữ liệu cho trang đã yêu cầu. Đã chuyển bạn về trang đầu.';
+
+            return redirect()
+                ->route('account.inventory', $input)
+                ->withInput(array_merge($input, ['page' => min($maxPage, 1)]))
+                ->withErrors(['page' => $errorMessage]);
+        }
+
         $pageItems = $filteredProducts
             ->slice(($currentPage - 1) * $perPage, $perPage)
             ->values();
@@ -150,6 +177,19 @@ class InventoryController extends Controller
             'maxStock' => self::MAX_STOCK_QUANTITY,
             'hasProducts' => $total > 0,
         ]);
+    }
+
+    protected function validatePageParameter(Request $request): void
+    {
+        $page = $request->input('page');
+
+        if ($page !== null && $page !== '') {
+            if (!is_numeric($page) || (int) $page < 1) {
+                throw ValidationException::withMessages([
+                    'page' => 'Số trang không hợp lệ',
+                ]);
+            }
+        }
     }
 
     public function updateStock(Request $request, Product $product): JsonResponse

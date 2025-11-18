@@ -74,5 +74,24 @@ class UserSeeder extends Seeder
             'reset_expires_at' => null,
             'avatar' => 'https://i.pravatar.cc/150?img=3',
         ]);
+
+        // 4️⃣ Seller (có sản phẩm để test)
+        User::create([
+            'is_new' => false,
+            'facebook_id' => null,
+            'provider' => null,
+            'provider_id' => null,
+            'username' => 'seller',
+            'fullname' => 'Nguyễn Thị Bán',
+            'name' => 'Seller',
+            'email' => 'seller@example.com',
+            'password' => Hash::make('123456'),
+            'phone' => '0909000999',
+            'address' => 'Quận 1, TP. Hồ Chí Minh',
+            'role' => 'customer',
+            'reset_code' => null,
+            'reset_expires_at' => null,
+            'avatar' => 'https://i.pravatar.cc/150?img=4',
+        ]);
     }
 }
