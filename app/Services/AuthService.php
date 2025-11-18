@@ -22,12 +22,12 @@ class AuthService
                 new HasAtLeastOneChar(),
                 new NoHTML(),
             // Bổ sung max:255 để nhất quán với CSDL
-            'email' => 'required|email|max:20',
+           
             'password' => 'required|string|min:6',
         ], [
             'email.required' => 'Vui lòng nhập Email',
             'email.email' => 'Email không hợp lệ',
-            'email.max' => 'Email không được vượt quá 255 ký tự', // Bổ sung
+          
             'password.required' => 'Vui lòng nhập mật khẩu',
             'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự',
         ]);

@@ -223,6 +223,38 @@
         };
 
         document.addEventListener('DOMContentLoaded', function() {
+            let favoriteCartToastTimeout;
+
+            const showFavoriteCartNotice = (message, type = 'success') => {
+                let toast = document.getElementById('favorite-cart-toast');
+
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'favorite-cart-toast';
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '24px';
+                    toast.style.right = '24px';
+                    toast.style.padding = '12px 16px';
+                    toast.style.borderRadius = '8px';
+                    toast.style.color = '#fff';
+                    toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+                    toast.style.fontSize = '14px';
+                    toast.style.zIndex = '9999';
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.2s ease';
+                    document.body.appendChild(toast);
+                }
+
+                toast.textContent = message;
+                toast.style.background = type === 'error' ? '#e74c3c' : '#2ecc71';
+                toast.style.opacity = '1';
+
+                clearTimeout(favoriteCartToastTimeout);
+                favoriteCartToastTimeout = setTimeout(() => {
+                    toast.style.opacity = '0';
+                }, 2200);
+            };
+
             // ----- HÀM TỰ SUBMIT SORT -----
             const sortSelect = document.getElementById('sortSelect'); // Dùng ID của giao diện lưới
             if (sortSelect) {
@@ -443,7 +475,11 @@
                         console.log('Found icon:', icon);
                         console.log('Icon classes before:', icon ? icon.className : 'No icon found');
 
-                        if (data.success) {
+                        const isSuccess = typeof data.success !== 'undefined'
+                            ? !!data.success
+                            : (data.status === 'ok');
+
+                        if (isSuccess) {
                             // Thay đổi icon để hiển thị đã thêm thành công
                             if (icon) {
                                 icon.className = 'fa fa-check';
@@ -461,14 +497,22 @@
                             } else {
                                 console.error('Cannot find icon element inside button');
                             }
+
+                            showFavoriteCartNotice('Đã thêm sản phẩm vào giỏ hàng!');
                         } else {
                             console.error('Server returned error:', data);
-                            alert('Lỗi: ' + (data.message || 'Không thể thêm vào giỏ hàng'));
+                            showFavoriteCartNotice(
+                                'Không thể thêm vào giỏ hàng: ' + (data.message || 'Vui lòng thử lại'),
+                                'error'
+                            );
                         }
                     })
                     .catch(error => {
                         console.error('Lỗi khi thêm vào giỏ hàng:', error);
-                        alert('Lỗi khi thêm vào giỏ hàng: ' + error.message);
+                        showFavoriteCartNotice(
+                            'Lỗi khi thêm vào giỏ hàng: ' + error.message,
+                            'error'
+                        );
                     });
                 });
             });
