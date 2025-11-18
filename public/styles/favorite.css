@@ -272,6 +272,38 @@ body.favorites-page {
     border-color: #ccc;
 }
 
+.favorite-cart {
+    position: absolute;
+    top: 48px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--fav-border);
+    background: #fff;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    z-index: 10;
+    color: #666;
+}
+
+.favorite-cart:hover {
+    background: #f0f0f0;
+    border-color: #999;
+    color: #333;
+}
+
+.favorite-cart.success {
+    background: #28a745;
+    border-color: #28a745;
+    color: #fff;
+}
+
 .favorite-image {
     width: 100%;
     aspect-ratio: 4 / 3;

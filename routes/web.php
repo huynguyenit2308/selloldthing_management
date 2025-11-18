@@ -276,6 +276,10 @@ Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])
     ->middleware('auth')
     ->name('favorites.toggle');
 
+Route::delete('/favorites', [FavoriteController::class, 'clearAll'])
+    ->middleware('auth')
+    ->name('favorites.clearAll');
+
 
 Route::fallback(function () {
     abort(404);

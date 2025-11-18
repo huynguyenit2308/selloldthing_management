@@ -16,7 +16,7 @@ class FavoriteService
      * @param string $sortOption
      * @return array
      */
-    public function getFavoritesPageData(User $user, string $sortOption): array
+    public function getFavoritesPageData(User $user, string $sortOption, ?string $filterType = null, ?int $categoryId = null): array
     {
         // 1. Lấy các biến cho Sắp xếp
         $sortLabels = [
@@ -36,6 +36,17 @@ class FavoriteService
                 $q->orderBy('created_at');
             }]);
 
+        // 2.1. Lọc theo danh mục (nếu có)
+        if ($categoryId !== null) {
+            $query->where('products.category_id', $categoryId);
+        }
+
+        // 2.2. Lọc theo kiểu filter (nếu có)
+        if ($filterType === 'on_sale') {
+            $query->whereNotNull('products.original_price')
+                ->whereColumn('products.original_price', '>', 'products.price');
+        }
+
         // 3. Áp dụng Sắp xếp
         switch ($sortOption) {
             case 'oldest':
@@ -54,10 +65,10 @@ class FavoriteService
                 $query->orderBy('products.price', 'asc');
                 break;
             case 'views_desc':
-                $query->orderBy('products.views', 'desc');
+                $query->orderBy('products.view_count', 'desc');
                 break;
             case 'views_asc':
-                $query->orderBy('products.views', 'asc');
+                $query->orderBy('products.view_count', 'asc');
                 break;
             default:
                 $query->orderBy('favorites.created_at', 'desc');
