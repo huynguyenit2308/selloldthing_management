@@ -503,7 +503,7 @@
         
         switch(data.error) {
             case 'UNAUTHORIZED':
-                window.location.href = '{{ route("login.form") }}';
+                window.location.href = '{{ route("login") }}';
                 break;
             case 'WATCHLIST_LIMIT_REACHED':
                 message = 'Bạn đã đạt giới hạn theo dõi. Vui lòng xóa bớt để thêm mới.';
