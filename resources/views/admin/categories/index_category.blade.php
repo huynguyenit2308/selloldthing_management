@@ -79,7 +79,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            z-index: 10;
+            z-index: 1;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
@@ -449,7 +449,7 @@
         
         // Kiểm tra authentication
         @guest
-            window.location.href = '{{ route("login.form") }}';
+            window.location.href = '{{ route("login") }}';
             return;
         @endguest
 
