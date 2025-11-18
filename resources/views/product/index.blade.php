@@ -26,6 +26,16 @@
             </button>
         </div>
         @endif
+        @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+            @foreach ($errors->all() as $error)
+                {{ $error }}
+            @endforeach
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        @endif
         <div class="products-breadcrumb">
             <span><a href="{{ url('/') }}">Trang chủ</a></span>
             <span> &gt; </span>
@@ -56,7 +66,7 @@
                         <div class="filter-price-row">
                             <div class="filter-option">
                                 <input type="number" name="price_min" placeholder="Từ"
-                                    min="{{ $priceBounds->min_price ?? 0 }}" value="{{ $filters['price_min'] }}">
+                                    min="0" value="{{ $filters['price_min'] }}">
                             </div>
                             <div class="filter-option">
                                 <input type="number" name="price_max" placeholder="Đến"
@@ -254,6 +264,52 @@
                     });
             });
         });
+
+    // Price filter validation
+        const filterForm = document.querySelector('.products-filters form');
+        const priceMinInput = document.querySelector('input[name="price_min"]');
+        const priceMaxInput = document.querySelector('input[name="price_max"]');
+
+        if (filterForm && priceMinInput && priceMaxInput) {
+            filterForm.addEventListener('submit', function(e) {
+                const priceMin = priceMinInput.value.trim();
+                const priceMax = priceMaxInput.value.trim();
+
+                // Check if both fields are filled or both are empty
+                if ((priceMin === '' && priceMax !== '') || (priceMin !== '' && priceMax === '')) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập đầy đủ khoảng giá');
+                    return;
+                }
+
+                // If both fields are filled, validate them
+                if (priceMin !== '' && priceMax !== '') {
+                    // Check if inputs are valid numbers
+                    if (isNaN(priceMin) || isNaN(priceMax)) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập giá hợp lệ');
+                        return;
+                    }
+
+                    const minPrice = parseFloat(priceMin);
+                    const maxPrice = parseFloat(priceMax);
+
+                    // Check for negative values
+                    if (minPrice < 0 || maxPrice < 0) {
+                        e.preventDefault();
+                        alert('Giá không được nhỏ hơn 0');
+                        return;
+                    }
+
+                    // Check if "from" price is greater than "to" price
+                    if (minPrice > maxPrice) {
+                        e.preventDefault();
+                        alert('Giá \'Từ\' không được lớn hơn giá \'Đến\'');
+                        return;
+                    }
+                }
+            });
+        }
 
     }); // <-- Kết thúc DOMContentLoaded
 </script>
