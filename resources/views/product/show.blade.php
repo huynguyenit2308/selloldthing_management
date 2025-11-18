@@ -89,12 +89,7 @@
                             <button type="button" class="btn-primary btn-icon-only" aria-label="Thêm vào giỏ hàng">
                                 <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                             </button>
-                            <button type="button"
-                                class="btn-outline btn-icon-only favorite-button {{ $isFavorited ? 'favorited' : '' }}"
-                                aria-label="Yêu thích"
-                                data-id="{{ $product->id }}"
-                                data-url="{{ route('favorites.toggle') }}"
-                                id="fav-btn-{{ $product->id }}">
+                            <button type="button" class="btn-outline btn-icon-only favorite-button {{ $isFavorited ? 'favorited' : '' }}" aria-label="Yêu thích" data-id="{{ $product->id }}" data-url="{{ route('favorites.toggle') }}" id="fav-btn-{{ $product->id }}">
                                 <i class="fa {{ $isFavorited ? 'fa-heart' : 'fa-heart-o' }}" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -516,12 +511,7 @@
                                     $isSimilarFavorited = in_array($similar->id, $userFavoriteIds);
                                     @endphp
 
-                                    <button type="button"
-                                        class="btn-outline btn-icon-only favorite-button {{ $isSimilarFavorited ? 'favorited' : '' }}"
-                                        aria-label="Yêu thích"
-                                        data-id="{{ $similar->id }}"
-                                        data-url="{{ route('favorites.toggle') }}"
-                                        id="fav-btn-{{ $similar->id }}">
+                                    <button type="button" class="btn-outline btn-icon-only favorite-button {{ $isSimilarFavorited ? 'favorited' : '' }}" aria-label="Yêu thích" data-id="{{ $similar->id }}" data-url="{{ route('favorites.toggle') }}" id="fav-btn-{{ $similar->id }}">
                                         <i class="fa {{ $isSimilarFavorited ? 'fa-heart' : 'fa-heart-o' }}" aria-hidden="true"></i>
                                     </button>
                                 </div>
@@ -541,6 +531,7 @@
 
         @push('scripts')
         <script>
+            const isAuthenticated = @auth true @else false @endauth;
             // =======================================================
             // 1. HÀM VALIDATE VÀ HÀM PREVIEW (MỚI)
             // =======================================================
@@ -675,6 +666,13 @@
 
                 reviewForm.addEventListener('submit', function(e) {
                     e.preventDefault();
+
+                    if (!isAuthenticated) {
+                        alert('Vui lòng đăng nhập tài khoản để gửi bình luận.');
+                        // Tùy chọn: Bạn cũng có thể chuyển hướng họ đến trang đăng nhập
+                        window.location.href = '{{ route('login') }}';
+                        return; // Dừng hàm ngay lập tức
+                    }
 
                     const formData = new FormData(reviewForm);
                     const actionUrl = reviewForm.getAttribute('action');
