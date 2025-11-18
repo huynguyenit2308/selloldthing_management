@@ -35,7 +35,8 @@
                 </div>
                 <div class="header-actions">
                     <button type="button" class="btn-secondary js-refresh" data-action="refresh">Làm mới</button>
-                    <a href="{{ route('account.inventory.export', ['format' => 'xlsx']) }}" class="btn-secondary">Xuất báo cáo</a>
+    
+                    <a href="{{ route('account.inventory.export', ['format' => 'pdf']) }}" class="btn-secondary">Xuất PDF</a>
                     <button type="button" class="btn-primary js-bulk-save" data-action="bulk-save">Lưu tất cả</button>
                 </div>
             </header>

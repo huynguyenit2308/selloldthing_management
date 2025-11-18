@@ -7,8 +7,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Exports\InventoryExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -321,7 +323,7 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function export(Request $request): StreamedResponse|RedirectResponse|BinaryFileResponse
+    public function export(Request $request): StreamedResponse|RedirectResponse|BinaryFileResponse|Response
     {
         $user = $request->user();
 
@@ -338,7 +340,7 @@ class InventoryController extends Controller
         }
 
         $format = strtolower((string) $request->input('format', 'xlsx'));
-        $allowedFormats = ['xlsx', 'csv', 'xls'];
+        $allowedFormats = ['xlsx', 'csv', 'xls', 'pdf'];
 
         if (!in_array($format, $allowedFormats, true)) {
             $format = 'xlsx';
@@ -346,7 +348,37 @@ class InventoryController extends Controller
 
         $filename = 'bao_cao_ton_kho_' . now()->format('Ymd_His') . '.' . $format;
 
-        $exportFormat = $format === 'csv' ? ExcelFormat::CSV : ExcelFormat::XLSX;
+        if ($format === 'pdf') {
+            $inventoryStats = $this->calculateInventoryStats($products);
+
+            $reportProducts = $products
+                ->map(function (array $product) {
+                    $totalValue = $product['price'] * $product['quantity'];
+
+                    return array_merge($product, [
+                        'price_formatted' => $this->formatCurrency($product['price']),
+                        'total_value' => $totalValue,
+                        'total_value_formatted' => $this->formatCurrency($totalValue),
+                    ]);
+                })
+                ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values();
+
+            $pdf = Pdf::loadView('account.inventory_pdf', [
+                'user' => $user,
+                'generatedAt' => now(),
+                'products' => $reportProducts,
+                'inventoryStats' => $inventoryStats,
+            ])->setPaper('a4', 'portrait');
+
+            return $pdf->download($filename);
+        }
+
+        $exportFormat = match ($format) {
+            'csv' => ExcelFormat::CSV,
+            'xls' => ExcelFormat::XLS,
+            default => ExcelFormat::XLSX,
+        };
 
         return Excel::download(new InventoryExport($products), $filename, $exportFormat);
     }
