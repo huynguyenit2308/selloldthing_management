@@ -392,7 +392,7 @@
                                     onclick="toggleWatchlist(event, {{ $category->id }})"
                                     data-category-id="{{ $category->id }}"
                                     title="{{ in_array($category->id, $watchedCategoryIds ?? []) ? 'Bỏ theo dõi' : 'Theo dõi danh mục' }}">
-                                    <i class="fas fa-heart"></i>
+                                    <i class="fa fa-heart"></i>
                                 </button>
                             @endauth
                             <a href="{{ route('categories.show', $category->id) }}" style="text-decoration: none; color: inherit;">
@@ -533,7 +533,7 @@
         const toast = document.createElement('div');
         toast.className = `toast-notification toast-${type}`;
         toast.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <i class="fa fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
             <span>${message}</span>
         `;
         
