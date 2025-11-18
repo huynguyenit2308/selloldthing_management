@@ -169,6 +169,8 @@
                         <div class="product-tab-section" id="tab-reviews" data-tab-panel role="tabpanel" aria-labelledby="tab-button-reviews" hidden>
                             <div class="container mt-5">
                                 <h2>Đánh giá sản phẩm: {{ $product->name }}</h2>
+                                @auth
+                                {{-- NẾU ĐÃ ĐĂNG NHẬP: HIỂN THỊ FORM --}}
                                 <form id="review-form" action="{{ route('reviews.store', $product->id) }}" method="POST">
                                     @csrf
                                     <div class="form-group">
@@ -182,7 +184,6 @@
                                                 @endfor
                                             </div>
                                         </div>
-
                                     </div>
                                     <div class="form-group">
                                         <label for="comment">Nhận xét:</label>
@@ -190,6 +191,12 @@
                                     </div>
                                     <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
                                 </form>
+                                @else
+                                {{-- NẾU CHƯA ĐĂNG NHẬP: HIỂN THỊ THÔNG BÁO --}}
+                                <div class="alert alert-info mt-3" role="alert">
+                                    Vui lòng <a href="{{ route('login') }}" class="alert-link">đăng nhập</a> để gửi đánh giá của bạn.
+                                </div>
+                                @endauth
                                 <hr>
 
                                 <h3>Danh sách đánh giá</h3>
@@ -418,6 +425,9 @@
 
         @push('scripts')
         <script>
+            // [THÊM MỚI] Biến này cho JS biết user đã đăng nhập hay chưa
+            const isAuthenticated = @auth true @else false @endauth;
+
             // =======================================================
             // 1. HÀM VALIDATE (ĐÃ TÁCH RA)
             // =======================================================
@@ -558,6 +568,48 @@
                                 const csrfToken = formData.get('_token');
                                 const commentStoreUrl = `/reviews/${review.id}/comments`;
 
+                                // [MỚI] Tạo các nút/form cho người đã đăng nhập
+                                let authButtonsHtml = '';
+                                if (isAuthenticated) {
+                                    authButtonsHtml = `
+                                <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
+                                <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST">
+                                    <input type="hidden" name="_token" value="${csrfToken}">
+                                    <input type="hidden" name="parent_id" value="">
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
+                                        <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                                    </div>
+                                </form>
+                            `;
+                                }
+
+                                // [MỚI] Tạo dropdown Sửa/Xóa (chỉ chủ sở hữu mới thấy)
+                                // Vì user này vừa tạo nó, họ chắc chắn là chủ sở hữu
+                                let dropdownHtml = '';
+                                if (isAuthenticated) {
+                                    dropdownHtml = `
+                                <div class="dropdown">
+                                    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
+                                                ✏️ Sửa
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
+                                                🗑️ Xóa
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            `;
+                                }
+
+                                // [ĐÃ SỬA] Dùng các biến vừa tạo
                                 const reviewHtml = `
                         <div class="card mb-3 position-relative" id="review-${review.id}">
                             <div class="card-body">
@@ -569,37 +621,14 @@
                                         </div>
                                         <p class="mb-0">${review.comment}</p>
                                         <small class="text-muted">Vừa xong</small>
-                                        <button class="btn btn-link btn-sm text-decoration-none p-0 ms-1" onclick="toggleReplyForm('review-${review.id}')">💬 Phản hồi</button>
-                                        <form id="reply-form-review-${review.id}" class="reply-form d-none mt-2" action="${commentStoreUrl}" method="POST">
-                                            <input type="hidden" name="_token" value="${csrfToken}">
-                                            <input type="hidden" name="parent_id" value="">
-                                            <div class="input-group input-group-sm">
-                                                <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
-                                                <button class="btn btn-outline-primary" type="submit">Gửi</button>
-                                            </div>
-                                        </form>
-                                        <div class="replies-root mt-4"></div> 
+                                        
+                                        ${authButtonsHtml} <div class="replies-root mt-4"></div> 
                                     </div>
-                                    <div class="dropdown">
-                                        <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <button class="dropdown-item" onclick="editReview(${review.id}, ${review.rating}, '${review.comment.replace(/'/g, "\\'")}')">
-                                                    ✏️ Sửa
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button class="dropdown-item text-danger" onclick="deleteReview(${review.id})">
-                                                    🗑️ Xóa
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                    
+                                    ${dropdownHtml} </div>
                             </div>
                         </div>`;
+
 
                                 if (reviewList) {
                                     reviewList.insertAdjacentHTML('afterbegin', reviewHtml);
@@ -674,6 +703,38 @@
                         }
                         newComment.style.cssText = `margin-left: ${newMarginLeft}px; display: block;`;
 
+
+                        // [MỚI] Tạo các nút/form cho người đã đăng nhập
+                        let authToolsHtml = '';
+                        if (isAuthenticated) {
+                            // User này vừa tạo comment, nên họ là chủ sở hữu
+                            authToolsHtml = `
+                        · <button class="btn btn-link btn-sm text-decoration-none p-0" 
+                              onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
+                        · <button class="btn btn-link btn-sm text-decoration-none p-0 text-primary" 
+                                onclick="toggleCommentEditForm(${data.id})">✏️ Sửa</button>
+                        · <button class="btn btn-link btn-sm text-decoration-none p-0 text-danger" 
+                                onclick="deleteComment(${data.id})">🗑️ Xóa</button>
+                    `;
+                        }
+
+                        // [MỚI] Tạo form reply (chỉ cho người đã đăng nhập)
+                        let replyFormHtml = '';
+                        if (isAuthenticated) {
+                            replyFormHtml = `
+                    <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" 
+                          action="/comments/${data.id}/reply" method="POST">
+                        <input type="hidden" name="_token" value="${formData.get('_token')}">
+                        <input type="hidden" name="parent_id" value="${data.id}">
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
+                            <button class="btn btn-outline-primary" type="submit">Gửi</button>
+                        </div>
+                    </form>
+                    `;
+                        }
+
+                        // [ĐÃ SỬA] Dùng các biến vừa tạo
                         newComment.innerHTML = `
                 <div class="d-flex align-items-start">
                     <div>
@@ -692,23 +753,9 @@
                         </div>
                         <small class="text-muted">
                             Vừa xong 
-                            · <button class="btn btn-link btn-sm text-decoration-none p-0" 
-                                onclick="toggleReplyForm('comment-${data.id}')">💬 Phản hồi</button>
-                            · <button class="btn btn-link btn-sm text-decoration-none p-0 text-primary" 
-                                    onclick="toggleCommentEditForm(${data.id})">✏️ Sửa</button>
-                            · <button class="btn btn-link btn-sm text-decoration-none p-0 text-danger" 
-                                    onclick="deleteComment(${data.id})">🗑️ Xóa</button>
-                        </small>
-                        <form id="reply-form-comment-${data.id}" class="reply-form d-none mt-1" 
-                              action="/comments/${data.id}/reply" method="POST">
-                            <input type="hidden" name="_token" value="${formData.get('_token')}">
-                            <input type="hidden" name="parent_id" value="${data.id}">
-                            <div class="input-group input-group-sm">
-                                <input type="text" name="content" class="form-control" placeholder="Viết phản hồi..." required minlength="10" maxlength="1000">
-                                <button class="btn btn-outline-primary" type="submit">Gửi</button>
-                            </div>
-                        </form>
-                        <div class="replies mt-2"></div> 
+                            ${authToolsHtml} </small>
+                        
+                        ${replyFormHtml} <div class="replies mt-2"></div> 
                     </div>
                 </div>
                 `;
@@ -906,6 +953,7 @@
                 wrapper.querySelector('.comment-edit-form').classList.toggle('d-none');
             }
 
+            // [ĐÃ SỬA LỖI] Di chuyển khối fetch vào bên trong hàm
             window.saveCommentEdit = function(commentId) {
                 const form = document.getElementById(`edit-form-comment-${commentId}`);
                 if (!form) return;
@@ -917,6 +965,7 @@
                     return;
                 }
 
+                // [ĐÃ SỬA] Khối fetch này trước đây nằm bên ngoài hàm
                 fetch(`/comments/${commentId}`, {
                         method: 'PUT',
                         headers: {
@@ -941,6 +990,7 @@
                     .catch(() => alert('Lỗi kết nối khi lưu comment.'));
             }
 
+            // [ĐÃ SỬA] Đã di chuyển hàm này xuống dưới cho đúng thứ tự
             window.deleteComment = function(commentId) {
                 if (!confirm('Bạn có chắc muốn xóa bình luận này?')) return;
 
@@ -964,5 +1014,71 @@
                     })
                     .catch(() => alert('Lỗi kết nối khi xóa comment.'));
             }
+
+            // [ĐÃ SỬA] Đã di chuyển khối logic này xuống dưới cho đúng thứ tự
+            document.querySelectorAll('.favorite-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault(); // Ngăn hành vi mặc định của button
+
+                    const buttonElement = this;
+                    const productId = buttonElement.dataset.id;
+                    const toggleUrl = buttonElement.dataset.url;
+
+                    // Lấy CSRF token từ thẻ meta
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                    // Lấy icon bên trong nút
+                    const icon = buttonElement.querySelector('i.fa');
+
+                    // Gửi request đến server bằng Fetch API
+                    fetch(toggleUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken // Gửi kèm CSRF token
+                            },
+                            body: JSON.stringify({
+                                product_id: productId
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                // [THÊM MỚI] Xử lý lỗi 401 (Chưa đăng nhập)
+                                if (response.status === 401) {
+                                    alert('Vui lòng đăng nhập để sử dụng chức năng này.');
+                                    window.location.href = '{{ route('login') }}'; // Chuyển hướng đến trang đăng nhập
+                                    throw new Error('Chưa xác thực');
+                                }
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            // Server sẽ trả về trạng thái mới ('added' hoặc 'removed')
+                            if (data.status === 'added') {
+                                // Thêm class 'favorited' vào nút
+                                buttonElement.classList.add('favorited');
+                                // Đổi icon thành 'fa-heart' (đầy)
+                                icon.classList.remove('fa-heart-o');
+                                icon.classList.add('fa-heart');
+                                console.log('Đã thêm vào yêu thích');
+                            } else if (data.status === 'removed') {
+                                // Xóa class 'favorited' khỏi nút
+                                buttonElement.classList.remove('favorited');
+                                // Đổi icon thành 'fa-heart-o' (viền)
+                                icon.classList.remove('fa-heart');
+                                icon.classList.add('fa-heart-o');
+                                console.log('Đã xóa khỏi yêu thích');
+                            }
+                        })
+                        .catch(error => {
+                            if (error.message !== 'Chưa xác thực') {
+                                console.error('Có lỗi xảy ra:', error);
+                                alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+                            }
+                        });
+                });
+            });
         </script>
         @endpush
