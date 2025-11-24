@@ -89,12 +89,16 @@
     <!-- Voucher -->
     @if (optional($payment->voucher))
         <div class="section">
-            <strong>Voucher:</strong> {{ optional($payment->voucher)->code ?? '' }}<br>
+            <strong>Voucher:</strong> {{ optional($payment->voucher)->code ?? 'Không có' }}<br>
             <strong>Giảm:</strong>
-            @if ($payment->voucher->type === 'percent')
-                {{ rtrim(rtrim($payment->voucher->discount, '0'), '.') }}%
+            @if (optional($payment->voucher))
+                @if (optional($payment->voucher)->type === 'percent')
+                    {{ rtrim(rtrim(optional($payment->voucher)->discount, '0'), '.') }}%
+                @else
+                    {{ number_format(optional($payment->voucher)->discount ?? 0, 0, '', ',') }}₫
+                @endif
             @else
-                {{ number_format($payment->voucher->discount, 0, '', ',') }}₫
+                0₫
             @endif
         </div>
     @endif
@@ -152,7 +156,7 @@
 
     <!-- Tổng tiền -->
     <div class="total">
-        Tổng cộng: {{ number_format($payment->amount, 0, '', ',') }}₫
+        Tổng thanh toán: {{ number_format($payment->amount, 0, '', ',') }}₫
     </div>
 </body>
 
