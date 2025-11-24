@@ -86,40 +86,17 @@
         <strong>Số điện thoại:</strong> {{ optional($payment->user)->phone ?? 'Không có' }}
     </div>
 
-    <!-- Voucher -->
-    @if (optional($payment->voucher))
-        <div class="section">
-            <strong>Voucher:</strong> {{ optional($payment->voucher)->code ?? 'Không có' }}<br>
-            <strong>Giảm:</strong>
-            @if (optional($payment->voucher))
-                @if (optional($payment->voucher)->type === 'percent')
-                    {{ rtrim(rtrim(optional($payment->voucher)->discount, '0'), '.') }}%
-                @else
-                    {{ number_format(optional($payment->voucher)->discount ?? 0, 0, '', ',') }}₫
-                @endif
-            @else
-                0₫
-            @endif
-        </div>
-    @endif
-
-    <!-- Thông tin thanh toán -->
-    <div class="section">
-        <strong>Số tiền:</strong> {{ number_format($payment->amount, 0, '', ',') }}₫<br>
-        <strong>Phương thức:</strong> {{ $payment->payment_method }}<br>
-        <strong>Trạng thái:</strong>
-        {{ $payment->payment_status === 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán' }}
-    </div>
-
     <!-- Bảng chi tiết đơn hàng -->
     @if (optional($payment->order))
-        <div class="section">
+        <div>
             <strong>Chi tiết đơn hàng:</strong>
             <table>
                 <thead>
                     <tr>
                         <th>Sản phẩm</th>
                         <th>Số lượng</th>
+                        <th>Phương thức</th>
+                        <th>Trạng thái</th>
                         <th>Giá</th>
                         <th>Giảm</th>
                         <th>Thành tiền</th>
@@ -144,6 +121,8 @@
                         <tr>
                             <td>{{ optional($item->product)->name ?? 'Không có' }}</td>
                             <td>{{ $quantity }}</td>
+                            <td>{{ $payment->payment_method }}</td>
+                            <td>{{ $payment->payment_status === 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán' }}</td>
                             <td>{{ number_format($price, 0, '', ',') }}₫</td>
                             <td>{{ number_format($discount, 0, '', ',') }}₫</td>
                             <td>{{ number_format($total, 0, '', ',') }}₫</td>
