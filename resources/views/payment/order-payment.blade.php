@@ -21,8 +21,12 @@
                             <div class="card mb-3 shadow-sm border-1">
                                 <div class="card-body d-flex align-items-center">
                                     <div class="mr-3">
-                                        <img src="{{ $item->product->images->first() ? asset('storage/' . $item->product->images->first()->url) : asset('images/default.jpg') }}"
-                                            alt="{{ $item->product->name }}" class="rounded border"
+                                        @php
+                                            $product = $item->product;
+                                            $image = $product->images->first();
+                                        @endphp
+                                        <img src="{{ $image ? $image->image_url : asset('images/default.jpg') }}"
+                                            alt="{{ $product->name }}" class="rounded border"
                                             style="width: 100px; height: 100px; object-fit: cover;">
                                     </div>
                                     <div class="flex-grow-1">
