@@ -133,6 +133,8 @@ class ProductController extends Controller
     }
     public function show(Product $product): View
     {
+        $this->incrementProductViewCount($product);
+
         $product->load([
             'user',
             'images' => function ($q) {
@@ -174,6 +176,17 @@ class ProductController extends Controller
             'isFavorited' => $isFavorited, // <-- THÊM MỚI DÒNG NÀY
             'userFavoriteIds' => $userFavoriteIds, // <-- TRUYỀN BIẾN MỚI SANG VIEW
         ]);
+    }
+
+    private function incrementProductViewCount(Product $product): void
+    {
+        $sessionKey = "viewed_products.{$product->id}";
+
+        if (!session()->has($sessionKey)) {
+            $product->increment('view_count');
+        }
+
+        session()->put($sessionKey, now()->timestamp);
     }
 
     public function manage(Request $request): View|RedirectResponse
@@ -1160,8 +1173,12 @@ class ProductController extends Controller
 
         // Check if product is newly posted (less than 24 hours)
         if ($product->created_at->diffInHours(now()) < 24) {
-            $hoursAgo = $product->created_at->diffInHours(now());
-            $warnings[] = "Sản phẩm mới đăng trong {$hoursAgo} giờ qua";
+            $secondsAgo = $product->created_at->diffInSeconds(now());
+            $hours = intdiv($secondsAgo, 3600);
+            $minutes = intdiv($secondsAgo % 3600, 60);
+            $seconds = $secondsAgo % 60;
+            $formattedDuration = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+            $warnings[] = "Sản phẩm mới đăng trong {$formattedDuration} giờ qua";
         }
 
         // Check daily delete limit (business rule)

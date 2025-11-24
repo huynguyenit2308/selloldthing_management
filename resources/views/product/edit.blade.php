@@ -174,7 +174,7 @@
 
                                 <div class="new-image-preview" id="new-image-preview"></div>
                                 <div id="remove-image-container"></div>
-                                <p class="field-note">Chỉ chấp nhận JPG, PNG. Mỗi ảnh tối đa 8MB. Kéo thả để thay đổi thứ tự.</p>
+                                <p class="field-note">Chỉ chấp nhận JPG, PNG. Kéo thả để thay đổi thứ tự.</p>
                                 @error('images')
                                     <p class="field-error">{{ $message }}</p>
                                 @enderror
@@ -381,6 +381,30 @@
                 imageCountNote.textContent = `${state.totalImages()} / ${maxImages} ảnh`;
             };
 
+            function updatePrimaryBadges() {
+                if (!existingGrid) {
+                    return;
+                }
+                const items = existingGrid.querySelectorAll('.image-item');
+                items.forEach((item, index) => {
+                    const badge = item.querySelector('.image-badge');
+                    if (index === 0) {
+                        if (!badge) {
+                            const thumb = item.querySelector('.image-thumb');
+                            if (thumb) {
+                                const newBadge = document.createElement('span');
+                                newBadge.className = 'image-badge';
+                                newBadge.textContent = 'Ảnh chính';
+                                newBadge.setAttribute('aria-label', 'Ảnh đại diện');
+                                thumb.appendChild(newBadge);
+                            }
+                        }
+                    } else if (badge) {
+                        badge.remove();
+                    }
+                });
+            }
+
             const syncExistingOrderInputs = () => {
                 if (!existingGrid) {
                     return;
@@ -548,30 +572,6 @@
 
             updateImageCountNote();
             syncExistingOrderInputs();
-
-            const updatePrimaryBadges = () => {
-                if (!existingGrid) {
-                    return;
-                }
-                const items = existingGrid.querySelectorAll('.image-item');
-                items.forEach((item, index) => {
-                    const badge = item.querySelector('.image-badge');
-                    if (index === 0) {
-                        if (!badge) {
-                            const thumb = item.querySelector('.image-thumb');
-                            if (thumb) {
-                                const newBadge = document.createElement('span');
-                                newBadge.className = 'image-badge';
-                                newBadge.textContent = 'Ảnh chính';
-                                newBadge.setAttribute('aria-label', 'Ảnh đại diện');
-                                thumb.appendChild(newBadge);
-                            }
-                        }
-                    } else if (badge) {
-                        badge.remove();
-                    }
-                });
-            };
 
             const validators = {
                 name() {
