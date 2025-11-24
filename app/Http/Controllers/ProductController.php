@@ -1173,8 +1173,12 @@ class ProductController extends Controller
 
         // Check if product is newly posted (less than 24 hours)
         if ($product->created_at->diffInHours(now()) < 24) {
-            $hoursAgo = $product->created_at->diffInHours(now());
-            $warnings[] = "Sản phẩm mới đăng trong {$hoursAgo} giờ qua";
+            $secondsAgo = $product->created_at->diffInSeconds(now());
+            $hours = intdiv($secondsAgo, 3600);
+            $minutes = intdiv($secondsAgo % 3600, 60);
+            $seconds = $secondsAgo % 60;
+            $formattedDuration = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+            $warnings[] = "Sản phẩm mới đăng trong {$formattedDuration} giờ qua";
         }
 
         // Check daily delete limit (business rule)
