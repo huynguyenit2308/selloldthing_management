@@ -76,6 +76,6 @@ class CRUD_InvoiceController extends Controller
         $pdf->save($filePath);
 
         // Mở PDF trong trình duyệt
-        return $pdf->stream('invoice_' . $payment->id . '.pdf');
+        return $pdf->download('invoice_' . $payment->id . '.pdf');
     }
 }
