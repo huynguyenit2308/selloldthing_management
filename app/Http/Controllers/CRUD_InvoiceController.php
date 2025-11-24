@@ -65,15 +65,15 @@ class CRUD_InvoiceController extends Controller
 
         $pdf = PDF::loadView('invoice.pdf', compact('payment'))->setPaper('A4', 'portrait')->setOption('isFontSubsettingEnabled', true);
 
-        // Tạo thư mục invoices nếu chưa tồn tại
-        $folderPath = public_path('invoices');
-        if (!File::exists($folderPath)) {
-            File::makeDirectory($folderPath, 0755, true); // true = tạo đệ quy nếu cần
-        }
+        // // Tạo thư mục invoices nếu chưa tồn tại
+        // $folderPath = public_path('invoices');
+        // if (!File::exists($folderPath)) {
+        //     File::makeDirectory($folderPath, 0755, true); // true = tạo đệ quy nếu cần
+        // }
 
-        // Lưu PDF vào public/invoices
-        $filePath = $folderPath . '/invoice_' . $payment->id . '.pdf';
-        $pdf->save($filePath);
+        // // Lưu PDF vào public/invoices
+        // $filePath = $folderPath . '/invoice_' . $payment->id . '.pdf';
+        // $pdf->save($filePath);
 
         // Mở PDF trong trình duyệt
         return $pdf->download('invoice_' . $payment->id . '.pdf');
