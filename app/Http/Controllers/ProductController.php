@@ -133,6 +133,8 @@ class ProductController extends Controller
     }
     public function show(Product $product): View
     {
+        $this->incrementProductViewCount($product);
+
         $product->load([
             'user',
             'images' => function ($q) {
@@ -174,6 +176,17 @@ class ProductController extends Controller
             'isFavorited' => $isFavorited, // <-- THÊM MỚI DÒNG NÀY
             'userFavoriteIds' => $userFavoriteIds, // <-- TRUYỀN BIẾN MỚI SANG VIEW
         ]);
+    }
+
+    private function incrementProductViewCount(Product $product): void
+    {
+        $sessionKey = "viewed_products.{$product->id}";
+
+        if (!session()->has($sessionKey)) {
+            $product->increment('view_count');
+        }
+
+        session()->put($sessionKey, now()->timestamp);
     }
 
     public function manage(Request $request): View|RedirectResponse

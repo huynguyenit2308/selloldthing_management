@@ -106,7 +106,7 @@
                             </div>
                         </div>
                         <div id="image-preview" class="image-preview-grid" aria-live="polite"></div>
-                        <p class="field-note">Chỉ hỗ trợ JPG, PNG, mỗi ảnh tối đa 8MB.</p>
+                        <p class="field-note">Chỉ hỗ trợ JPG, PNG.</p>
                         @error('images')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
