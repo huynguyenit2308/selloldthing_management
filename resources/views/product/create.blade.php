@@ -34,6 +34,24 @@
                 </div>
             </header>
 
+            <!-- DEBUG: session data -->
+            <div style="background:lightblue;padding:10px;margin:10px;">
+                DEBUG: Page loaded at {{ now() }}
+            </div>
+            @if(request('error') == 'post_too_large')
+                <div style="background:yellow;padding:10px;margin:10px;">
+                    DEBUG: post_too_large query parameter detected
+                </div>
+            @endif
+            @if(session()->has('post_too_large_error'))
+                <div style="background:orange;padding:10px;margin:10px;">
+                    DEBUG: post_too_large_error session flag is present
+                </div>
+            @endif
+            <div style="background:pink;padding:10px;margin:10px;">
+                DEBUG: Query params: {{ json_encode(request()->query()) }}
+            </div>
+
             @if ($errors->any())
                 <div class="alert alert-error" role="alert">
                     <p>Vui lòng kiểm tra lại các trường được đánh dấu.</p>
@@ -113,6 +131,9 @@
                         @error('images.*')
                             <p class="field-error">{{ $message }}</p>
                         @enderror
+                        @if(request('error') == 'post_too_large')
+                            <p class="field-error">Tổng dung lượng file tải lên vượt quá giới hạn cho phép. Vui lòng chọn tối đa 5 ảnh, mỗi ảnh không quá 8MB.</p>
+                        @endif
                     </div>
                 </section>
 

@@ -7,18 +7,16 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -422,56 +420,66 @@ class ProductController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $user = $request->user();
-
-        abort_if(!$user instanceof User, 403);
-
-        \Log::info('Bắt đầu tạo sản phẩm', ['user_id' => $user->id]);
-
-        $validated = $this->validateProduct($request, $user);
-
-        \Log::info('Validation thành công', ['images_count' => count($request->file('images', []))]);
-
-        DB::beginTransaction();
-
         try {
-            $product = Product::create([
-                'user_id' => $user->id,
-                'name' => $validated['name'],
-                'category_id' => $validated['category_id'],
-                'description' => $validated['description'],
-                'short_description' => $validated['short_description'] ?? null,
-                'condition' => $validated['condition'],
-                'price' => $validated['price'],
-                'original_price' => $validated['original_price'] ?? null,
-                'quantity' => $validated['quantity'],
-                'location' => $validated['location_city'].' - '.$validated['location_district'],
-                'contact_method' => implode(',', $validated['contact_methods']),
-                'status' => 'pending',
-            ]);
+            $user = $request->user();
 
-            \Log::info('Sản phẩm đã tạo', ['product_id' => $product->id]);
+            abort_if(!$user instanceof User, 403);
 
-            $this->storeProductImages($product, $request->file('images', []));
+            \Log::info('Bắt đầu tạo sản phẩm', ['user_id' => $user->id]);
 
-            \Log::info('Ảnh đã lưu thành công');
+            $validated = $this->validateProduct($request, $user);
 
-            DB::commit();
+            \Log::info('Validation thành công', ['images_count' => count($request->file('images', []))]);
 
-            return redirect()
-                ->route('products.manage')
-                ->with('product_status_success', 'Sản phẩm đã được gửi để duyệt.');
-        } catch (\Throwable $exception) {
-            DB::rollBack();
-            \Log::error('Lỗi khi tạo sản phẩm', [
-                'error' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString()
-            ]);
-            report($exception);
+            DB::beginTransaction();
 
-            return back()->withInput()->withErrors([
-                'general' => 'Không thể đăng sản phẩm. Vui lòng thử lại: ' . $exception->getMessage(),
-            ]);
+            try {
+                $product = Product::create([
+                    'user_id' => $user->id,
+                    'name' => $validated['name'],
+                    'category_id' => $validated['category_id'],
+                    'description' => $validated['description'],
+                    'short_description' => $validated['short_description'] ?? null,
+                    'condition' => $validated['condition'],
+                    'price' => $validated['price'],
+                    'original_price' => $validated['original_price'] ?? null,
+                    'quantity' => $validated['quantity'],
+                    'location' => $validated['location_city'].' - '.$validated['location_district'],
+                    'contact_method' => implode(',', $validated['contact_methods']),
+                    'status' => 'pending',
+                ]);
+
+                \Log::info('Sản phẩm đã tạo', ['product_id' => $product->id]);
+
+                $this->storeProductImages($product, $request->file('images', []));
+
+                \Log::info('Ảnh đã lưu thành công');
+
+                DB::commit();
+
+                return redirect()
+                    ->route('products.manage')
+                    ->with('product_status_success', 'Sản phẩm đã được gửi để duyệt.');
+            } catch (\Throwable $exception) {
+                DB::rollBack();
+                \Log::error('Lỗi khi tạo sản phẩm', [
+                    'error' => $exception->getMessage(),
+                    'trace' => $exception->getTraceAsString()
+                ]);
+                report($exception);
+
+                return back()->withInput()->withErrors([
+                    'general' => 'Không thể đăng sản phẩm. Vui lòng thử lại: ' . $exception->getMessage(),
+                ]);
+            }
+        } catch (PostTooLargeException $e) {
+            \Log::info('PostTooLargeException caught in ProductController');
+            
+            $message = 'Tổng dung lượng file tải lên vượt quá giới hạn cho phép. Vui lòng chọn tối đa 5 ảnh, mỗi ảnh không quá 8MB.';
+            
+            return back()
+                ->withInput($request->except('images'))
+                ->with('post_too_large_error', $message);
         }
     }
 
