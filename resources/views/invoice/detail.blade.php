@@ -86,6 +86,9 @@
                         <a href="{{ route('invoice.list') }}" class="btn btn-outline-info btn-sm mr-2">
                             <i class="fa fa-arrow-left"></i> Quay lại
                         </a>
+                        <a href="{{ route('invoice.pdf', $encodeId) }}" class="btn btn-outline-danger btn-sm">
+                            <i class="fa fa-file-pdf-o"></i> In PDF
+                        </a>
                     </div>
                 </div>
             </div>

@@ -149,6 +149,8 @@ Route::get('invoice/detail', [CRUD_InvoiceController::class, 'detailInvoice'])->
 Route::post('order/cancel/{encodeId}', [CRUD_OrderController::class, 'cancelOrder'])->name('order.cancel')->middleware('auth');
 // ChatBot
 Route::post('/chat/send', [ChatBotController::class, 'send'])->name('chat.send');
+// In PDF
+Route::get('/invoice/pdf/{id}', [CRUD_InvoiceController::class, 'generatePDF'])->name('invoice.pdf');
 // Route fallback cho mọi GET không hợp lệ
 Route::get('auth/google/callback', function () {
     $user = Socialite::driver('google')->user();

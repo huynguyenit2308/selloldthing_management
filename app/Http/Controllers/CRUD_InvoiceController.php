@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Helpers\IdEncoder;
 use App\Models\Payment;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class CRUD_InvoiceController extends Controller
 {
@@ -42,5 +44,38 @@ class CRUD_InvoiceController extends Controller
         }
 
         return view('invoice.detail', compact('payment'));
+    }
+
+    /**
+     * In PDF
+     */
+    public function generatePDF($encodeId)
+    {
+        $id = IdEncoder::decodeId($encodeId);
+
+        if (!$id) {
+            return redirect()->route('invoice.list')->with('error', 'ID không hợp lệ!');
+        }
+
+        $payment = Payment::with(['user', 'order.items.product', 'voucher'])->find($id);
+
+        if (!$payment) {
+            return redirect()->route('invoice.list')->with('error', 'Hóa đơn không tồn tại!');
+        }
+
+        $pdf = PDF::loadView('invoice.pdf', compact('payment'))->setPaper('A4', 'portrait')->setOption('isFontSubsettingEnabled', true);
+
+        // Tạo thư mục invoices nếu chưa tồn tại
+        $folderPath = public_path('invoices');
+        if (!File::exists($folderPath)) {
+            File::makeDirectory($folderPath, 0755, true); // true = tạo đệ quy nếu cần
+        }
+
+        // Lưu PDF vào public/invoices
+        $filePath = $folderPath . '/invoice_' . $payment->id . '.pdf';
+        $pdf->save($filePath);
+
+        // Mở PDF trong trình duyệt
+        return $pdf->stream('invoice_' . $payment->id . '.pdf');
     }
 }
