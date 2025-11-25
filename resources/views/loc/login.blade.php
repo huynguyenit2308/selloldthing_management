@@ -88,8 +88,8 @@
 
                 {{-- Email --}}
                 <div class="form-group">
-                    <label>Email hoặc Số Điện Thoại</label>
-                    <input type="text" name="email" class="form-control" placeholder="Nhập email hoặc SĐT"
+                    <label>Email </label>
+                    <input type="text" name="email" class="form-control" placeholder="Nhập email"
                         value="{{ old('email') }}" required>
                 </div>
 
