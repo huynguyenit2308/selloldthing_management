@@ -26,6 +26,14 @@ class CategoryController extends Controller
 
         $q = trim((string) $request->query('q', ''));
         $status = $request->query('status'); // active|inactive|null
+        
+        // Validate status parameter - nếu có giá trị nhưng không hợp lệ thì báo lỗi
+        if ($status !== null && $status !== '' && !in_array($status, ['active', 'inactive'])) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => 'CATEGORY_NOT_FOUND: Danh mục không tồn tại']);
+        }
+        
         $categoriesQuery = Category::query()
             ->select(['id', 'name', 'description', 'image', 'status', 'created_at']);
 
