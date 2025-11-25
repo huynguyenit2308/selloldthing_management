@@ -137,6 +137,7 @@ class ProductController extends Controller
             'contactMethods' => $contactMethods,
             'conditions' => $conditions,
             'maxImages' => 5,
+            'submissionToken' => $this->issueProductSubmissionToken(),
         ]);
     }
     public function show(Product $product): View
@@ -501,11 +502,30 @@ class ProductController extends Controller
 
         abort_if(!$user instanceof User, 403);
 
+        if (!$this->consumeProductSubmissionToken($request->input('submission_token'))) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'general' => 'Phiên gửi không hợp lệ hoặc đã được xử lý. Vui lòng tải lại trang và thử lại.',
+                ]);
+        }
+
         \Log::info('Bắt đầu tạo sản phẩm', ['user_id' => $user->id]);
 
         $validated = $this->validateProduct($request, $user);
 
         \Log::info('Validation thành công', ['images_count' => count($request->file('images', []))]);
+
+        $creationLock = Cache::lock('product:create:' . $user->id, 5);
+        $lockAcquired = $creationLock->get();
+
+        if (!$lockAcquired) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'general' => 'Yêu cầu tạo sản phẩm đang được xử lý. Vui lòng không nhấn lưu liên tục.',
+                ]);
+        }
 
         DB::beginTransaction();
 
@@ -559,6 +579,10 @@ class ProductController extends Controller
             return back()->withInput()->withErrors([
                 'general' => 'Không thể đăng sản phẩm. Vui lòng thử lại: ' . $exception->getMessage(),
             ]);
+        } finally {
+            if ($lockAcquired) {
+                $creationLock->release();
+            }
         }
     }
 
@@ -642,6 +666,35 @@ class ProductController extends Controller
         }
 
         return $validated;
+    }
+
+    protected function issueProductSubmissionToken(): string
+    {
+        $token = (string) Str::uuid();
+        $tokens = collect(session('product_submission_tokens', []))
+            ->filter(fn($value) => is_string($value))
+            ->take(-4)
+            ->values();
+
+        $tokens->push($token);
+
+        session(['product_submission_tokens' => $tokens->all()]);
+
+        return $token;
+    }
+
+    protected function consumeProductSubmissionToken(?string $token): bool
+    {
+        if (!$token || !is_string($token)) {
+            return false;
+        }
+
+        $tokens = collect(session('product_submission_tokens', []));
+        $remaining = $tokens->reject(fn($stored) => $stored === $token)->values();
+
+        session(['product_submission_tokens' => $remaining->all()]);
+
+        return $tokens->count() !== $remaining->count();
     }
 
     protected function validateProductUpdate(Request $request, Product $product, User $user): array

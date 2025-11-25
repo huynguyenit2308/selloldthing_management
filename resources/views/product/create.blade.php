@@ -49,8 +49,9 @@
                 <div class="alert alert-error" role="alert">{{ $errors->first('general') }}</div>
             @endif
 
-            <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data" class="product-create-form">
+            <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data" class="product-create-form" id="product-create-form">
                 @csrf
+                <input type="hidden" name="submission_token" value="{{ $submissionToken }}">
 
                 <section class="form-section" aria-labelledby="basic-info-heading">
                     <div class="section-heading">
@@ -216,7 +217,7 @@
                 </section>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary">Đăng bán ngay</button>
+                    <button type="submit" class="btn-primary" id="submit-product-btn">Đăng bán ngay</button>
                     <a href="{{ route('products.manage') }}" class="btn-secondary">Hủy</a>
                 </div>
             </form>
@@ -307,6 +308,20 @@
             });
 
             renderPreview();
+        })();
+
+        (function () {
+            const form = document.getElementById('product-create-form');
+            const submitBtn = document.getElementById('submit-product-btn');
+
+            if (!form || !submitBtn) {
+                return;
+            }
+
+            form.addEventListener('submit', () => {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('is-loading');
+            });
         })();
     </script>
 @endpush
