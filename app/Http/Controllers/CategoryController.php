@@ -188,19 +188,6 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         try {
-            // Kiểm tra xem danh mục có sản phẩm không
-            $productCount = $category->products()->count();
-            if ($productCount > 0) {
-                return response()->json([
-                    'success' => false,
-                    'error_code' => 'CATEGORY_HAS_PRODUCTS',
-                    'message' => 'Xóa không hợp lệ',
-                    'data' => [
-                        'product_count' => $productCount
-                    ]
-                ], 400);
-            }
-
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);
             }
