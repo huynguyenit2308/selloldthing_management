@@ -192,6 +192,25 @@
             </div>
         @endif
 
+        <!-- Hiển thị lỗi system từ validation errors -->
+        @if($errors->has('system'))
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @if(str_contains($errors->first('system'), 'CATEGORY_ID_INVALID'))
+                    ID danh mục không hợp lệ
+                @elseif(str_contains($errors->first('system'), 'CATEGORY_NOT_FOUND'))
+                    Danh mục không tồn tại hoặc đã bị xóa
+                @elseif(str_contains($errors->first('system'), 'PAGE_INVALID'))
+                    Số trang không hợp lệ
+                @else
+                    {{ $errors->first('system') }}
+                @endif
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        @endif
+
         @if($categories->total() === 0)
             <div class="card shadow-sm">
                 <div class="card-body text-center">
@@ -472,10 +491,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 2000);
                 break;
                 
-            case 'CATEGORY_IN_USE':
+            case 'CATEGORY_HAS_PRODUCTS':
                 // Danh mục đang được sử dụng
-                const productCount = additionalData?.product_count || 0;
-                showDeleteError(`Không thể xóa danh mục đang được sử dụng bởi ${productCount} sản phẩm.`);
+                showDeleteError('Xóa không hợp lệ');
                 setDeletingState(false);
                 break;
                 
@@ -487,12 +505,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 3000);
                 break;
                 
-            case 'SERVER_ERROR':
+            case 'DELETE_FAILED':
                 // Lỗi hệ thống
-                showDeleteError('Đã có lỗi xảy ra. Vui lòng thử lại sau.');
-                setTimeout(() => {
-                    $(deleteModal).modal('hide');
-                }, 3000);
+                showDeleteError('Xóa không hợp lệ');
+                setDeletingState(false);
                 break;
                 
             case 'CATEGORY_NOT_FOUND':
@@ -505,9 +521,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 break;
                 
             default:
-                // Lỗi không xác định
-                showDeleteError(message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+                // Lỗi khác
+                showDeleteError('Xóa không hợp lệ');
                 setDeletingState(false);
+                break;
         }
     }
 

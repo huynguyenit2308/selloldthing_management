@@ -16,6 +16,14 @@ class CategoryController extends Controller
     // Admin: Quản lý danh mục
     public function index(Request $request)
     {
+        // [TEST CASE] Validate page parameter
+        $page = $request->query('page');
+        if ($page !== null && (!is_numeric($page) || $page <= 0 || $page > 999999)) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => 'PAGE_INVALID: Số trang không hợp lệ']);
+        }
+
         $q = trim((string) $request->query('q', ''));
         $status = $request->query('status'); // active|inactive|null
         $categoriesQuery = Category::query()
@@ -84,6 +92,14 @@ class CategoryController extends Controller
 
     public function show(Category $category, Request $request): View
     {
+        // [TEST CASE] Validate page parameter
+        $page = $request->query('page');
+        if ($page !== null && (!is_numeric($page) || $page <= 0 || $page > 999999)) {
+            return redirect()
+                ->route('categories.show', $category->id)
+                ->withErrors(['system' => 'PAGE_INVALID: Số trang không hợp lệ']);
+        }
+
         try {
             // Kiểm tra danh mục có active không
             if ($category->status != 1) {
@@ -169,24 +185,41 @@ class CategoryController extends Controller
         }
     }
 
-    public function destroy(Category $category): RedirectResponse
+    public function destroy(Category $category)
     {
         try {
+            // Kiểm tra xem danh mục có sản phẩm không
+            $productCount = $category->products()->count();
+            if ($productCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'CATEGORY_HAS_PRODUCTS',
+                    'message' => 'Xóa không hợp lệ',
+                    'data' => [
+                        'product_count' => $productCount
+                    ]
+                ], 400);
+            }
+
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);
             }
 
             $category->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Xóa danh mục thành công'
+            ]);
+
         } catch (Exception $e) {
             Log::error('CATEGORY_DELETE_FAILED: ' . $e->getMessage());
 
-            return redirect()
-                ->route('admin.categories.index')
-                ->withErrors(['system' => 'CATEGORY_DELETE_FAILED: Không thể xóa danh mục, vui lòng thử lại sau']);
+            return response()->json([
+                'success' => false,
+                'error_code' => 'DELETE_FAILED',
+                'message' => 'Xóa không hợp lệ'
+            ], 500);
         }
-
-        return redirect()
-            ->route('admin.categories.index')
-            ->with('success', 'Danh mục đã được xóa thành công');
     }
 }

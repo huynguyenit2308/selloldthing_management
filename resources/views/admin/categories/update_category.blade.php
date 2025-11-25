@@ -39,6 +39,23 @@
             </div>
         </div>
 
+        <!-- Hiển thị lỗi DATA_OUTDATED (optimistic locking) -->
+        @if($errors->has('system') && str_contains($errors->first('system'), 'DATA_OUTDATED'))
+            <div class="alert alert-warning">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div>
+                        <strong class="d-block">Dữ liệu đã thay đổi</strong>
+                        <small class="d-block mt-1">Dữ liệu danh mục đã được thay đổi bởi người khác. Vui lòng tải lại trang để xem dữ liệu mới nhất trước khi cập nhật.</small>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.location.reload()">Tải lại trang</button>
+                            <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary btn-sm">Quay lại danh sách</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Hiển thị lỗi backend quan trọng -->
         @if(session('error_code') && in_array(session('error_code'), ['CATEGORY_NOT_FOUND', 'PERMISSION_DENIED', 'CATEGORY_IN_USE']))
             <div class="alert alert-danger">
@@ -109,8 +126,24 @@
             </div>
         @endif
 
+        <!-- Hiển thị lỗi system khác -->
+        @if($errors->has('system') && !str_contains($errors->first('system'), 'DATA_OUTDATED'))
+            <div class="alert alert-danger">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div>
+                        <strong class="d-block">Lỗi hệ thống</strong>
+                        <small class="d-block mt-1">{{ $errors->first('system') }}</small>
+                        <div class="mt-2">
+                            <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary btn-sm">Quay lại danh sách</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Hiển thị lỗi validation thông thường -->
-        @if($errors->any() && !session('error_code'))
+        @if($errors->any() && !session('error_code') && !$errors->has('system'))
             <div class="alert alert-danger">
                 <h6 class="alert-heading">Vui lòng sửa các lỗi sau:</h6>
                 <ul class="mb-0">
@@ -124,6 +157,7 @@
         <form id="categoryEditForm" class="card shadow-sm" action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data" novalidate>
             @csrf
             @method('PUT')
+            <input type="hidden" name="updated_at" value="{{ $category->updated_at->toString() }}">
             <div class="card-body">
                 <!-- Trường Tên danh mục -->
                 <div class="form-group">
