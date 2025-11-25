@@ -393,8 +393,11 @@ class ProductSeeder extends Seeder
                 'status' => 'published',
                 'view_count' => 156,
                 'images' => [
-                    'images/products/aristino-vest-1.jpg',
-                    'images/products/aristino-vest-2.jpg',
+                    'images/products/aristino-vest-navy-1.png',
+                    'images/products/aristino-vest-navy-2.png',
+                    'images/products/aristino-vest-navy-3.png',
+                    'images/products/aristino-vest-navy-4.png',
+                    'images/products/aristino-vest-navy-5.png',
                 ],
             ],
             [
@@ -472,9 +475,11 @@ class ProductSeeder extends Seeder
                 'status' => 'published',
                 'view_count' => 189,
                 'images' => [
-                    'images/products/giant-atx-720-1.jpg',
-                    'images/products/giant-atx-720-2.jpg',
-                    'images/products/giant-atx-720-3.jpg',
+                    'images/products/giant-contend-ar4-1.png',
+                    'images/products/giant-contend-ar4-2.png',
+                    'images/products/giant-contend-ar4-3.png',
+                    'images/products/giant-contend-ar4-4.png',
+                    'images/products/giant-contend-ar4-5.png',
                 ],
             ],
             [
@@ -499,9 +504,11 @@ class ProductSeeder extends Seeder
                 'status' => 'published',
                 'view_count' => 187,
                 'images' => [
-                    'images/products/adidas-ultraboost-22-1.jpg',
-                    'images/products/adidas-ultraboost-22-2.jpg',
-                    'images/products/adidas-ultraboost-22-3.jpg',
+                    'images/products/adidas-ultraboost-22-1.png',
+                    'images/products/adidas-ultraboost-22-2.png',
+                    'images/products/adidas-ultraboost-22-3.png',
+                    'images/products/adidas-ultraboost-22-4.png',
+                    'images/products/adidas-ultraboost-22-5.png',
                 ],
             ],
             [
