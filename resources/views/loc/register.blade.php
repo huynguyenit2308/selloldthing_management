@@ -97,7 +97,7 @@
         }
     </style>
 
-    <div class="register-box" style="margin-top:150px;">
+    <div class="register-box" style="margin-top:200px;">
         <h2>Đăng Ký</h2>
 
         {{-- Success --}}
