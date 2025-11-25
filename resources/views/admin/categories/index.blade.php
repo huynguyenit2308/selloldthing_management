@@ -499,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 
             case 'PERMISSION_DENIED':
                 // Không có quyền xóa
-                showDeleteError('Bạn không có quyền xóa danh mục này.');
+                showDeleteError('Bạn không có quyền admin');
                 setTimeout(() => {
                     $(deleteModal).modal('hide');
                 }, 3000);

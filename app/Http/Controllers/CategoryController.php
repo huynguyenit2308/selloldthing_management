@@ -188,6 +188,15 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         try {
+            // Kiểm tra quyền admin
+            if (!auth()->check() || auth()->user()->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'PERMISSION_DENIED',
+                    'message' => 'Bạn không có quyền admin'
+                ], 403);
+            }
+
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);
             }
