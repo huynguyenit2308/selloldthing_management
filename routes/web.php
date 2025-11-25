@@ -77,8 +77,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/categories/create', [AddCategoryController::class, 'create'])->name('admin.categories.create');
     Route::post('/categories', [AddCategoryController::class, 'store'])->name('admin.categories.store');
     //sửa danh mục
-    Route::get('/categories/{category}/edit', [UpdateCategoryController::class, 'edit'])->name('admin.categories.edit');
-    Route::put('/categories/{category}', [UpdateCategoryController::class, 'update'])->name('admin.categories.update');
+    Route::middleware('auth')->group(function () {
+        Route::get('/categories/{category}/edit', [UpdateCategoryController::class, 'edit'])->name('admin.categories.edit');
+        Route::put('/categories/{category}', [UpdateCategoryController::class, 'update'])->name('admin.categories.update');
+    });
     //xóa danh mục
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
     //thống kê danh mục

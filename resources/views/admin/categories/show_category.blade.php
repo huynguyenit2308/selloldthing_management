@@ -592,6 +592,21 @@
                 @endif
             @endif
 
+            {{-- Hiển thị lỗi system --}}
+            @if($errors->has('system'))
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @if(str_contains($errors->first('system'), 'PAGE_INVALID'))
+                        Số trang không hợp lệ
+                    @else
+                        {{ $errors->first('system') }}
+                    @endif
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            @endif
+
             <!-- Category Header -->
             <div class="category-header">
                 <div class="container">

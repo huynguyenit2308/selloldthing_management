@@ -28,6 +28,16 @@ class AddCategoryController extends Controller
             abort(403, 'Bạn không có quyền thêm danh mục');
         }
 
+        // [TEST CASE 6] Trim & reject whitespace-only (bao gồm cả khoảng trắng 2 bytes)
+        $request->merge([
+            'name'        => $this->trimAllWhitespace($request->name ?? ''),
+            'description' => $this->trimAllWhitespace($request->description ?? ''),
+        ]);
+
+        if ($request->name === '' || $this->isOnlyWhitespace($request->name)) {
+            return back()->withInput()->withErrors(['name' => 'CATEGORY_NAME_INVALID: Tên danh mục không được toàn khoảng trắng']);
+        }
+
         $validated = $request->validate(
             [
                 'name' => [
@@ -85,5 +95,33 @@ class AddCategoryController extends Controller
         return redirect()
             ->route('admin.categories.index')
             ->with('success', 'Danh mục đã được tạo thành công');
+    }
+
+    // [TEST CASE 6] Hàm trim tất cả các loại khoảng trắng (bao gồm cả 2 bytes)
+    private function trimAllWhitespace($str)
+    {
+        if ($str === '') {
+            return '';
+        }
+        
+        // Trim các khoảng trắng thông thường
+        $str = trim($str);
+        
+        // Loại bỏ các khoảng trắng full-width (2 bytes) ở đầu và cuối
+        $str = preg_replace('/^[\s　]+|[\s　]+$$/u', '', $str);
+        
+        return $str;
+    }
+
+    // [TEST CASE 6] Hàm kiểm tra chuỗi chỉ chứa khoảng trắng
+    private function isOnlyWhitespace($str)
+    {
+        if ($str === '') {
+            return false;
+        }
+        
+        // Kiểm tra sau khi loại bỏ tất cả các loại khoảng trắng có còn nội dung không
+        $cleaned = preg_replace('/[\s　]+/u', '', $str);
+        return $cleaned === '';
     }
 }
