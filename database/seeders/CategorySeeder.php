@@ -33,7 +33,7 @@ class CategorySeeder extends Seeder
                 'image' => 'images/dogiadung.jpg',
                 'status' => 1,
             ],
-            
+
             // 2 danh mục ít sản phẩm hơn
             [
                 'name' => 'Sách - Văn phòng phẩm',
@@ -45,6 +45,50 @@ class CategorySeeder extends Seeder
                 'name' => 'Xe cộ - Phụ tùng',
                 'description' => 'Xe máy cũ, xe đạp, phụ tùng xe, phụ kiện xe',
                 'image' => 'images/xeco.jpg',
+                'status' => 1,
+            ],
+
+            // ----- Thêm mới để đủ 12 danh mục -----
+            [
+                'name' => 'Mỹ phẩm - Làm đẹp',
+                'description' => 'Mỹ phẩm, nước hoa, sản phẩm chăm sóc da và tóc',
+                'image' => 'images/mypham.jpg',
+                'status' => 1,
+            ],
+            [
+                'name' => 'Thể thao - Dã ngoại',
+                'description' => 'Dụng cụ thể thao, đồ cắm trại, đồ leo núi',
+                'image' => 'images/thethao.jpg',
+                'status' => 1,
+            ],
+            [
+                'name' => 'Mẹ và bé',
+                'description' => 'Đồ chơi, quần áo trẻ em, đồ cho mẹ và bé',
+                'image' => 'images/mevabe.jpg',
+                'status' => 1,
+            ],
+            [
+                'name' => 'Thú cưng - Phụ kiện',
+                'description' => 'Thức ăn, chuồng, đồ chơi, phụ kiện thú cưng',
+                'image' => 'images/thucung.jpg',
+                'status' => 1,
+            ],
+            [
+                'name' => 'Nội thất',
+                'description' => 'Bàn ghế, tủ kệ, nệm, nội thất văn phòng và gia đình',
+                'image' => 'images/noithat.jpg',
+                'status' => 1,
+            ],
+            [
+                'name' => 'Nhạc cụ - Giải trí',
+                'description' => 'Đàn guitar, organ, trống, thiết bị âm thanh',
+                'image' => 'images/nhaccu.jpg',
+                'status' => 1,
+            ],
+            [
+                'name' => 'Đồ cổ - Sưu tầm',
+                'description' => 'Đồ cổ, đồ trang trí, đồ sưu tầm hiếm',
+                'image' => 'images/suutam.jpg',
                 'status' => 1,
             ],
         ];
