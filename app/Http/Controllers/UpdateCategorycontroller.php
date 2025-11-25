@@ -21,8 +21,18 @@ class UpdateCategoryController extends Controller
         }
 
         // Kiểm tra quyền admin
-        if (auth()->user()->role !== 'admin') {
-            abort(403, 'Bạn không có quyền sửa danh mục');
+        if (!auth()->check()) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => 'Bạn chưa đăng nhập']);
+        }
+        
+        // Debug: Kiểm tra role của user
+        $userRole = auth()->user()->role;
+        if ($userRole !== 'admin') {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => "Bạn không có quyền admin. Role hiện tại: {$userRole}"]);
         }
 
         $category = Category::find($categoryId);
@@ -46,8 +56,18 @@ class UpdateCategoryController extends Controller
         }
 
         // Kiểm tra quyền admin
-        if (auth()->user()->role !== 'admin') {
-            abort(403, 'Bạn không có quyền sửa danh mục');
+        if (!auth()->check()) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => 'Bạn chưa đăng nhập']);
+        }
+        
+        // Debug: Kiểm tra role của user
+        $userRole = auth()->user()->role;
+        if ($userRole !== 'admin') {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => "Bạn không có quyền admin. Role hiện tại: {$userRole}"]);
         }
 
         $category = Category::find($categoryId);

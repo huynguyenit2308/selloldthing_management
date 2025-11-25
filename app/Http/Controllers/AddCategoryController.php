@@ -14,8 +14,10 @@ class AddCategoryController extends Controller
     public function create()
     {
         // Kiểm tra quyền admin
-        if (auth()->user()->role !== 'admin') {
-            abort(403, 'Bạn không có quyền thêm danh mục');
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => 'Bạn không có quyền admin']);
         }
 
         return view('admin.categories.add_category');
@@ -24,8 +26,10 @@ class AddCategoryController extends Controller
     public function store(Request $request)
     {
         // Kiểm tra quyền admin
-        if (auth()->user()->role !== 'admin') {
-            abort(403, 'Bạn không có quyền thêm danh mục');
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['system' => 'Bạn không có quyền admin']);
         }
 
         // [TEST CASE 6] Trim & reject whitespace-only (bao gồm cả khoảng trắng 2 bytes)
