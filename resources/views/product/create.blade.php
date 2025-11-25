@@ -143,6 +143,7 @@
                                 <input id="price" name="price" type="text" inputmode="numeric" value="{{ old('price') }}" required>
                                 <span class="addon">đ</span>
                             </div>
+                            <p class="field-note">Giá tối thiểu 1,000 VND.</p>
                             @error('price')
                                 <p class="field-error">{{ $message }}</p>
                             @enderror
@@ -155,12 +156,13 @@
                                 <p class="field-error">{{ $message }}</p>
                             @enderror
                         </div>
-                        <div class="form-field">
+                        <div class="form-field">    
                             <label for="original_price">Giá gốc (Tham khảo)</label>
                             <div class="input-addon">
                                 <input id="original_price" name="original_price" type="text" inputmode="numeric" value="{{ old('original_price') }}">
                                 <span class="addon">đ</span>
                             </div>
+                            <p class="field-note">Không bắt buộc. Giúp người mua thấy mức giảm giá.</p>
                             @error('original_price')
                                 <p class="field-error">{{ $message }}</p>
                             @enderror

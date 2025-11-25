@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -31,6 +32,7 @@ class ProductController extends Controller
             $this->validatePriceFilter($request);
             $this->validateCategoryFilter($request);
             $this->validatePageFilter($request);
+            $this->validateLocationFilter($request);
         } catch (ValidationException $e) {
             // Clear invalid page parameter when redirecting
             $input = $request->except(['page']);
@@ -66,6 +68,12 @@ class ProductController extends Controller
             ->orderByDesc('created_at')
             ->paginate(12)
             ->withQueryString();
+
+        $overflowRedirect = $this->guardAgainstOutOfRangePage($request, $products, 'products.index');
+
+        if ($overflowRedirect) {
+            return $overflowRedirect;
+        }
 
 
         $priceBounds = (clone $baseQuery)
@@ -254,20 +262,10 @@ class ProductController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $requestedPage = (int) $request->input('page', 1);
-        $totalProducts = $products->total();
-        $lastPage = max(1, $products->lastPage());
+        $overflowRedirect = $this->guardAgainstOutOfRangePage($request, $products, 'products.manage');
 
-        if (($totalProducts === 0 && $requestedPage > 1) || ($totalProducts > 0 && $requestedPage > $lastPage)) {
-            $input = $request->except(['page']);
-            $errorMessage = $totalProducts > 0
-                ? "Số trang không tồn tại. Trang cuối cùng hiện tại là {$lastPage}."
-                : 'Không có dữ liệu cho trang đã yêu cầu. Đã chuyển bạn về trang đầu.';
-
-            return redirect()
-                ->route('products.manage', $input)
-                ->withInput(array_merge($input, ['page' => min($lastPage, 1)]))
-                ->withErrors(['page' => $errorMessage]);
+        if ($overflowRedirect) {
+            return $overflowRedirect;
         }
 
         $statusCounts = Product::select('status', DB::raw('COUNT(*) as total'))
@@ -575,6 +573,19 @@ class ProductController extends Controller
 
         $phoneVerified = (bool) ($user->phone && $user->phone !== '');
 
+        $this->rejectWhitespaceOnlyText($request, [
+            'name' => 'Tên sản phẩm',
+            'description' => 'Mô tả sản phẩm',
+            'location_city' => 'Tỉnh/Thành phố',
+            'location_district' => 'Quận/Huyện',
+        ]);
+
+        $this->rejectFullWidthDigits($request, [
+            'price' => 'Giá bán',
+            'original_price' => 'Giá gốc',
+            'quantity' => 'Số lượng',
+        ]);
+
         $request->merge([
             'price' => $this->normalizePrice($request->input('price')),
             'original_price' => $this->normalizePrice($request->input('original_price')),
@@ -599,7 +610,7 @@ class ProductController extends Controller
             'name.regex' => 'Tên sản phẩm chứa ký tự không hợp lệ',
             'images.required' => 'Vui lòng chọn ít nhất 1 ảnh sản phẩm',
             'images.max' => 'Chỉ được upload tối đa 5 ảnh',
-            'images.*.mimetypes' => 'File không đúng định dạng (chỉ chấp nhận JPG, PNG, WebP)',
+            'images.*.mimetypes' => 'File không đúng định dạng (chỉ chấp nhận JPG, PNG)',
             'images.*.max' => 'Kích thước file vượt quá 8MB',
             'condition.in' => 'Vui lòng chọn tình trạng sản phẩm hợp lệ',
             'original_price.integer' => 'Giá gốc phải là số nguyên',
@@ -635,6 +646,19 @@ class ProductController extends Controller
 
     protected function validateProductUpdate(Request $request, Product $product, User $user): array
     {
+        $this->rejectWhitespaceOnlyText($request, [
+            'name' => 'Tên sản phẩm',
+            'description' => 'Mô tả sản phẩm',
+            'location_city' => 'Tỉnh/Thành phố',
+            'location_district' => 'Quận/Huyện',
+        ]);
+
+        $this->rejectFullWidthDigits($request, [
+            'price' => 'Giá bán',
+            'original_price' => 'Giá gốc',
+            'quantity' => 'Số lượng',
+        ]);
+
         $this->normalizeRequestPrices($request);
 
         $rules = [
@@ -864,6 +888,51 @@ class ProductController extends Controller
         }
     }
 
+    protected function guardAgainstOutOfRangePage(Request $request, LengthAwarePaginator $paginator, string $routeName): ?RedirectResponse
+    {
+        $requestedPage = (int) $request->input('page', 1);
+        $totalItems = $paginator->total();
+        $lastPage = max(1, $paginator->lastPage());
+
+        if (($totalItems === 0 && $requestedPage > 1) || ($totalItems > 0 && $requestedPage > $lastPage)) {
+            $input = $request->except(['page']);
+            $errorMessage = $totalItems > 0
+                ? "Số trang không tồn tại. Trang cuối cùng hiện tại là {$lastPage}."
+                : 'Không có dữ liệu cho trang đã yêu cầu. Đã chuyển bạn về trang đầu.';
+
+            return redirect()
+                ->route($routeName, $input)
+                ->withInput(array_merge($input, ['page' => min($lastPage, 1)]))
+                ->withErrors(['page' => $errorMessage]);
+        }
+
+        return null;
+    }
+
+    protected function validateLocationFilter(Request $request): void
+    {
+        $location = $request->input('location');
+
+        if ($location !== null && $location !== '') {
+            if (!Schema::hasColumn('products', 'location')) {
+                throw ValidationException::withMessages([
+                    'location' => 'Không thể lọc theo địa điểm vào lúc này',
+                ]);
+            }
+
+            $locationExists = Product::query()
+                ->where('status', 'published')
+                ->where('location', $location)
+                ->exists();
+
+            if (!$locationExists) {
+                throw ValidationException::withMessages([
+                    'location' => 'Không tìm thấy địa chỉ phù hợp',
+                ]);
+            }
+        }
+    }
+
 
     protected function validatePriceFilter(Request $request): void
     {
@@ -974,6 +1043,70 @@ class ProductController extends Controller
         }
 
         Storage::disk('public')->delete($normalized);
+    }
+
+    protected function containsFullWidthDigits($value): bool
+    {
+        if ($value === null || $value === '') {
+            return false;
+        }
+
+        return preg_match('/[\x{FF10}-\x{FF19}]/u', (string) $value) === 1;
+    }
+
+    protected function rejectFullWidthDigits(Request $request, array $fields): void
+    {
+        foreach ($fields as $field => $label) {
+            $value = $request->input($field);
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if ($this->containsFullWidthDigits($value)) {
+                throw ValidationException::withMessages([
+                    $field => sprintf('%s không được chứa số full-width. Vui lòng dùng số 0-9.', $label),
+                ]);
+            }
+        }
+    }
+
+    protected function rejectWhitespaceOnlyText(Request $request, array $fields): void
+    {
+        foreach ($fields as $field => $label) {
+            $value = $request->input($field);
+
+            if ($value === null) {
+                continue;
+            }
+
+            if (!is_string($value)) {
+                continue;
+            }
+
+            $trimmed = $this->unicodeTrim($value);
+
+            if ($trimmed === '') {
+                throw ValidationException::withMessages([
+                    $field => sprintf('%s không được chỉ chứa khoảng trắng.', $label),
+                ]);
+            }
+
+            if ($trimmed !== $value) {
+                $request->merge([$field => $trimmed]);
+            }
+        }
+    }
+
+    protected function unicodeTrim(string $value): string
+    {
+        $trimmed = preg_replace('/^\s+|\s+$/u', '', $value);
+
+        if ($trimmed === null) {
+            return trim($value);
+        }
+
+        return trim($trimmed);
     }
 
     protected function splitLocation(?string $location): array
