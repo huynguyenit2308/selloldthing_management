@@ -100,9 +100,19 @@ class AuthService
         ];
     }
 
-    // ======= LOGOUT =======
-    public function handleLogout(Request $request)
+    // ======= LOGOUT =======// ======= LOGOUT =======
+   public function handleLogout(Request $request)
     {
+        // 1. KIỂM TRA QUAN TRỌNG: Nếu user không tồn tại (Tab 1 đã logout/xóa)
+        if (!Auth::check()) {
+            return [
+                'success' => false, // Báo hiệu thất bại cho Controller
+                'redirect' => route('login'),
+                'message' => 'Tài khoản không xác định hoặc đã đăng xuất ở tab khác. Vui lòng đăng nhập lại.', // Nội dung lỗi hiển thị
+            ];
+        }
+
+        // 2. Logic đăng xuất bình thường
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

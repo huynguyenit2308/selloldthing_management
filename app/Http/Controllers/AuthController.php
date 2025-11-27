@@ -49,9 +49,17 @@ class AuthController extends Controller
     }
 
     // ======= LOGOUT =======
-    public function logout(Request $request)
+   public function logout(Request $request)
     {
         $result = $this->authService->handleLogout($request);
+
+        // KIỂM TRA: Nếu Service trả về thất bại (do đã logout ở tab khác)
+        if (isset($result['success']) && !$result['success']) {
+            // Chuyển hướng về login kèm thông báo lỗi để hiển thị alert đỏ
+            return redirect($result['redirect'])->with('error', $result['message']);
+        }
+
+        // Trường hợp đăng xuất bình thường
         return redirect($result['redirect']);
     }
 }

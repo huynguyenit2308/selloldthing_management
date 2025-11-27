@@ -2,6 +2,9 @@
 @section('title', 'Cập Nhật Thông Tin')
 
 @section('content')
+    {{-- Thêm thư viện SweetAlert2 nếu chưa có trong layout chính --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <div class="account-box mx-auto" style="max-width:500px;">
         <h5 class="text-center mb-4 fw-bold">Cập Nhật Thông Tin</h5>
 
@@ -17,6 +20,11 @@
 
         <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
             @csrf
+
+            {{-- 🟢 [QUAN TRỌNG] Input ẩn chứa thời gian cập nhật hiện tại --}}
+            {{-- Giúp Server so sánh xem dữ liệu có bị cũ so với Database không --}}
+            {{-- Gửi con số timestamp (VD: 167899200) thay vì chuỗi ngày tháng --}}
+            <input type="hidden" name="last_updated_at" value="{{ $user->updated_at ? $user->updated_at->timestamp : 0 }}">
             <div class="text-center mb-3">
                 <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : 'https://via.placeholder.com/100' }}"
                     class="rounded-circle mb-2" width="100" height="100" alt="Avatar">
@@ -53,4 +61,27 @@
             </div>
         </form>
     </div>
+
+    {{-- 🟢 [SCRIPT XỬ LÝ LỖI DỮ LIỆU CŨ] --}}
+    {{-- Nếu Service trả về session 'reload_page', đoạn này sẽ chạy --}}
+    @if(session('error') && session('reload_page'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Dữ liệu không đồng bộ!',
+                    text: "{{ session('error') }}", // "Thông tin đã được cập nhật ở tab khác..."
+                    confirmButtonText: 'Tải lại dữ liệu mới',
+                    allowOutsideClick: false, // Bắt buộc người dùng phải bấm nút
+                    confirmButtonColor: '#3085d6',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Tải lại trang để lấy tên/avatar mới nhất từ Database
+                        window.location.reload();
+                    }
+                });
+            });
+        </script>
+    @endif
+
 @endsection

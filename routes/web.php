@@ -193,19 +193,25 @@ Route::prefix('password')->group(function () {
     Route::get('/reset', [ForgotPasswordController::class, 'showResetForm'])->name('password.resetForm');
     Route::post('/reset', [ForgotPasswordController::class, 'resetPassword'])->name('password.reset');
 });
-
-//thong tin tai khoan
-Route::middleware(['auth'])->group(function () {
-    // Thông tin tài khoản
-    Route::get('/account/info', [AccountController::class, 'info'])->name('account.info');
-
-    // Đổi mật khẩu
+Route::group(['prefix' => 'account'], function() {
+    
+    // Trang thông tin (Vẫn nên để auth để bảo vệ view, hoặc xử lý trong Controller)
+    Route::get('/info', [AccountController::class, 'info'])->name('account.info');    
+ // Đổi mật khẩu
     Route::get('/account/change-password', [AccountController::class, 'showChangePassword'])->name('account.change');
     Route::post('/account/change-password', [AccountController::class, 'updatePassword'])->name('account.updatePassword');
     Route::post('/account/confirm-logout', [AccountController::class, 'confirmLogoutAfterChange'])->name('account.confirmLogout');
-    // Xóa tài khoản
-    Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
 
+    // Xóa tài khoản
+    Route::post('/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
+});
+Route::group(['prefix' => 'profile'], function() {
+    Route::get('/', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/update', [ProfileController::class, 'update'])->name('profile.update');
+});
+//thong tin tai khoan
+Route::middleware(['auth'])->group(function () {
     // Quản lý tồn kho
     Route::get('/account/inventory', [InventoryController::class, 'index'])->name('account.inventory');
     Route::get('/account/inventory/export', [InventoryController::class, 'export'])->name('account.inventory.export');
@@ -213,10 +219,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/inventory/bulk', [InventoryController::class, 'bulkSave'])->name('account.inventory.bulk');
 });
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-
     // Category Watchlist Routes
     Route::get('/watchlist', [CategoryWatchlistController::class, 'index'])->name('watchlist.index');
     Route::post('/watchlist/{category}', [CategoryWatchlistController::class, 'store'])->name('watchlist.store');
