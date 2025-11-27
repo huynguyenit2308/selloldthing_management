@@ -1,9 +1,10 @@
-@extends('dashboard')
 
-@section('content')
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    {{-- Thêm thư viện SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         .input-group-custom {
@@ -62,17 +63,7 @@
 
             <h3 class="text-center mb-4 font-weight-bold">Đăng Nhập</h3>
 
-            {{-- Thông báo thành công --}}
-            @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-
-            {{-- Thông báo lỗi --}}
-            @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
-
-            {{-- Thông báo lỗi validate --}}
+            {{-- Vẫn giữ thông báo tĩnh này để hiển thị các lỗi validate form thông thường --}}
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul class="mb-0 pl-3">
@@ -94,10 +85,9 @@
                 </div>
 
                 {{-- Password --}}
-                {{-- Password --}}
-                <div class="form-group"> {{-- Xóa class "input-group-custom" khỏi đây --}}
+                <div class="form-group"> 
                     <label>Mật khẩu</label>
-                    <div class="input-group-custom"> {{-- Thêm 1 div mới bao bọc input và icon --}}
+                    <div class="input-group-custom"> 
                         <input type="password" id="password" name="password" class="form-control"
                             placeholder="Nhập mật khẩu" required>
                         <span class="toggle-eye" id="eye-password"
@@ -149,4 +139,32 @@
         }
     </script>
 
-@endsection
+    {{-- ========================================== --}}
+    {{-- PHẦN XỬ LÝ POPUP THÔNG BÁO (SWEETALERT2) --}}
+    {{-- ========================================== --}}
+    
+    {{-- 1. Xử lý thông báo LỖI (Ví dụ: Tab 1 xóa nick, Tab 2 bị đá về đây) --}}
+    @if(session('error'))
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Chú ý!',
+            text: "{{ session('error') }}",
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Đã hiểu'
+        });
+    </script>
+    @endif
+
+    {{-- 2. Xử lý thông báo THÀNH CÔNG (Ví dụ: Đăng ký thành công, Đổi pass thành công) --}}
+    @if(session('success'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: "{{ session('success') }}",
+            confirmButtonColor: '#28a745',
+            confirmButtonText: 'Tuyệt vời'
+        });
+    </script>
+    @endif
