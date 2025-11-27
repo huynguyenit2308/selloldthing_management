@@ -1,4 +1,6 @@
+@extends('dashboard')
 
+@section('content')
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -168,3 +170,4 @@
         });
     </script>
     @endif
+@endsection

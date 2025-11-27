@@ -20,11 +20,10 @@
 
         <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
             @csrf
+            {{-- Input Token Bảo Mật --}}
+            <input type="hidden" name="secure_version_token"
+                value="{{ \Illuminate\Support\Facades\Crypt::encryptString($user->updated_at ? $user->updated_at->timestamp : 0) }}">
 
-            {{-- 🟢 [QUAN TRỌNG] Input ẩn chứa thời gian cập nhật hiện tại --}}
-            {{-- Giúp Server so sánh xem dữ liệu có bị cũ so với Database không --}}
-            {{-- Gửi con số timestamp (VD: 167899200) thay vì chuỗi ngày tháng --}}
-            <input type="hidden" name="last_updated_at" value="{{ $user->updated_at ? $user->updated_at->timestamp : 0 }}">
             <div class="text-center mb-3">
                 <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : 'https://via.placeholder.com/100' }}"
                     class="rounded-circle mb-2" width="100" height="100" alt="Avatar">
@@ -45,9 +44,12 @@
                 <label>Số điện thoại</label>
                 <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="form-control">
             </div>
+            {{-- Đối với các trường không cho sửa (Email, Username), nên thêm disabled thay vì chỉ readonly để chắc chắn (dù
+            Backend đã chặn rồi) --}}
             <div class="mb-3">
                 <label>Email</label>
-                <input type="email" name="email" value="{{ old('email', $user->email) }}" class="form-control" readonly>
+                {{-- disabled giúp input xám đi và không gửi dữ liệu lên server --}}
+                <input type="email" value="{{ $user->email }}" class="form-control" disabled>
             </div>
 
             <div class="mb-3">
@@ -62,21 +64,19 @@
         </form>
     </div>
 
-    {{-- 🟢 [SCRIPT XỬ LÝ LỖI DỮ LIỆU CŨ] --}}
-    {{-- Nếu Service trả về session 'reload_page', đoạn này sẽ chạy --}}
+    {{-- 🟢 [SCRIPT XỬ LÝ LỖI DỮ LIỆU CŨ HOẶC GIAN LẬN] --}}
     @if(session('error') && session('reload_page'))
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 Swal.fire({
-                    icon: 'warning',
+                    icon: 'warning', // Icon cảnh báo
                     title: 'Dữ liệu không đồng bộ!',
-                    text: "{{ session('error') }}", // "Thông tin đã được cập nhật ở tab khác..."
+                    text: "{{ session('error') }}", // Nội dung lỗi từ Service gửi về
                     confirmButtonText: 'Tải lại dữ liệu mới',
-                    allowOutsideClick: false, // Bắt buộc người dùng phải bấm nút
+                    allowOutsideClick: false,
                     confirmButtonColor: '#3085d6',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Tải lại trang để lấy tên/avatar mới nhất từ Database
                         window.location.reload();
                     }
                 });
