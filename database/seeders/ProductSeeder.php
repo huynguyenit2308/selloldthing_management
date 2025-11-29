@@ -28,7 +28,7 @@ class ProductSeeder extends Seeder
 
         $products = [
             [
-                'name' => 'iPhone 15 Pro Max 256GB Titan Xanh',
+                'name' => 'iPhone 15 Pro Max',
                 'category' => 'Điện tử - Điện thoại',
                 'price' => 32990000,
                 'original_price' => 36990000,
@@ -57,7 +57,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Samsung Galaxy Z Fold5 512GB Kem Ivory',
+                'name' => 'Samsung Galaxy Z Fold5',
                 'category' => 'Điện tử - Điện thoại',
                 'price' => 34990000,
                 'original_price' => 39990000,
@@ -84,7 +84,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'MacBook Pro 14" M1 Pro 16GB/512GB',
+                'name' => 'MacBook Pro 14" M1',
                 'category' => 'Laptop',
                 'price' => 12990000,
                 'original_price' => 15990000,
@@ -111,7 +111,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Google Pixel 8 Pro 128GB Xanh Biển',
+                'name' => 'Google Pixel 8 Pro',
                 'category' => 'Điện tử - Điện thoại',
                 'price' => 22490000,
                 'original_price' => 25990000,
@@ -140,7 +140,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'iPad Air M2 11" Wi-Fi 256GB Xanh Dương',
+                'name' => 'iPad Air M2 11"',
                 'category' => 'Điện tử - Điện thoại',
                 'price' => 18990000,
                 'original_price' => 21990000,
@@ -169,7 +169,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'MacBook Air 15" M3 16GB/512GB Bạc',
+                'name' => 'MacBook Air 15" M3',
                 'category' => 'Điện tử - Điện thoại',
                 'price' => 32990000,
                 'original_price' => 38990000,
@@ -198,7 +198,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Tai nghe Sony WH-1000XM5 Đen',
+                'name' => 'Tai nghe Sony WH-1000XM5',
                 'category' => 'Điện tử - Điện thoại',
                 'price' => 6490000,
                 'original_price' => 8490000,
@@ -227,7 +227,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Máy hút bụi Dyson V11 Absolute',
+                'name' => 'Máy hút bụi Dyson V11',
                 'category' => 'Đồ gia dụng',
                 'price' => 11800000,
                 'original_price' => 16990000,
@@ -256,7 +256,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Máy pha cà phê DeLonghi Dedica EC685.M',
+                'name' => 'Máy pha cà phê DeLonghi',
                 'category' => 'Đồ gia dụng',
                 'price' => 5200000,
                 'original_price' => 8490000,
@@ -285,7 +285,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Nồi chiên không dầu Philips XXL HD9650',
+                'name' => 'Nồi chiên Philips XXL',
                 'category' => 'Đồ gia dụng',
                 'price' => 4200000,
                 'original_price' => 6990000,
@@ -314,7 +314,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Bộ nồi inox Elmich Trimax Classic 5 món',
+                'name' => 'Bộ nồi inox Elmich',
                 'category' => 'Đồ gia dụng',
                 'price' => 1950000,
                 'original_price' => 3290000,
@@ -343,7 +343,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Áo khoác da Zara Biker nam size L',
+                'name' => 'Áo khoác da Zara',
                 'category' => 'Thời trang',
                 'price' => 1450000,
                 'original_price' => 2890000,
@@ -372,7 +372,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Bộ vest nam Aristino Premium Navy size 52',
+                'name' => 'Bộ vest nam Aristino',
                 'category' => 'Thời trang',
                 'price' => 3500000,
                 'original_price' => 5790000,
@@ -401,7 +401,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Dell XPS 13 9310 FHD+',
+                'name' => 'Dell XPS 13 9310',
                 'category' => 'Laptop',
                 'price' => 2500000,
                 'original_price' => 4500000,
@@ -424,7 +424,7 @@ class ProductSeeder extends Seeder
                 'view_count' => 156,
             ],
             [
-                'name' => 'Đầm maxi linen Hnoss màu be size M',
+                'name' => 'Đầm maxi linen Hnoss',
                 'category' => 'Thời trang',
                 'price' => 790000,
                 'original_price' => 1590000,
@@ -454,7 +454,7 @@ class ProductSeeder extends Seeder
             ],
             // ========== DANH MỤC 5: Xe cộ - Phụ tùng (3 sản phẩm) ==========
             [
-                'name' => 'Xe đạp Giant ATX 720 27.5"',
+                'name' => 'Xe đạp Giant ATX 720',
                 'category' => 'Xe cộ - Phụ tùng',
                 'price' => 4500000,
                 'original_price' => 9000000,
@@ -483,7 +483,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Giày sneaker Adidas Ultraboost 22 Trắng',
+                'name' => 'Giày Adidas Ultraboost 22',
                 'category' => 'Thời trang',
                 'price' => 2200000,
                 'original_price' => 4800000,
@@ -512,7 +512,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Combo bút máy Lamy Safari + ống mực',
+                'name' => 'Combo bút máy Lamy Safari',
                 'category' => 'Sách - Văn phòng phẩm',
                 'price' => 1250000,
                 'original_price' => 1680000,
@@ -541,7 +541,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Sổ tay bullet journal Leuchtturm1917 chấm bi',
+                'name' => 'Sổ tay Leuchtturm1917',
                 'category' => 'Sách - Văn phòng phẩm',
                 'price' => 380000,
                 'original_price' => 520000,
@@ -570,7 +570,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Bộ sách Harvard Business Review Essentials (6 cuốn)',
+                'name' => 'Sách Harvard Business Review',
                 'category' => 'Sách - Văn phòng phẩm',
                 'price' => 950000,
                 'original_price' => 1680000,
@@ -599,7 +599,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Honda SH Mode 2023 ABS đỏ nâu',
+                'name' => 'Honda SH Mode 2023',
                 'category' => 'Xe cộ - Phụ tùng',
                 'price' => 64900000,
                 'original_price' => 73900000,
@@ -628,7 +628,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Xe đạp road Giant Contend AR 4 2024',
+                'name' => 'Xe đạp Giant Contend AR4',
                 'category' => 'Xe cộ - Phụ tùng',
                 'price' => 21990000,
                 'original_price' => 27990000,
@@ -657,7 +657,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Mũ bảo hiểm fullface LS2 FF800 Storm',
+                'name' => 'Mũ bảo hiểm LS2 FF800',
                 'category' => 'Xe cộ - Phụ tùng',
                 'price' => 3200000,
                 'original_price' => 4500000,

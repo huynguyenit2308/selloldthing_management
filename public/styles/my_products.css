@@ -600,12 +600,6 @@ margin-left: 18px;
     border-color: #bbf7d0;
 }
 
-.status-hidden {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #64748b;
-    border-color: #cbd5e1;
-}
-
 .status-pending {
     background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
     color: #d97706;
@@ -686,26 +680,6 @@ margin-left: 18px;
     stroke: var(--color-text-muted);
 }
 
-.btn-toggle {
-    background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
-    border-color: #93c5fd;
-}
-
-.btn-toggle svg {
-    stroke: #3b82f6;
-}
-
-.btn-toggle:hover {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-color: #2563eb;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
-}
-
-.btn-toggle:hover svg {
-    stroke: #ffffff;
-}
-
 .btn-edit {
     background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
     border-color: #86efac;
@@ -715,7 +689,7 @@ margin-left: 18px;
     stroke: #059669;
 }
 
-.btn-edit:hover {
+.btn-edit:hover {   
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
     border-color: #047857;
     transform: translateY(-2px);
