@@ -117,9 +117,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/my-products', [ProductController::class, 'store'])->name('products.store');
     Route::get('/my-products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/my-products/{product}', [ProductController::class, 'update'])->name('products.update');
-    Route::post('/my-products/{product}/autosave', [ProductController::class, 'autosave'])->name('products.autosave');
-    Route::patch('/my-products/{product}/toggle', [ProductController::class, 'toggleVisibility'])->name('products.toggle');
     Route::get('/my-products/{product}/check-delete', [ProductController::class, 'checkDeleteConditions'])->name('products.checkDelete');
+    Route::get('/product-not-found', [ProductController::class, 'productNotFound'])->name('products.notFound');
     Route::delete('/my-products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::post('/my-products/undo-delete', [ProductController::class, 'undoDelete'])->name('products.undoDelete');
     Route::post('/my-products/bulk', [ProductController::class, 'bulkAction'])->name('products.bulk');

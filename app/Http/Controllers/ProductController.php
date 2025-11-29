@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -229,7 +230,7 @@ class ProductController extends Controller
         }, 'category'])
             ->where('user_id', $user->id);
 
-        $statusOptions = ['all', 'published', 'pending', 'hidden', 'sold'];
+        $statusOptions = ['all', 'published', 'pending', 'sold'];
 
         if (in_array($statusFilter, array_diff($statusOptions, ['all']), true)) {
             $baseQuery->where('status', $statusFilter);
@@ -278,7 +279,6 @@ class ProductController extends Controller
             'total' => Product::where('user_id', $user->id)->count(),
             'published' => (int) ($statusCounts['published'] ?? 0),
             'pending' => (int) ($statusCounts['pending'] ?? 0),
-            'hidden' => (int) ($statusCounts['hidden'] ?? 0),
             'sold' => (int) ($statusCounts['sold'] ?? 0),
         ];
 
@@ -314,81 +314,89 @@ class ProductController extends Controller
 
     public function edit(Request $request, Product $product): View|RedirectResponse
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        abort_if(!$user instanceof User, 403);
-        abort_if($product->user_id !== $user->id, 403, 'Bạn không có quyền chỉnh sửa sản phẩm này');
+            abort_if(!$user instanceof User, 403);
+            abort_if($product->user_id !== $user->id, 403, 'Bạn không có quyền chỉnh sửa sản phẩm này');
 
-        // Nếu sản phẩm đã được cập nhật sau khi tab danh sách mở, quay về trang quản lý
-        $clientVersion = (int) $request->query('version', 0);
-        $currentVersion = $product->updated_at ? $product->updated_at->getTimestamp() : 0;
+            // Nếu sản phẩm đã được cập nhật sau khi tab danh sách mở, quay về trang quản lý
+            $clientVersion = (int) $request->query('version', 0);
+            $currentVersion = $product->updated_at ? $product->updated_at->getTimestamp() : 0;
 
-        if ($clientVersion > 0 && $currentVersion > 0 && $clientVersion < $currentVersion) {
-            return redirect()
-                ->route('products.manage')
-                ->with('product_sync_warning', 'Sản phẩm đã được cập nhật ở một tab khác. Vui lòng xem lại danh sách sản phẩm mới nhất.');
+            if ($clientVersion > 0 && $currentVersion > 0 && $clientVersion < $currentVersion) {
+                return redirect()
+                    ->route('products.manage')
+                    ->with('product_sync_warning', 'Sản phẩm đã được cập nhật ở một tab khác. Vui lòng xem lại danh sách sản phẩm mới nhất.');
+            }
+
+            $product->load(['images' => function ($query) {
+                $query->orderBy('sort_order')->orderBy('created_at');
+            }, 'category']);
+
+            $categories = Category::orderBy('name')->get();
+            $contactMethods = $this->contactMethodOptions();
+            $conditions = $this->conditionOptions();
+
+            [$locationCity, $locationDistrict] = $this->splitLocation($product->location);
+            $selectedContactMethods = $product->contact_method ? array_filter(explode(',', $product->contact_method)) : [];
+
+            $additionalInfo = $this->resolveAdditionalInfo($product->additional_info);
+
+            $draft = $this->getProductDraft($user->id, $product->id);
+
+            $isSold = $product->status === 'sold';
+
+            return view('product.edit', [
+                'user' => $user,
+                'product' => $product,
+                'categories' => $categories,
+                'contactMethods' => $contactMethods,
+                'conditions' => $conditions,
+                'maxImages' => 5,
+                'locationCity' => old('location_city', $draft['data']['location_city'] ?? $locationCity),
+                'locationDistrict' => old('location_district', $draft['data']['location_district'] ?? $locationDistrict),
+                'selectedContactMethods' => old('contact_methods', $draft['data']['contact_methods'] ?? $selectedContactMethods),
+                'additionalInfo' => [
+                    'return_policy' => old('return_policy', $draft['data']['return_policy'] ?? $additionalInfo['return_policy']),
+                    'shipping_policy' => old('shipping_policy', $draft['data']['shipping_policy'] ?? $additionalInfo['shipping_policy']),
+                    'additional_note' => old('additional_note', $draft['data']['additional_note'] ?? $additionalInfo['additional_note']),
+                ],
+                'draft' => $draft,
+                'isSold' => $isSold,
+                'phoneVerified' => (bool) ($user->phone && $user->phone !== ''),
+            ]);
+        } catch (ModelNotFoundException $exception) {
+        // Sản phẩm không tồn tại (có thể bị xóa ở tab khác)
+        return redirect()
+            ->route('products.manage')
+            ->with('product_delete_error', 'Không có id sản phẩm để xóa');
         }
-
-        $product->load(['images' => function ($query) {
-            $query->orderBy('sort_order')->orderBy('created_at');
-        }, 'category']);
-
-        $categories = Category::orderBy('name')->get();
-        $contactMethods = $this->contactMethodOptions();
-        $conditions = $this->conditionOptions();
-
-        [$locationCity, $locationDistrict] = $this->splitLocation($product->location);
-        $selectedContactMethods = $product->contact_method ? array_filter(explode(',', $product->contact_method)) : [];
-
-        $additionalInfo = $this->resolveAdditionalInfo($product->additional_info);
-
-        $draft = $this->getProductDraft($user->id, $product->id);
-
-        $isSold = $product->status === 'sold';
-
-        return view('product.edit', [
-            'user' => $user,
-            'product' => $product,
-            'categories' => $categories,
-            'contactMethods' => $contactMethods,
-            'conditions' => $conditions,
-            'maxImages' => 5,
-            'locationCity' => old('location_city', $draft['data']['location_city'] ?? $locationCity),
-            'locationDistrict' => old('location_district', $draft['data']['location_district'] ?? $locationDistrict),
-            'selectedContactMethods' => old('contact_methods', $draft['data']['contact_methods'] ?? $selectedContactMethods),
-            'additionalInfo' => [
-                'return_policy' => old('return_policy', $draft['data']['return_policy'] ?? $additionalInfo['return_policy']),
-                'shipping_policy' => old('shipping_policy', $draft['data']['shipping_policy'] ?? $additionalInfo['shipping_policy']),
-                'additional_note' => old('additional_note', $draft['data']['additional_note'] ?? $additionalInfo['additional_note']),
-            ],
-            'draft' => $draft,
-            'isSold' => $isSold,
-            'phoneVerified' => (bool) ($user->phone && $user->phone !== ''),
-        ]);
     }
 
     public function update(Request $request, Product $product): RedirectResponse
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        abort_if(!$user instanceof User, 403);
-        abort_if($product->user_id !== $user->id, 403, 'Bạn không có quyền chỉnh sửa sản phẩm này');
+            abort_if(!$user instanceof User, 403);
+            abort_if($product->user_id !== $user->id, 403, 'Bạn không có quyền chỉnh sửa sản phẩm này');
 
-        if ($product->status === 'sold') {
-            return back()->withErrors([
-                'general' => 'Không thể chỉnh sửa sản phẩm đã có người mua',
-            ]);
-        }
+            if ($product->status === 'sold') {
+                return back()->withErrors([
+                    'general' => 'Không thể chỉnh sửa sản phẩm đã có người mua',
+                ]);
+            }
 
-        // Optimistic locking: ngăn ghi đè thay đổi từ tab khác
-        $clientVersion = (int) $request->input('version', 0);
-        $currentVersion = $product->updated_at ? $product->updated_at->getTimestamp() : 0;
+            // Optimistic locking: ngăn ghi đè thay đổi từ tab khác
+            $clientVersion = (int) $request->input('version', 0);
+            $currentVersion = $product->updated_at ? $product->updated_at->getTimestamp() : 0;
 
-        if ($clientVersion > 0 && $currentVersion > 0 && $clientVersion < $currentVersion) {
-            return back()
-                ->withInput()
-                ->with('product_sync_warning', 'Sản phẩm đã được cập nhật ở một tab khác. Vui lòng tải lại trang để xem và áp dụng thay đổi mới nhất.');
-        }
+            if ($clientVersion > 0 && $currentVersion > 0 && $clientVersion < $currentVersion) {
+                return back()
+                    ->withInput()
+                    ->with('product_sync_warning', 'Sản phẩm đã được cập nhật ở một tab khác. Vui lòng tải lại trang để xem và áp dụng thay đổi mới nhất.');
+            }
 
         $validated = $this->validateProductUpdate($request, $product, $user);
 
@@ -446,54 +454,12 @@ class ProductController extends Controller
                 'general' => 'Cập nhật thất bại. Vui lòng thử lại sau',
             ]);
         }
-    }
-
-    public function autosave(Request $request, Product $product): JsonResponse
-    {
-        $user = $request->user();
-
-        if (!$user instanceof User || $product->user_id !== $user->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bạn không có quyền lưu bản nháp sản phẩm này',
-            ], 403);
+        } catch (ModelNotFoundException $exception) {
+            // Sản phẩm không tồn tại (có thể bị xóa ở tab khác)
+            return redirect()
+                ->route('products.manage')
+                ->with('product_delete_error', 'Không có id sản phẩm để xóa');
         }
-
-        if ($product->status === 'sold') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không thể lưu bản nháp cho sản phẩm đã có người mua',
-            ], 422);
-        }
-
-        $payload = $request->only([
-            'name',
-            'category_id',
-            'description',
-            'condition',
-            'price',
-            'original_price',
-            'quantity',
-            'location_city',
-            'location_district',
-            'contact_methods',
-            'return_policy',
-            'shipping_policy',
-            'additional_note',
-        ]);
-
-        $payload['saved_at'] = now()->toIso8601String();
-
-        Cache::put(
-            $this->productDraftCacheKey($user->id, $product->id),
-            ['data' => $payload, 'saved_at' => $payload['saved_at']],
-            now()->addMinutes(30)
-        );
-
-        return response()->json([
-            'success' => true,
-            'saved_at' => $payload['saved_at'],
-        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -1070,7 +1036,7 @@ class ProductController extends Controller
 
         // Nếu là URL đầy đủ, chuyển về đường dẫn tương đối
         if (Str::startsWith($normalized, ['http://', 'https://'])) {
-            $publicPrefix = rtrim(Storage::disk('public')->url(''), '/');
+            $publicPrefix = rtrim(asset('storage'), '/');
 
             if (!Str::startsWith($normalized, $publicPrefix)) {
                 return;
@@ -1081,7 +1047,7 @@ class ProductController extends Controller
 
         // Loại bỏ tiền tố storage/ nếu có
         if (Str::startsWith($normalized, 'storage/')) {
-            $normalized = ltrim(Str::after($normalized, 'storage/'), '/');
+            $normalized = Str::after($normalized, 'storage/');
         }
 
         // Loại bỏ tiền tố public/ nếu có
@@ -1095,7 +1061,14 @@ class ProductController extends Controller
             return;
         }
 
-        Storage::disk('public')->delete($normalized);
+        try {
+            Storage::disk('public')->delete($normalized);
+        } catch (\Throwable $exception) {
+            // Log lỗi nhưng không throw exception để không ảnh hưởng đến việc xóa record
+            \Log::warning('Không thể xóa file ảnh: ' . $normalized, [
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     protected function containsFullWidthDigits($value): bool
@@ -1240,74 +1213,7 @@ class ProductController extends Controller
         return null;
     }
 
-    public function toggleVisibility(Request $request, Product $product)
-    {
-        $user = $request->user();
-
-        abort_if(!$user instanceof User, 403);
-        abort_if($product->user_id !== $user->id, 403);
-
-        $respond = function (bool $success, string $message, ?string $status = null) use ($request) {
-            if ($request->wantsJson()) {
-                $payload = ['success' => $success, 'message' => $message];
-
-                if ($status !== null) {
-                    $payload['status'] = $status;
-                }
-
-                return response()->json($payload, $success ? 200 : 422);
-            }
-
-            $flashKey = $success ? 'product_status_success' : 'product_status_error';
-
-            return back()->with($flashKey, $message);
-        };
-
-        if (session('account_restricted', false)) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tài khoản của bạn đang bị hạn chế tính năng đăng bán',
-                ], 403);
-            }
-
-            return back()->with('product_action_blocked', 'Tài khoản của bạn đang bị hạn chế tính năng đăng bán');
-        }
-
-        if ($product->status === 'sold') {
-            return $respond(false, 'Không thể thay đổi trạng thái sản phẩm đã bán');
-        }
-
-        if ($product->status === 'pending') {
-            return $respond(false, 'Sản phẩm đang chờ duyệt, vui lòng đợi quản trị viên phê duyệt');
-        }
-
-        $nextStatus = match ($product->status) {
-            'published' => 'hidden',
-            'hidden' => 'published',
-            default => null,
-        };
-
-        if ($nextStatus === null) {
-            return $respond(false, 'Không thể thay đổi trạng thái sản phẩm');
-        }
-
-        try {
-            $product->status = $nextStatus;
-            $product->save();
-
-            $message = $nextStatus === 'published'
-                ? 'Sản phẩm đã được hiển thị trở lại'
-                : 'Sản phẩm đã được chuyển sang trạng thái ẩn';
-
-            return $respond(true, $message, $nextStatus);
-        } catch (\Throwable $exception) {
-            report($exception);
-
-            return $respond(false, 'Không thể thay đổi trạng thái sản phẩm');
-        }
-    }
-
+    
     public function checkDeleteConditions(Request $request, Product $product): JsonResponse
     {
         $user = $request->user();
@@ -1379,6 +1285,7 @@ class ProductController extends Controller
             'canDelete' => empty($errors),
             'errors' => $errors,
             'warnings' => $warnings,
+            'exists' => true, // Product exists since we got this far
         ]);
     }
 
@@ -1625,5 +1532,15 @@ class ProductController extends Controller
         }
 
         return back()->with('product_bulk_error', 'Không có sản phẩm nào phù hợp để xử lý');
+    }
+
+    /**
+     * Handle ModelNotFoundException for products
+     */
+    public function productNotFound()
+    {
+        return redirect()
+            ->route('products.manage')
+            ->with('product_delete_error', 'Sản phẩm không còn tồn tại.');
     }
 }

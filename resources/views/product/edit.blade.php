@@ -16,18 +16,15 @@
                     ->filter()
                     ->unique()
                     ->all();
-                $orderedImages = collect($existingOrder)
-                    ->map(function ($id) use ($product) {
-                        return $product->images->firstWhere('id', $id);
-                    })
-                    ->filter()
-                    ->values();
-                $remainingImages = $product->images->reject(function ($image) use ($existingOrder) {
-                    return in_array($image->id, $existingOrder, true);
-                });
-                $displayImages = $orderedImages->merge($remainingImages)->reject(function ($image) use ($removedImageIds) {
-                    return $removedImageIds->contains($image->id ?? 0);
-                });
+                
+                // Get existing images, ordered by sort_order and created_at
+                $displayImages = $product->images->reject(function ($image) use ($removedImageIds) {
+                    return $removedImageIds->contains($image->id);
+                })->sortBy([
+                    ['sort_order', 'asc'],
+                    ['created_at', 'asc']
+                ])->values();
+                
                 $currentImageCount = $displayImages->count();
             @endphp
             <nav class="account-breadcrumb" aria-label="breadcrumb">
@@ -37,6 +34,9 @@
                     <li aria-current="page"><span>Cập nhật sản phẩm</span></li>
                 </ol>
             </nav>
+
+            <!-- Notification Container -->
+            <div id="image-notification-container" class="image-notification-container"></div>
 
             <header class="product-edit-header">
                 <div class="title-block">
@@ -94,7 +94,7 @@
             @endif
 
             <form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data" id="product-edit-form"
-                class="product-edit-form" data-autosave-url="{{ route('products.autosave', $product) }}" data-max-images="{{ $maxImages }}">
+                class="product-edit-form" data-max-images="{{ $maxImages }}">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="version" value="{{ optional($product->updated_at)->getTimestamp() }}">
@@ -152,19 +152,19 @@
                             <div class="image-list">
                                 <div class="image-grid js-existing-images" data-max="{{ $maxImages }}">
                                     @forelse ($displayImages as $index => $image)
-                                        <div class="image-item" draggable="true" data-image-id="{{ $image->id }}">
-                                            <span class="drag-handle" aria-label="Kéo để sắp xếp">⠿</span>
-                                            <div class="image-thumb">
-                                                <img src="{{ $image->image_url }}" alt="Ảnh {{ $index + 1 }} của {{ $product->name }}">
-                                                @if ($loop->first)
-                                                    <span class="image-badge" aria-label="Ảnh đại diện">Ảnh chính</span>
-                                                @endif
-                                            </div>
-                                            <div class="image-actions">
-                                                <button type="button" class="btn-danger js-remove-existing" data-image-id="{{ $image->id }}">Xóa</button>
-                                            </div>
-                                            <input type="hidden" name="existing_images[]" value="{{ $image->id }}">
+                                    <div class="image-item" draggable="true" data-image-id="{{ $image->id }}">
+                                        <span class="drag-handle" aria-label="Kéo để sắp xếp">⠿</span>
+                                        <div class="image-thumb">
+                                            <img src="{{ $image->image_url }}" alt="Ảnh {{ $index + 1 }} của {{ $product->name }}">
+                                            @if ($loop->first)
+                                                <span class="image-badge" aria-label="Ảnh đại diện">Ảnh chính</span>
+                                            @endif
                                         </div>
+                                        <div class="image-actions">
+                                            <button type="button" class="btn-danger js-remove-existing" data-image-id="{{ $image->id }}">Xóa</button>
+                                        </div>
+                                        <input type="hidden" name="existing_images[]" value="{{ $image->id }}">
+                                    </div>
                                     @empty
                                         <p class="field-note">Chưa có ảnh nào. Vui lòng tải lên tối thiểu 1 ảnh.</p>
                                     @endforelse
@@ -315,24 +315,11 @@
                 </fieldset>
 
                 <div class="form-actions">
-                    <div class="autosave-status" id="autosave-status" aria-live="polite"></div>
-                    <button type="button" class="btn-secondary" id="preview-toggle">Xem trước thay đổi</button>
                     <a href="{{ route('products.manage') }}" class="btn-secondary">Hủy</a>
                     <button type="submit" class="btn-primary" {{ $isSold ? 'disabled' : '' }}>Lưu thay đổi</button>
                 </div>
 
-                <div class="preview-panel" id="preview-panel" aria-live="polite" aria-hidden="true">
-                    <h3>Xem trước tổng quan</h3>
-                    <div class="preview-details">
-                        <div>Tên sản phẩm: <span id="preview-name"></span></div>
-                        <div>Danh mục: <span id="preview-category"></span></div>
-                        <div>Giá bán: <span id="preview-price"></span></div>
-                        <div>Tình trạng: <span id="preview-condition"></span></div>
-                        <div>Khu vực: <span id="preview-location"></span></div>
-                        <div>Hình thức liên hệ: <span id="preview-contacts"></span></div>
-                    </div>
-                </div>
-            </form>
+                </form>
         </div>
     </div>
 @endsection
@@ -347,14 +334,11 @@
 
             const maxImages = Number(form.dataset.maxImages || 6);
             const existingGrid = document.querySelector('.js-existing-images');
-            const fileInput = document.getElementById('images');
-            const triggerUpload = document.getElementById('trigger-upload');
             const newPreview = document.getElementById('new-image-preview');
             const removeContainer = document.getElementById('remove-image-container');
             const imageCountNote = document.getElementById('image-count-note');
-            const autosaveStatus = document.getElementById('autosave-status');
-            const previewToggle = document.getElementById('preview-toggle');
-            const previewPanel = document.getElementById('preview-panel');
+            const fileInput = document.getElementById('images');
+            const triggerUpload = document.getElementById('trigger-upload');
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             const isSold = {{ $isSold ? 'true' : 'false' }};
 
@@ -366,12 +350,53 @@
             const state = {
                 removedImageIds: new Set(),
                 newFiles: [],
-                autosaveTimer: null,
-                isSaving: false,
                 totalImages() {
                     const existingCount = existingGrid ? existingGrid.querySelectorAll('.image-item').length : 0;
                     return existingCount + this.newFiles.length;
                 }
+            };
+
+            // Notification System
+            const showNotification = (message, type = 'error') => {
+                const container = document.getElementById('image-notification-container');
+                if (!container) return;
+
+                // Check if same notification already exists to prevent duplicates
+                const existingNotifications = container.querySelectorAll('.image-notification');
+                for (let existing of existingNotifications) {
+                    const messageEl = existing.querySelector('.image-notification-message');
+                    if (messageEl && messageEl.textContent === message) {
+                        return; // Don't show duplicate notification
+                    }
+                }
+
+                const notification = document.createElement('div');
+                notification.className = 'image-notification';
+                
+                const icon = document.createElement('div');
+                icon.className = 'image-notification-icon';
+                icon.innerHTML = type === 'error' ? '⚠️' : '✓';
+                
+                const messageEl = document.createElement('div');
+                messageEl.className = 'image-notification-message';
+                messageEl.textContent = message;
+                
+                notification.appendChild(icon);
+                notification.appendChild(messageEl);
+                
+                container.appendChild(notification);
+                
+                // Auto hide after 3 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.classList.add('hiding');
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                    }
+                }, 3000);
             };
 
             const updateImageCountNote = () => {
@@ -424,6 +449,14 @@
                 if (!item) {
                     return;
                 }
+                
+                // Kiểm tra số lượng ảnh còn lại sau khi xóa
+                const currentCount = state.totalImages();
+                if (currentCount <= 1) {
+                    showNotification('Vui lòng giữ lại ít nhất 1 ảnh sản phẩm', 'error');
+                    return;
+                }
+                
                 state.removedImageIds.add(Number(imageId));
                 item.remove();
                 const hiddenInput = document.createElement('input');
@@ -433,7 +466,6 @@
                 removeContainer.appendChild(hiddenInput);
                 updateImageCountNote();
                 syncExistingOrderInputs();
-                scheduleAutosave();
             };
 
             // Drag & drop sorting for existing images
@@ -477,7 +509,6 @@
                 existingGrid.addEventListener('drop', (event) => {
                     event.preventDefault();
                     syncExistingOrderInputs();
-                    scheduleAutosave();
                 });
 
                 existingGrid.addEventListener('click', (event) => {
@@ -485,7 +516,6 @@
                     if (removeButton) {
                         const imageId = removeButton.dataset.imageId;
                         removeExistingImage(imageId);
-                        scheduleAutosave();
                         return;
                     }
                 });
@@ -528,7 +558,7 @@
                     const maxNewAllowed = Math.max(0, maxImages - existingCount);
 
                     if (maxNewAllowed <= 0) {
-                        alert(`Bạn chỉ có thể có tối đa ${maxImages} ảnh. Vui lòng xóa bớt ảnh hiện tại trước khi thêm ảnh mới.`);
+                        showNotification(`Bạn chỉ có thể có tối đa ${maxImages} ảnh. Vui lòng xóa bớt ảnh hiện tại trước khi thêm ảnh mới.`, 'error');
                         fileInput.value = '';
                         return;
                     }
@@ -540,7 +570,7 @@
                     let combined = state.newFiles.concat(selected);
 
                     if (combined.length > maxNewAllowed) {
-                        alert(`Bạn chỉ có thể thêm tối đa ${maxNewAllowed} ảnh mới. Chỉ giữ ${maxNewAllowed} ảnh đầu tiên.`);
+                        showNotification(`Bạn chỉ có thể thêm tối đa ${maxNewAllowed} ảnh mới. Chỉ giữ ${maxNewAllowed} ảnh đầu tiên.`, 'error');
                         combined = combined.slice(0, maxNewAllowed);
                     }
 
@@ -548,7 +578,6 @@
                     syncNewFileInput();
                     renderNewPreviews();
                     updateImageCountNote();
-                    scheduleAutosave();
                 });
             }
 
@@ -562,11 +591,18 @@
                     if (Number.isNaN(index)) {
                         return;
                     }
+                    
+                    // Kiểm tra số lượng ảnh còn lại sau khi xóa
+                    const currentCount = state.totalImages();
+                    if (currentCount <= 1) {
+                        showNotification('Vui lòng giữ lại ít nhất 1 ảnh sản phẩm', 'error');
+                        return;
+                    }
+                    
                     state.newFiles.splice(index, 1);
                     syncNewFileInput();
                     renderNewPreviews();
                     updateImageCountNote();
-                    scheduleAutosave();
                 });
             }
 
@@ -676,132 +712,34 @@
                 input.value = numberFormatter.format(numeric);
             };
 
-            const collectAutosavePayload = () => {
-                const contactMethods = Array.from(form.querySelectorAll('input[name="contact_methods[]"]:checked')).map(input => input.value);
-                return {
-                    name: form.name?.value ?? '',
-                    category_id: form.category_id?.value ?? '',
-                    description: form.description?.value ?? '',
-                    condition: form.querySelector('input[name="condition"]:checked')?.value ?? '',
-                    price: form.price?.value ?? '',
-                    original_price: form.original_price?.value ?? '',
-                    location_city: form.location_city?.value ?? '',
-                    location_district: form.location_district?.value ?? '',
-                    contact_methods: contactMethods,
-                    return_policy: form.return_policy?.value ?? '',
-                    shipping_policy: form.shipping_policy?.value ?? '',
-                    additional_note: form.additional_note?.value ?? '',
-                };
-            };
-
-            const setAutosaveStatus = (message, status = 'idle') => {
-                if (!autosaveStatus) {
-                    return;
-                }
-                autosaveStatus.textContent = message;
-                autosaveStatus.classList.remove('is-saving', 'has-error');
-                if (status === 'saving') {
-                    autosaveStatus.classList.add('is-saving');
-                }
-                if (status === 'error') {
-                    autosaveStatus.classList.add('has-error');
-                }
-            };
-
-            const runAutosave = () => {
-                if (!form.dataset.autosaveUrl || state.isSaving) {
-                    return;
-                }
-                const payload = collectAutosavePayload();
-                state.isSaving = true;
-                setAutosaveStatus('Đang lưu bản nháp...', 'saving');
-
-                fetch(form.dataset.autosaveUrl, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const savedAt = data.saved_at ? new Date(data.saved_at) : new Date();
-                            setAutosaveStatus(`Đã lưu bản nháp lúc ${savedAt.toLocaleTimeString('vi-VN')}`);
-                        } else {
-                            throw new Error(data.message || 'Không thể lưu bản nháp. Vui lòng kiểm tra kết nối');
+            form.addEventListener('submit', async (e) => {
+                // Kiểm tra xem sản phẩm còn tồn tại không trước khi submit
+                try {
+                    const response = await fetch(`{{ route('products.checkDelete', $product) }}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
                         }
-                    })
-                    .catch(() => {
-                        setAutosaveStatus('Không thể lưu bản nháp. Vui lòng kiểm tra kết nối', 'error');
-                    })
-                    .finally(() => {
-                        state.isSaving = false;
                     });
-            };
-
-            const scheduleAutosave = () => {
-                if (isSold) {
-                    return;
-                }
-                clearTimeout(state.autosaveTimer);
-                state.autosaveTimer = setTimeout(runAutosave, 1200);
-            };
-
-            form.addEventListener('input', scheduleAutosave);
-            form.addEventListener('change', scheduleAutosave);
-
-            form.addEventListener('submit', () => {
-                clearTimeout(state.autosaveTimer);
-            });
-
-            const updatePreviewPanel = () => {
-                const nameEl = document.getElementById('preview-name');
-                const categoryEl = document.getElementById('preview-category');
-                const priceEl = document.getElementById('preview-price');
-                const conditionEl = document.getElementById('preview-condition');
-                const locationEl = document.getElementById('preview-location');
-                const contactsEl = document.getElementById('preview-contacts');
-
-                if (nameEl) {
-                    nameEl.textContent = form.name?.value || '—';
-                }
-                if (categoryEl) {
-                    const categoryId = form.category_id?.value;
-                    categoryEl.textContent = categoryId ? (categoryOptions[categoryId] || '—') : '—';
-                }
-                if (priceEl) {
-                    priceEl.textContent = form.price?.value ? `${form.price.value} đ` : 'Chưa đặt giá';
-                }
-                if (conditionEl) {
-                    const conditionKey = form.querySelector('input[name="condition"]:checked')?.value;
-                    conditionEl.textContent = conditionKey ? (conditionLabels[conditionKey] || conditionKey) : '—';
-                }
-                if (locationEl) {
-                    const city = form.location_city?.value || '';
-                    const district = form.location_district?.value || '';
-                    locationEl.textContent = city || district ? `${city}${city && district ? ' - ' : ''}${district}` : '—';
-                }
-                if (contactsEl) {
-                    const contacts = Array.from(form.querySelectorAll('input[name="contact_methods[]"]:checked')).map(input => input.nextElementSibling?.textContent?.trim() || input.value);
-                    contactsEl.textContent = contacts.length > 0 ? contacts.join(', ') : '—';
-                }
-            };
-
-            if (previewToggle && previewPanel) {
-                previewToggle.addEventListener('click', () => {
-                    const isVisible = previewPanel.classList.toggle('is-visible');
-                    previewPanel.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
-                    if (isVisible) {
-                        updatePreviewPanel();
-                        previewToggle.textContent = 'Ẩn xem trước';
-                    } else {
-                        previewToggle.textContent = 'Xem trước thay đổi';
+                    
+                    if (response.status === 404) {
+                        e.preventDefault();
+                        window.location.href = '{{ route('products.notFound') }}';
+                        return;
                     }
-                });
-            }
+                    
+                    const data = await response.json();
+                    if (!data || !data.exists) {
+                        e.preventDefault();
+                        window.location.href = '{{ route('products.notFound') }}';
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi kiểm tra sản phẩm:', error);
+                    // Vẫn cho phép submit nếu có lỗi mạng
+                }
+            });
         })();
     </script>
 @endpush

@@ -12,7 +12,6 @@
             'all' => 'Tất cả',
             'published' => 'Đang hiển thị',
             'pending' => 'Đang chờ duyệt',
-            'hidden' => 'Đã ẩn',
             'sold' => 'Đã bán',
         ];
 
@@ -243,13 +242,6 @@
                                 </div>
                                 <div class="cell actions" role="cell">
                                     <div class="action-buttons">
-                                        <form method="POST" action="{{ route('products.toggle', $product) }}">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="action-btn btn-toggle" title="Ẩn/hiển thị" aria-label="Ẩn/hiển thị" {{ ($accountRestricted) ? 'disabled' : '' }}>
-                                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M1.458 12C2.732 7.943 6.796 5 12 5s9.268 2.943 10.542 7c-1.274 4.057-5.338 7-10.542 7S2.732 16.057 1.458 12Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            </button>
-                                        </form>
                                         <button type="button" class="action-btn btn-edit js-edit-product" data-edit-url="{{ route('products.edit', ['product' => $product, 'version' => optional($product->updated_at)->getTimestamp()]) }}" data-product-id="{{ $product->id }}" title="Chỉnh sửa" aria-label="Chỉnh sửa">
                                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 15.5 15.5 4a2.121 2.121 0 1 1 3 3L7 18.5 3 19.5Z" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="m14.5 5.5 3 3" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                         </button>
@@ -426,70 +418,60 @@
                     updateThumbnailState(container);
                 });
 
-                // AJAX for toggle visibility
-                document.querySelectorAll('form[action*="toggle"]').forEach(function (form) {
-                    form.addEventListener('submit', function (e) {
-                        e.preventDefault();
-                        const row = form.closest('.table-row');
-                        const statusTag = row.querySelector('.status-tag');
-                        const isHidden = statusTag.classList.contains('status-hidden');
-
-                        fetch(form.action, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Accept': 'application/json',
-                            },
-                            body: new FormData(form)
-                        })
-                        .then(response => {
-                            if (response.status === 404) {
-                                showAlert('error', 'Sản phẩm không còn tồn tại. Trang sẽ được tải lại.');
-                                setTimeout(() => window.location.reload(), 1500);
-                                return null;
-                            }
-
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (!data) {
-                                return;
-                            }
-
-                            if (data.success) {
-                                statusTag.textContent = isHidden ? 'Đang hiển thị' : 'Đã ẩn';
-                                statusTag.className = 'status-tag ' + (isHidden ? 'status-published' : 'status-hidden');
-
-                                const alert = document.createElement('div');
-                                alert.className = 'alert alert-success';
-                                alert.textContent = data.message;
-                                document.querySelector('.account-products-panel').prepend(alert);
-                                setTimeout(() => alert.remove(), 3000);
-                            } else {
-                                const alert = document.createElement('div');
-                                alert.className = 'alert alert-error';
-                                alert.textContent = data.message || 'Có lỗi xảy ra';
-                                document.querySelector('.account-products-panel').prepend(alert);
-                                setTimeout(() => alert.remove(), 3000);
-                            }
-                        })
-                        .catch(error => {
-                            const alert = document.createElement('div');
-                            alert.className = 'alert alert-error';
-                            alert.textContent = 'Lỗi kết nối. Vui lòng thử lại.';
-                            document.querySelector('.account-products-panel').prepend(alert);
-                            setTimeout(() => alert.remove(), 3000);
-                        });
-                    });
-                });
-
+                
                 // Enhanced delete product functionality
                 let currentDeleteData = null;
                 let undoTimeout = null;
 
+                // Check product existence before action
+                async function checkProductExists(checkUrl) {
+                    try {
+                        const response = await fetch(checkUrl, {
+                            method: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                            }
+                        });
+                        
+                        if (response.status === 404) {
+                            return false;
+                        }
+                        
+                        const data = await response.json();
+                        return data && data.exists;
+                    } catch (error) {
+                        console.error('Lỗi khi kiểm tra sản phẩm:', error);
+                        return true; // Assume exists if network error
+                    }
+                }
+
+                // Edit button click handler
+                document.querySelectorAll('.js-edit-product').forEach(function (button) {
+                    button.addEventListener('click', async function (e) {
+                        e.preventDefault();
+                        
+                        if (button.disabled) return;
+                        
+                        const editUrl = button.dataset.editUrl;
+                        const productId = button.dataset.productId;
+                        const checkUrl = `{{ route('products.checkDelete', ['product' => ':id']) }}`.replace(':id', productId);
+                        
+                        // Check if product still exists
+                        const exists = await checkProductExists(checkUrl);
+                        if (!exists) {
+                            window.location.href = '{{ route('products.notFound') }}';
+                            return;
+                        }
+                        
+                        // Product exists, proceed to edit
+                        window.location.href = editUrl;
+                    });
+                });
+
                 // Delete button click handler
                 document.querySelectorAll('.js-delete-product').forEach(function (button) {
-                    button.addEventListener('click', function (e) {
+                    button.addEventListener('click', async function (e) {
                         e.preventDefault();
                         
                         if (button.disabled) return;
@@ -498,6 +480,13 @@
                         const productName = button.dataset.productName;
                         const checkUrl = button.dataset.checkUrl;
                         const deleteUrl = button.dataset.deleteUrl;
+                        
+                        // Check if product still exists
+                        const exists = await checkProductExists(checkUrl);
+                        if (!exists) {
+                            window.location.href = '{{ route('products.notFound') }}';
+                            return;
+                        }
                         
                         currentDeleteData = {
                             productId,
