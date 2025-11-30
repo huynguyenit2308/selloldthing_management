@@ -156,7 +156,17 @@
             <div class="card-body">
                 <div class="form-row">
                     <div class="col-md-6 mb-2">
-                        <input type="text" name="q" value="{{ $q }}" class="form-control" placeholder="Tìm theo tên danh mục...">
+                        <input type="text" name="q" value="{{ $q }}" class="form-control @error('q') is-invalid @enderror" placeholder="Tìm theo tên danh mục...">
+                        @error('q')
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                @if(str_contains($message, 'CATEGORY_QUERY_TOO_LONG'))
+                                    Từ khóa tìm kiếm không được vượt quá 100 ký tự
+                                @else
+                                {{ $message }}
+                                @endif
+                            </div>
+                        @enderror
                     </div>
                     <div class="col-md-3 mb-2">
                         <select name="status" class="form-control">
@@ -205,6 +215,17 @@
                 @else
                     {{ $errors->first('system') }}
                 @endif
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        @endif
+
+        <!-- Hiển thị lỗi page từ validation errors -->
+        @if($errors->has('page'))
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ $errors->first('page') }}
                 <button type="button" class="close" data-dismiss="alert">
                     <span>&times;</span>
                 </button>

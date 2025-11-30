@@ -27,6 +27,13 @@ class CategoryController extends Controller
         $q = trim((string) $request->query('q', ''));
         $status = $request->query('status'); // active|inactive|null
         
+        // Validate query parameter - nếu quá dài thì báo lỗi
+        if (strlen($q) > 100) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['q' => 'CATEGORY_QUERY_TOO_LONG: Từ khóa tìm kiếm không được vượt quá 100 ký tự']);
+        }
+        
         // Validate status parameter - nếu có giá trị nhưng không hợp lệ thì báo lỗi
         if ($status !== null && $status !== '' && !in_array($status, ['active', 'inactive'])) {
             return redirect()
@@ -51,6 +58,15 @@ class CategoryController extends Controller
         }
 
         $categories = $categoriesQuery->orderByDesc('created_at')->paginate(10)->withQueryString();
+
+        // Validate page - nếu page vượt quá số trang thực tế
+        $page = $request->query('page');
+        if ($page !== null && is_numeric($page) && $page > $categories->lastPage()) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withInput()
+                ->withErrors(['page' => 'Trang bạn yêu cầu không tồn tại. Chỉ có ' . $categories->lastPage() . ' trang.']);
+        }
 
         return view('admin.categories.index', [
             'categories' => $categories,
@@ -98,7 +114,7 @@ class CategoryController extends Controller
         }
     }
 
-    public function show(Category $category, Request $request): View
+    public function show(Category $category, Request $request)
     {
         // [TEST CASE] Validate page parameter
         $page = $request->query('page');
@@ -131,6 +147,16 @@ class CategoryController extends Controller
             // Lấy các tham số lọc và sắp xếp từ request
             $sort = $request->query('sort', 'newest');
             $filter = $request->query('filter', 'all');
+            $page = $request->query('page');
+
+            // Validate tham số sort
+            $validSorts = ['newest', 'oldest', 'price_asc', 'price_desc'];
+            if ($sort !== null && !in_array($sort, $validSorts)) {
+                return redirect()
+                    ->route('categories.show', $category->id)
+                    ->withInput()
+                    ->withErrors(['sort' => 'Bạn chọn sắp xếp không phù hợp']);
+            }
 
             // Query sản phẩm theo danh mục
             $productsQuery = Product::published()
@@ -166,6 +192,14 @@ class CategoryController extends Controller
 
             // Phân trang sản phẩm (6 sản phẩm mỗi trang)
             $products = $productsQuery->paginate(6)->withQueryString();
+
+            // Validate page - nếu page vượt quá số trang thực tế
+            if ($page !== null && is_numeric($page) && $page > $products->lastPage()) {
+                return redirect()
+                    ->route('categories.show', $category->id)
+                    ->withInput()
+                    ->withErrors(['page' => 'Trang bạn yêu cầu không tồn tại. Chỉ có ' . $products->lastPage() . ' trang.']);
+            }
 
             return view('admin.categories.show_category', [
                 'category' => $category,

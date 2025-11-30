@@ -209,14 +209,7 @@
                         </div>
                         <input id="image" name="image" type="file" class="d-none" accept="image/*">
                     </div>
-                    
-                    <!-- Lỗi validation frontend -->
-                    <div id="imageErrorFormat" class="mt-1 text-danger d-none">
-                        <i class="fas fa-exclamation-circle me-1"></i>Định dạng file không được hỗ trợ
-                    </div>
-                    <div id="imageErrorSize" class="mt-1 text-danger d-none">
-                        <i class="fas fa-exclamation-circle me-1"></i>Kích thước file không được vượt quá 2MB
-                    </div>
+                    <div class="invalid-feedback d-block" id="imageError"></div>
                     
                     <!-- Lỗi backend -->
                     @error('image')
@@ -243,13 +236,10 @@
                 <!-- Trường Trạng thái -->
                 <div class="form-group">
                     <label class="font-weight-semibold d-block">Ẩn/Hiện</label>
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="statusToggle" {{ $initialStatus === '1' ? 'checked' : '' }}>
-                        <label class="custom-control-label" for="statusToggle">
-                            <span id="statusToggleText">{{ $initialStatus === '1' ? 'Đang hiển thị' : 'Đang ẩn' }}</span>
-                        </label>
-                    </div>
-                    <input type="hidden" name="status" id="statusInput" value="{{ $initialStatus }}">
+                    <select name="status" class="form-control" id="statusSelect">
+                        <option value="1" {{ $initialStatus === '1' ? 'selected' : '' }}>Hiện</option>
+                        <option value="0" {{ $initialStatus === '0' ? 'selected' : '' }}>Ẩn</option>
+                    </select>
                     @error('status')
                         <div class="mt-1 text-danger">{{ $message }}</div>
                     @enderror
@@ -257,7 +247,6 @@
             </div>
 
             <div class="card-footer d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
-                <button type="button" class="btn btn-outline-info order-1" id="toggleStatusBtn">Ẩn/Hiện</button>
                 <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary order-3 order-md-2">Hủy bỏ</a>
                 <button id="submitBtn" type="submit" class="btn btn-primary order-2 order-md-3" disabled>
                     <span id="submitText">Xác nhận</span>
@@ -278,17 +267,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const descriptionInput = document.getElementById('description');
     const imageInput = document.getElementById('image');
     const submitBtn = document.getElementById('submitBtn');
-    const submitText = document.getElementById('submitText');
-    const submitSpinner = document.getElementById('submitSpinner');
     const dropZone = document.getElementById('imageDropZone');
     const imagePicker = document.getElementById('imagePicker');
     const imagePlaceholder = document.getElementById('imagePlaceholder');
-    const imageOverlay = document.getElementById('imageOverlay');
-    const changeImageButton = document.getElementById('changeImageButton');
-    const statusToggle = document.getElementById('statusToggle');
-    const statusInput = document.getElementById('statusInput');
-    const statusToggleText = document.getElementById('statusToggleText');
-    const toggleStatusBtn = document.getElementById('toggleStatusBtn');
+    const imageOverlay = document.getElementById('changeImageButton');
+    const imageError = document.getElementById('imageError');
+    const statusSelect = document.getElementById('statusSelect');
 
     const nameErrors = {
         required: document.getElementById('nameErrorRequired'),
@@ -297,8 +281,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const imageErrors = {
-        format: document.getElementById('imageErrorFormat'),
-        size: document.getElementById('imageErrorSize')
+        format: document.getElementById('imageError'),
+        size: document.getElementById('imageError')
     };
 
     let previewUrl = null;
@@ -308,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const initialData = {
         name: nameInput.value.trim(),
         description: descriptionInput.value.trim(),
-        status: statusInput.value,
+        status: statusSelect.value,
         imageUrl: dropZone.dataset.initialImageUrl || ''
     };
 
@@ -358,13 +342,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
         if (!file.type.startsWith('image/')) {
-            showError(imageErrors.format);
+            imageError.textContent = 'Định dạng file không được hỗ trợ (IMAGE_FORMAT_INVALID)';
             return false;
         }
         if (file.size > 2 * 1024 * 1024) {
-            showError(imageErrors.size);
+            imageError.textContent = 'Kích thước file không được vượt quá 2MB (IMAGE_SIZE_EXCEEDED)';
             return false;
         }
+        imageError.textContent = '';
         return true;
     }
 
@@ -397,16 +382,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function updateStatusText() {
-        const isActive = statusToggle.checked;
-        statusInput.value = isActive ? '1' : '0';
-        statusToggleText.textContent = isActive ? 'Đang hiển thị' : 'Đang ẩn';
-    }
 
     function hasChanges() {
         const nameChanged = nameInput.value.trim() !== initialData.name;
         const descriptionChanged = descriptionInput.value.trim() !== initialData.description;
-        const statusChanged = statusInput.value !== initialData.status;
+        const statusChanged = statusSelect.value !== initialData.status;
         return nameChanged || descriptionChanged || statusChanged || imageChanged;
     }
 
@@ -487,13 +467,8 @@ document.addEventListener('DOMContentLoaded', function () {
     nameInput.addEventListener('input', updateSubmitState);
     descriptionInput.addEventListener('input', updateSubmitState);
 
-    statusToggle.addEventListener('change', function () {
-        updateStatusText();
+    statusSelect.addEventListener('change', function () {
         updateSubmitState();
-    });
-    toggleStatusBtn.addEventListener('click', function () {
-        statusToggle.checked = !statusToggle.checked;
-        statusToggle.dispatchEvent(new Event('change'));
     });
 
     form.addEventListener('submit', function (event) {
@@ -510,7 +485,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 10000);
     });
 
-    updateStatusText();
     updateSubmitState();
 });
 </script>
