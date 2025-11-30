@@ -211,6 +211,17 @@
             </div>
         @endif
 
+        <!-- Hiển thị lỗi page từ validation errors -->
+        @if($errors->has('page'))
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ $errors->first('page') }}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        @endif
+
         @if($categories->total() === 0)
             <div class="card shadow-sm">
                 <div class="card-body text-center">

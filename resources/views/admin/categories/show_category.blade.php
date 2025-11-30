@@ -660,28 +660,40 @@
                     <div class="products-section">
                         <!-- Toolbar -->
                         <div class="products-toolbar">
-                            <div class="sort-options">
-                                <span class="sort-label">Sắp xếp theo:</span>
-                                <select class="sort-select" onchange="window.location.href=this.value">
-                                    <option value="{{ route('categories.show', ['category' => $category->id, 'filter' => request('filter', 'all'), 'sort' => 'newest']) }}"
-                                        {{ $sort === 'newest' ? 'selected' : '' }}>
-                                        Mới nhất
-                                    </option>
-                                    <option value="{{ route('categories.show', ['category' => $category->id, 'filter' => request('filter', 'all'), 'sort' => 'oldest']) }}"
-                                        {{ $sort === 'oldest' ? 'selected' : '' }}>
-                                        Cũ nhất
-                                    </option>
-                                    <option value="{{ route('categories.show', ['category' => $category->id, 'filter' => request('filter', 'all'), 'sort' => 'price_asc']) }}"
-                                        {{ $sort === 'price_asc' ? 'selected' : '' }}>
-                                        Giá thấp đến cao
-                                    </option>
-                                    <option value="{{ route('categories.show', ['category' => $category->id, 'filter' => request('filter', 'all'), 'sort' => 'price_desc']) }}"
-                                        {{ $sort === 'price_desc' ? 'selected' : '' }}>
-                                        Giá cao đến thấp
-                                    </option>
-                                </select>
+                            <div class="d-flex align-items-center">
+                                <form id="sortForm" action="{{ request()->fullUrlWithoutQuery('sort') }}" method="GET">
+                                    <div class="form-group mb-0 mr-2">
+                                        <select name="sort" class="form-control form-control-sm sort-select" onchange="document.getElementById('sortForm').submit();">
+                                            <option value="newest"
+                                                {{ $sort === 'newest' ? 'selected' : '' }}>
+                                                Mới nhất
+                                            </option>
+                                            <option value="oldest"
+                                                {{ $sort === 'oldest' ? 'selected' : '' }}>
+                                                Cũ nhất
+                                            </option>
+                                            <option value="price_asc"
+                                                {{ $sort === 'price_asc' ? 'selected' : '' }}>
+                                                Giá thấp đến cao
+                                            </option>
+                                            <option value="price_desc"
+                                                {{ $sort === 'price_desc' ? 'selected' : '' }}>
+                                                Giá cao đến thấp
+                                            </option>
+                                        </select>
+                                    </div>
+                                    @if(request()->has('filter'))
+                                        <input type="hidden" name="filter" value="{{ request('filter') }}">
+                                    @endif
+                                </form>
+                                <button class="refresh-btn btn btn-sm btn-light" onclick="window.location.reload()">Làm mới</button>
+                                @error('sort')
+                                    <div class="ml-2 text-danger">Bạn chọn sắp xếp không phù hợp</div>
+                                @enderror
+                                @error('page')
+                                    <div class="ml-2 text-danger">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <button class="refresh-btn" onclick="window.location.reload()">Làm mới</button>
                         </div>
 
                         <!-- Products Grid -->
@@ -736,17 +748,17 @@
                                                 {{ $product->location ?? 'TP.HCM' }}
                                             </div>
                                             <div class="product-actions">
-                                                <a href="{{ route('products.show', $product) }}" class="btn-product btn-detail">Xem chi tiết</a>
+                                                <a href="{{ route('products.show', $product) }}" class="btn-product btn-detail text-nowrap">Xem chi tiết</a>
                                                 @if ($isOutOfStock)
-                                                    <button class="btn-product btn-buy" disabled title="Sản phẩm tạm thời hết hàng">Hết hàng</button>
+                                                    <button class="btn-product btn-buy text-nowrap" disabled title="Sản phẩm tạm thời hết hàng">Hết hàng</button>
                                                 @elseif ($isExpired)
-                                                    <button class="btn-product btn-buy" disabled title="Sản phẩm đã hết hạn">Hết hạn</button>
+                                                    <button class="btn-product btn-buy text-nowrap" disabled title="Sản phẩm đã hết hạn">Hết hạn</button>
                                                 @else
                                                     <form method="POST" action="{{ route('cart.add') }}" style="display: inline;">
                                                         @csrf
                                                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                                                         <input type="hidden" name="quantity" value="1">
-                                                        <button type="submit" class="btn-product btn-buy">Mua ngay</button>
+                                                        <button type="submit" class="btn-product btn-buy text-nowrap">Mua ngay</button>
                                                     </form>
                                                 @endif
                                             </div>
