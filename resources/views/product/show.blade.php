@@ -3,16 +3,152 @@
         @section('body-class', 'product-detail-page')
 
         @push('styles')
-        <link rel="stylesheet" href="{{ asset('styles/product-detail.css') }}">
-        <link rel="stylesheet" href="{{ asset('styles/review.css') }}">
-        <link rel="stylesheet" href="{{ asset('styles/favorite.css') }}">
-        @endpush
+<link rel="stylesheet" href="{{ asset('styles/product-detail.css') }}">
+<link rel="stylesheet" href="{{ asset('styles/review.css') }}">
+<link rel="stylesheet" href="{{ asset('styles/favorite.css') }}">
+<style>
+.product-not-found-container {
+    padding: 80px 0;
+    text-align: center;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-not-found-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.error-icon {
+    font-size: 80px;
+    color: #dc3545;
+    margin-bottom: 30px;
+}
+
+.error-icon i {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.error-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.error-description {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-actions .btn {
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    min-width: 180px;
+    justify-content: center;
+}
+
+.error-actions .btn-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border: none;
+    color: white;
+}
+
+.error-actions .btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3, #004085);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+}
+
+.error-actions .btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    background: transparent;
+}
+
+.error-actions .btn-outline-secondary:hover {
+    background: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108,117,125,0.3);
+}
+
+@media (max-width: 768px) {
+    .product-not-found-container {
+        padding: 60px 20px;
+    }
+    
+    .error-icon {
+        font-size: 60px;
+        margin-bottom: 20px;
+    }
+    
+    .error-title {
+        font-size: 24px;
+    }
+    
+    .error-description {
+        font-size: 16px;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .error-actions .btn {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+</style>
+@endpush
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
         @section('content')
         <div class="product-detail-wrapper">
             <div class="container">
+                {{-- Error Message Section --}}
+                @if(!$product)
+                <div class="product-not-found-container">
+                    <div class="product-not-found-content">
+                        <div class="error-icon">
+                            <i class="fa fa-search"></i>
+                        </div>
+                        <h2 class="error-title">{{ $errorMessage ?? 'Không tìm thấy sản phẩm' }}</h2>
+                        <p class="error-description">{{ $errorDescription ?? 'Sản phẩm bạn tìm kiếm không tồn tại hoặc đã bị xóa.' }}</p>
+                        <div class="error-actions">
+                            <a href="{{ route('products.index') }}" class="btn btn-primary">
+                                <i class="fa fa-arrow-left"></i> Quay lại danh sách sản phẩm
+                            </a>
+                            <a href="{{ url('/') }}" class="btn btn-outline-secondary">
+                                <i class="fa fa-home"></i> Về trang chủ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @else
                 <div class="product-detail-breadcrumb">
                     <span><a href="{{ url('/') }}">Trang chủ</a></span>
                     <span>&gt;</span>
@@ -526,8 +662,6 @@
         </div>
         <!-- Bootstrap 5 JS Bundle (có PopperJS để dropdown hoạt động) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-        @endsection
 
         @push('scripts')
         <script>
@@ -1238,3 +1372,5 @@
             // [ĐÃ XÓA] Các đoạn fetch lơ lửng đã được chuyển vào hàm
         </script>
         @endpush
+        @endif
+        @endsection

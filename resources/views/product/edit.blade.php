@@ -283,35 +283,6 @@
                             @enderror
                         </div>
                     </section>
-
-                    <section class="form-section" aria-labelledby="extra-info-heading">
-                        <div class="section-heading">
-                            <h2 id="extra-info-heading">Thông tin bổ sung</h2>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label for="return_policy">Chính sách đổi trả</label>
-                                <textarea id="return_policy" name="return_policy" rows="3" maxlength="500" placeholder="Ví dụ: Hỗ trợ đổi trả trong 3 ngày với lỗi do nhà sản xuất.">{{ old('return_policy', $additionalInfo['return_policy']) }}</textarea>
-                                @error('return_policy')
-                                    <p class="field-error">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="form-field">
-                                <label for="shipping_policy">Vận chuyển</label>
-                                <textarea id="shipping_policy" name="shipping_policy" rows="3" maxlength="500" placeholder="Ví dụ: Giao hàng toàn quốc qua Viettel Post, phí do người mua chịu.">{{ old('shipping_policy', $additionalInfo['shipping_policy']) }}</textarea>
-                                @error('shipping_policy')
-                                    <p class="field-error">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="form-field">
-                                <label for="additional_note">Ghi chú</label>
-                                <textarea id="additional_note" name="additional_note" rows="3" maxlength="500" placeholder="Ghi chú thêm cho người mua (tùy chọn).">{{ old('additional_note', $additionalInfo['additional_note']) }}</textarea>
-                                @error('additional_note')
-                                    <p class="field-error">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-                    </section>
                 </fieldset>
 
                 <div class="form-actions">

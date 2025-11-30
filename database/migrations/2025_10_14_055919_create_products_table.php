@@ -19,7 +19,6 @@ return new class extends Migration
             $table->decimal('price', 12, 2);
             $table->decimal('original_price', 12, 2)->nullable();
             $table->text('description')->nullable();
-            $table->text('short_description')->nullable();
             $table->enum('condition', ['new', 'like_new', 'good', 'fair', 'needs_repair'])->nullable();
             $table->string('location')->nullable();
             $table->string('seller_name')->nullable();

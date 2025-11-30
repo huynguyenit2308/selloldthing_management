@@ -7,6 +7,57 @@
 @push('styles')
 {{-- THAY ĐỔI 1: Giữ nguyên CSS của Giao diện 1 (lưới) mà bạn muốn --}}
 <link rel="stylesheet" href="{{ asset('styles/favorite.css') }}">
+<style>
+.alert {
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-dismissible .btn-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    padding: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    opacity: 0.5;
+}
+
+.alert-dismissible .btn-close:hover {
+    opacity: 0.8;
+}
+
+.alert strong {
+    font-weight: 600;
+}
+
+.alert ul {
+    margin: 8px 0 0 20px;
+    padding: 0;
+}
+
+.alert ul li {
+    margin-bottom: 4px;
+}
+</style>
 {{-- Nếu cần, bạn có thể nạp thêm file favorite.css của Giao diện 2 --}}
 @endpush
 
@@ -24,6 +75,27 @@
             <span>/</span>
             <span>Sản phẩm yêu thích</span>
         </nav>
+
+        {{-- Error Messages Section --}}
+        @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin: 20px 0;">
+            <strong>Lỗi:</strong> Vui lòng kiểm tra lại các thông tin sau:
+            <ul style="margin: 10px 0 0 20px;">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+
+        {{-- Success Messages Section --}}
+        @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin: 20px 0;">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
 
 
 
@@ -77,10 +149,8 @@
                 <header class="favorites-header">
                     <h1>Sản phẩm yêu thích</h1>
                     @php
-
-                    $favoritesCount = $products instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
-                    ? $products->total()
-                    : $products->count();
+                    $hasTotalMethodHeader = method_exists($products, 'total');
+                    $favoritesCount = $hasTotalMethodHeader ? $products->total() : $products->count();
                     @endphp
                     <span class="favorites-count"><span class="favorites-count-number">{{ $favoritesCount }}</span> sản phẩm</span>
                 </header>
@@ -116,7 +186,11 @@
                 </div>
 
                 {{-- THAY ĐỔI 5: Dùng @forelse và biến $products (từ Giao diện 2) --}}
-                @if ($products->total() > 0)
+                @php
+                $hasTotalMethod = method_exists($products, 'total');
+                $productCount = $hasTotalMethod ? $products->total() : $products->count();
+                @endphp
+                @if ($productCount > 0)
                 <div class="favorites-grid">
                     @foreach ($products as $product)
                     {{-- Không cần @php $product = $favorite->product; @endphp nữa --}}
@@ -180,8 +254,13 @@
                 </div>
 
                 <div class="favorites-pagination">
-                    {{-- THAY ĐỔI 8: Dùng $products cho phân trang --}}
-                    {{ $products->appends(request()->query())->links() }}
+                    {{-- THAY ĐỔI 8: Dùng $products cho phân trang nếu nó là paginator --}}
+                    @php
+                    $hasLinksMethod = method_exists($products, 'links');
+                    @endphp
+                    @if($hasLinksMethod)
+                        {{ $products->appends(request()->query())->links() }}
+                    @endif
                 </div>
                 @else
                 {{-- Giữ nguyên Empty State của Giao diện 1 --}}
