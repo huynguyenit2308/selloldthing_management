@@ -801,13 +801,13 @@ class ProductController extends Controller
             'remove_image_ids' => ['nullable', 'array'],
             'remove_image_ids.*' => ['integer', Rule::exists('product_images', 'id')->where('product_id', $product->id)],
             'images' => ['nullable', 'array'],
-            'images.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp', 'max:5120'],
+            'images.*' => ['file', 'mimetypes:image/jpeg,image/png', 'max:5120'],
         ];
 
         $messages = [
             'name.regex' => 'Tên sản phẩm chứa ký tự không hợp lệ',
             'contact_methods.required' => 'Vui lòng chọn hình thức liên hệ',
-            'images.*.mimetypes' => 'Chỉ chấp nhận file JPG, PNG, WebP',
+            'images.*.mimetypes' => 'Chỉ chấp nhận file JPG, PNG',
             'images.*.max' => 'Kích thước file không được vượt quá 5MB',
             'original_price.integer' => 'Giá gốc phải là số nguyên',
             'original_price.min' => 'Giá gốc phải từ :min VND trở lên',
