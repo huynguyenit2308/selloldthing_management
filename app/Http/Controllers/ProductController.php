@@ -595,6 +595,7 @@ class ProductController extends Controller
         $conditions = $this->conditionOptions();
 
         $draft = $this->getProductDraft($user->id, 0);
+        $submissionToken = $this->issueProductSubmissionToken();
 
         return view('product.create', [
             'user' => $user,
@@ -610,6 +611,7 @@ class ProductController extends Controller
                 'shipping_policy' => old('shipping_policy', $draft['data']['shipping_policy'] ?? ''),
             ],
             'draft' => $draft,
+            'submissionToken' => $submissionToken,
             'phoneVerified' => (bool) ($user->phone && $user->phone !== ''),
         ]);
     }
