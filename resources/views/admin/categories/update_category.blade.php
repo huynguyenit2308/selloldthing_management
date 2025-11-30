@@ -209,14 +209,7 @@
                         </div>
                         <input id="image" name="image" type="file" class="d-none" accept="image/*">
                     </div>
-                    
-                    <!-- Lỗi validation frontend -->
-                    <div id="imageErrorFormat" class="mt-1 text-danger d-none">
-                        <i class="fas fa-exclamation-circle me-1"></i>Định dạng file không được hỗ trợ
-                    </div>
-                    <div id="imageErrorSize" class="mt-1 text-danger d-none">
-                        <i class="fas fa-exclamation-circle me-1"></i>Kích thước file không được vượt quá 2MB
-                    </div>
+                    <div class="invalid-feedback d-block" id="imageError"></div>
                     
                     <!-- Lỗi backend -->
                     @error('image')
@@ -274,13 +267,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const descriptionInput = document.getElementById('description');
     const imageInput = document.getElementById('image');
     const submitBtn = document.getElementById('submitBtn');
-    const submitText = document.getElementById('submitText');
-    const submitSpinner = document.getElementById('submitSpinner');
     const dropZone = document.getElementById('imageDropZone');
     const imagePicker = document.getElementById('imagePicker');
     const imagePlaceholder = document.getElementById('imagePlaceholder');
-    const imageOverlay = document.getElementById('imageOverlay');
-    const changeImageButton = document.getElementById('changeImageButton');
+    const imageOverlay = document.getElementById('changeImageButton');
+    const imageError = document.getElementById('imageError');
     const statusSelect = document.getElementById('statusSelect');
 
     const nameErrors = {
@@ -290,8 +281,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const imageErrors = {
-        format: document.getElementById('imageErrorFormat'),
-        size: document.getElementById('imageErrorSize')
+        format: document.getElementById('imageError'),
+        size: document.getElementById('imageError')
     };
 
     let previewUrl = null;
@@ -351,13 +342,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
         if (!file.type.startsWith('image/')) {
-            showError(imageErrors.format);
+            imageError.textContent = 'Định dạng file không được hỗ trợ (IMAGE_FORMAT_INVALID)';
             return false;
         }
         if (file.size > 2 * 1024 * 1024) {
-            showError(imageErrors.size);
+            imageError.textContent = 'Kích thước file không được vượt quá 2MB (IMAGE_SIZE_EXCEEDED)';
             return false;
         }
+        imageError.textContent = '';
         return true;
     }
 
