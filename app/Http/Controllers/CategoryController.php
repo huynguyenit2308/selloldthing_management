@@ -27,6 +27,13 @@ class CategoryController extends Controller
         $q = trim((string) $request->query('q', ''));
         $status = $request->query('status'); // active|inactive|null
         
+        // Validate query parameter - nếu quá dài thì báo lỗi
+        if (strlen($q) > 100) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->withErrors(['q' => 'CATEGORY_QUERY_TOO_LONG: Từ khóa tìm kiếm không được vượt quá 100 ký tự']);
+        }
+        
         // Validate status parameter - nếu có giá trị nhưng không hợp lệ thì báo lỗi
         if ($status !== null && $status !== '' && !in_array($status, ['active', 'inactive'])) {
             return redirect()
