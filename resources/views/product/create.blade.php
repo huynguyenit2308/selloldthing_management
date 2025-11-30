@@ -87,14 +87,7 @@
                                 <p class="field-error">{{ $message }}</p>
                             @enderror
                         </div>
-                        <div class="form-field wide">
-                            <label for="short_description">Thông tin bổ sung</label>
-                            <textarea id="short_description" name="short_description" rows="3" maxlength="255" placeholder="Thông tin thêm (tùy chọn)">{{ old('short_description') }}</textarea>
-                            @error('short_description')
-                                <p class="field-error">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
+                                            </div>
 
                     <div class="form-field wide media-field">
                         <label for="images">Hình ảnh sản phẩm <span class="required">*</span></label>

@@ -28,9 +28,9 @@ class InventoryController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         try {
-            $this->validatePageParameter($request);
+            $this->validateInventoryFilters($request);
         } catch (ValidationException $e) {
-            $input = $request->except(['page']);
+            $input = $request->except(['page', 'status', 'sort']);
 
             return redirect()
                 ->route('account.inventory')
@@ -81,11 +81,6 @@ class InventoryController extends Controller
                 'created_at' => $product->created_at,
             ];
         });
-
-        $allowedStatuses = ['all', 'in_stock', 'low_stock', 'out_of_stock', 'value'];
-        if (!in_array($statusFilter, $allowedStatuses, true)) {
-            $statusFilter = 'all';
-        }
 
         $normalizedFilter = $statusFilter === 'value' ? 'all' : $statusFilter;
 
@@ -179,14 +174,62 @@ class InventoryController extends Controller
         ]);
     }
 
-    protected function validatePageParameter(Request $request): void
+    protected function validateInventoryFilters(Request $request): void
     {
+        // Validate page parameter
         $page = $request->input('page');
-
         if ($page !== null && $page !== '') {
             if (!is_numeric($page) || (int) $page < 1) {
                 throw ValidationException::withMessages([
                     'page' => 'Số trang không hợp lệ',
+                ]);
+            }
+        }
+
+        // Validate status filter
+        $status = $request->input('status', 'all');
+        $validStatuses = ['all', 'in_stock', 'low_stock', 'out_of_stock', 'value'];
+        
+        if (!in_array($status, $validStatuses, true)) {
+            throw ValidationException::withMessages([
+                'status' => 'Trạng thái tồn kho không hợp lệ',
+            ]);
+        }
+
+        // Validate sort option
+        $sort = $request->input('sort', 'newest');
+        $validSorts = ['newest', 'oldest', 'price_desc', 'price_asc', 'name_asc', 'name_desc'];
+        
+        if (!in_array($sort, $validSorts, true)) {
+            throw ValidationException::withMessages([
+                'sort' => 'Tiêu chí sắp xếp không hợp lệ cho quản lý tồn kho',
+            ]);
+        }
+
+        // Validate stock range filters if they exist
+        $minStock = $request->input('min_stock');
+        $maxStock = $request->input('max_stock');
+
+        if ($minStock !== null && $minStock !== '') {
+            if (!is_numeric($minStock) || (int)$minStock < 0) {
+                throw ValidationException::withMessages([
+                    'min_stock' => 'Số lượng tồn kho tối thiểu không hợp lệ',
+                ]);
+            }
+        }
+
+        if ($maxStock !== null && $maxStock !== '') {
+            if (!is_numeric($maxStock) || (int)$maxStock < 0) {
+                throw ValidationException::withMessages([
+                    'max_stock' => 'Số lượng tồn kho tối đa không hợp lệ',
+                ]);
+            }
+        }
+
+        if (($minStock !== null && $minStock !== '') && ($maxStock !== null && $maxStock !== '')) {
+            if ((int)$minStock > (int)$maxStock) {
+                throw ValidationException::withMessages([
+                    'min_stock' => 'Số lượng tồn kho tối thiểu không được lớn hơn tối đa',
                 ]);
             }
         }

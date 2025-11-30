@@ -26,6 +26,14 @@ use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
+    // ========================================
+    // USER METHODS - dành cho người dùng thường
+    // ========================================
+    
+    /**
+     * Display a listing of products for users
+     * Hiển thị danh sách sản phẩm cho người dùng
+     */
     public function index(Request $request): View|RedirectResponse
     {
         // Validate price filter inputs
@@ -34,9 +42,10 @@ class ProductController extends Controller
             $this->validateCategoryFilter($request);
             $this->validatePageFilter($request);
             $this->validateLocationFilter($request);
+            $this->validateConditionFilter($request);
         } catch (ValidationException $e) {
-            // Clear invalid page parameter when redirecting
-            $input = $request->except(['page']);
+            // Clear invalid filter parameters when redirecting
+            $input = $request->except(['page', 'category', 'condition', 'location', 'price_min', 'price_max']);
             return redirect()
                 ->route('products.index')
                 ->withInput($input)
@@ -109,40 +118,39 @@ class ProductController extends Controller
         ]);
     }
 
-    public function create(Request $request): View
+    /**
+     * Display the specified product for users
+     * Hiển thị chi tiết sản phẩm cho người dùng
+     */
+    public function show($id): View
     {
-        $user = $request->user();
+        // Validate ID format
+        if (!is_numeric($id) || (int)$id <= 0) {
+            return view('product.show')->with([
+                'product' => null,
+                'errorMessage' => 'Không tìm thấy sản phẩm',
+                'errorDescription' => 'Sản phẩm bạn tìm kiếm không tồn tại hoặc đã bị xóa.'
+            ]);
+        }
 
-        abort_if(!$user instanceof User, 403);
+        // Check if ID is too large for database limits
+        if ((int)$id > 2147483647) {
+            return view('product.show')->with([
+                'product' => null,
+                'errorMessage' => 'Không tìm thấy sản phẩm',
+                'errorDescription' => 'Sản phẩm bạn tìm kiếm không tồn tại hoặc đã bị xóa.'
+            ]);
+        }
 
-        $categories = Category::orderBy('name')->get();
-
-        $contactMethods = [
-            'phone' => 'Số điện thoại',
-            'email' => 'Email',
-            'chat' => 'Chat trong ứng dụng',
-            'other' => 'Khác',
-        ];
-
-        $conditions = [
-            'new' => 'Mới',
-            'like_new' => 'Như mới',
-            'good' => 'Tốt',
-            'fair' => 'Khá',
-            'needs_repair' => 'Cần sửa',
-        ];
-
-        return view('product.create', [
-            'user' => $user,
-            'categories' => $categories,
-            'contactMethods' => $contactMethods,
-            'conditions' => $conditions,
-            'maxImages' => 5,
-            'submissionToken' => $this->issueProductSubmissionToken(),
-        ]);
-    }
-    public function show(Product $product): View
-    {
+        $product = Product::find($id);
+        
+        if (!$product) {
+            return view('product.show')->with([
+                'product' => null,
+                'errorMessage' => 'Không tìm thấy sản phẩm',
+                'errorDescription' => 'Sản phẩm bạn tìm kiếm không tồn tại hoặc đã bị xóa.'
+            ]);
+        }
         $this->incrementProductViewCount($product);
 
         $product->load([
@@ -188,25 +196,21 @@ class ProductController extends Controller
         ]);
     }
 
-    private function incrementProductViewCount(Product $product): void
-    {
-        $sessionKey = "viewed_products.{$product->id}";
-
-        if (!session()->has($sessionKey)) {
-            $product->increment('view_count');
-        }
-
-        session()->put($sessionKey, now()->timestamp);
-    }
-
+    /**
+     * Display user's product management page
+     * Hiển thị trang quản lý sản phẩm của người dùng
+     */
     public function manage(Request $request): View|RedirectResponse
     {
-        // Validate page parameter
+        // Validate page parameter and filters
         try {
             $this->validatePageFilter($request);
+            $this->validateStatusFilter($request);
+            $this->validateSortFilter($request);
+            $this->validateSearchTerm($request);
         } catch (ValidationException $e) {
-            // Clear invalid page parameter when redirecting
-            $input = $request->except(['page']);
+            // Clear invalid filter parameters when redirecting
+            $input = $request->except(['page', 'status', 'sort', 'q']);
             return redirect()
                 ->route('products.manage')
                 ->withInput($input)
@@ -312,6 +316,10 @@ class ProductController extends Controller
         ]);
     }
 
+    /**
+     * Show the form for editing the specified product for users
+     * Hiển thị form chỉnh sửa sản phẩm cho người dùng
+     */
     public function edit(Request $request, Product $product): View|RedirectResponse
     {
         try {
@@ -360,7 +368,6 @@ class ProductController extends Controller
                 'additionalInfo' => [
                     'return_policy' => old('return_policy', $draft['data']['return_policy'] ?? $additionalInfo['return_policy']),
                     'shipping_policy' => old('shipping_policy', $draft['data']['shipping_policy'] ?? $additionalInfo['shipping_policy']),
-                    'additional_note' => old('additional_note', $draft['data']['additional_note'] ?? $additionalInfo['additional_note']),
                 ],
                 'draft' => $draft,
                 'isSold' => $isSold,
@@ -374,6 +381,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Update the specified product for users
+     * Cập nhật sản phẩm cho người dùng
+     */
     public function update(Request $request, Product $product): RedirectResponse
     {
         try {
@@ -407,7 +418,6 @@ class ProductController extends Controller
                 'name' => $validated['name'],
                 'category_id' => $validated['category_id'],
                 'description' => $validated['description'],
-                'short_description' => $validated['additional_note'] ?? null,
                 'condition' => $validated['condition'],
                 'price' => $validated['price'],
                 'original_price' => $validated['original_price'] ?? null,
@@ -419,7 +429,6 @@ class ProductController extends Controller
             $additionalInfo = array_filter([
                 'return_policy' => $validated['return_policy'] ?? null,
                 'shipping_policy' => $validated['shipping_policy'] ?? null,
-                'additional_note' => $validated['additional_note'] ?? null,
             ], fn($value) => $value !== null && $value !== '');
 
             $product->additional_info = !empty($additionalInfo)
@@ -462,6 +471,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Store a newly created product for users
+     * Lưu sản phẩm mới cho người dùng
+     */
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -501,7 +514,6 @@ class ProductController extends Controller
                 'name' => $validated['name'],
                 'category_id' => $validated['category_id'],
                 'description' => $validated['description'],
-                'short_description' => $validated['short_description'] ?? null,
                 'condition' => $validated['condition'],
                 'price' => $validated['price'],
                 'original_price' => $validated['original_price'] ?? null,
@@ -552,6 +564,83 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Show the form for creating a new product for users
+     * Hiển thị form tạo sản phẩm mới cho người dùng
+     */
+    public function create(Request $request): View|RedirectResponse
+    {
+        // Validate page parameter
+        try {
+            $this->validatePageFilter($request);
+        } catch (ValidationException $e) {
+            // Clear invalid page parameter when redirecting
+            $input = $request->except(['page']);
+            return redirect()
+                ->route('products.create')
+                ->withInput($input)
+                ->withErrors($e->errors());
+        }
+
+        $user = $request->user();
+
+        if (!$user instanceof User) {
+            $user = User::query()->first();
+        }
+
+        abort_if(!$user, 404, 'User not found');
+
+        $categories = Category::orderBy('name')->get();
+        $contactMethods = $this->contactMethodOptions();
+        $conditions = $this->conditionOptions();
+
+        $draft = $this->getProductDraft($user->id, 0);
+
+        return view('product.create', [
+            'user' => $user,
+            'categories' => $categories,
+            'contactMethods' => $contactMethods,
+            'conditions' => $conditions,
+            'maxImages' => 5,
+            'locationCity' => old('location_city', $draft['data']['location_city'] ?? ''),
+            'locationDistrict' => old('location_district', $draft['data']['location_district'] ?? ''),
+            'selectedContactMethods' => old('contact_methods', $draft['data']['contact_methods'] ?? []),
+            'additionalInfo' => [
+                'return_policy' => old('return_policy', $draft['data']['return_policy'] ?? ''),
+                'shipping_policy' => old('shipping_policy', $draft['data']['shipping_policy'] ?? ''),
+            ],
+            'draft' => $draft,
+            'phoneVerified' => (bool) ($user->phone && $user->phone !== ''),
+        ]);
+    }
+
+    // ========================================
+    // ADMIN METHODS - dành cho người quản trị
+    // ========================================
+
+    // ========================================
+    // HELPER METHODS - các phương thức hỗ trợ
+    // ========================================
+
+    /**
+     * Increment product view count
+     * Tăng lượt xem sản phẩm
+     */
+    private function incrementProductViewCount(Product $product): void
+    {
+        $sessionKey = "viewed_products.{$product->id}";
+
+        if (!session()->has($sessionKey)) {
+            $product->increment('view_count');
+        }
+
+        session()->put($sessionKey, now()->timestamp);
+    }
+
+    /**
+     * Validate product creation data
+     * Validate dữ liệu tạo sản phẩm
+     */
     protected function validateProduct(Request $request, User $user): array
     {
         $forbiddenKeywords = [
@@ -585,7 +674,6 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'between:1,30', 'regex:/^[^<>|]+$/u'],
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'description' => ['required', 'string', 'between:1,3000'],
-            'short_description' => ['nullable', 'string', 'max:255'],
             'images' => ['required', 'array', 'min:1', 'max:5'],
             'images.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp', 'max:8192'],
             'condition' => ['required', Rule::in(['new', 'like_new', 'good', 'fair', 'needs_repair'])],
@@ -634,6 +722,10 @@ class ProductController extends Controller
         return $validated;
     }
 
+    /**
+     * Issue product submission token
+     * Tạo token gửi sản phẩm
+     */
     protected function issueProductSubmissionToken(): string
     {
         $token = (string) Str::uuid();
@@ -649,6 +741,10 @@ class ProductController extends Controller
         return $token;
     }
 
+    /**
+     * Consume product submission token
+     * Tiêu thụ token gửi sản phẩm
+     */
     protected function consumeProductSubmissionToken(?string $token): bool
     {
         if (!$token || !is_string($token)) {
@@ -663,6 +759,10 @@ class ProductController extends Controller
         return $tokens->count() !== $remaining->count();
     }
 
+    /**
+     * Validate product update data
+     * Validate dữ liệu cập nhật sản phẩm
+     */
     protected function validateProductUpdate(Request $request, Product $product, User $user): array
     {
         $this->rejectWhitespaceOnlyText($request, [
@@ -694,7 +794,6 @@ class ProductController extends Controller
             'contact_methods.*' => ['string', Rule::in(array_keys($this->contactMethodOptions()))],
             'return_policy' => ['nullable', 'string', 'max:500'],
             'shipping_policy' => ['nullable', 'string', 'max:500'],
-            'additional_note' => ['nullable', 'string', 'max:500'],
             'existing_images' => ['nullable', 'array'],
             'existing_images.*' => ['integer', Rule::exists('product_images', 'id')->where('product_id', $product->id)],
             'remove_image_ids' => ['nullable', 'array'],
@@ -771,7 +870,8 @@ class ProductController extends Controller
     }
 
     /**
-     * @param array<int, UploadedFile|null> $files
+     * Store product images
+     * Lưu ảnh sản phẩm
      */
     protected function storeProductImages(Product $product, array $files): void
     {
@@ -801,6 +901,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Store image file to storage
+     * Lưu file ảnh vào storage
+     */
     protected function storeImageFile(UploadedFile $file): string
     {
         \Log::info('Bắt đầu lưu file', [
@@ -835,6 +939,10 @@ class ProductController extends Controller
         return $path;
     }
 
+    /**
+     * Sync product images (add/remove/reorder)
+     * Đồng bộ ảnh sản phẩm (thêm/xóa/sắp xếp lại)
+     */
     protected function syncProductImages(Product $product, array $newFiles, array $existingOrder, array $removeIds): void
     {
         $removeIds = collect($removeIds)->map(static fn($id) => (int) $id)->filter()->unique()->values();
@@ -881,6 +989,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Validate category filter
+     * Validate bộ lọc danh mục
+     */
     protected function validateCategoryFilter(Request $request): void
     {
         $categoryId = $request->input('category');
@@ -894,6 +1006,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Validate page filter
+     * Validate bộ lọc trang
+     */
     protected function validatePageFilter(Request $request): void
     {
         $page = $request->input('page');
@@ -907,6 +1023,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Guard against out of range page
+     * Bảo vệ chống lại trang ngoài phạm vi
+     */
     protected function guardAgainstOutOfRangePage(Request $request, LengthAwarePaginator $paginator, string $routeName): ?RedirectResponse
     {
         $requestedPage = (int) $request->input('page', 1);
@@ -928,6 +1048,10 @@ class ProductController extends Controller
         return null;
     }
 
+    /**
+     * Validate location filter
+     * Validate bộ lọc địa điểm
+     */
     protected function validateLocationFilter(Request $request): void
     {
         $location = $request->input('location');
@@ -952,7 +1076,10 @@ class ProductController extends Controller
         }
     }
 
-
+    /**
+     * Validate price filter
+     * Validate bộ lọc giá
+     */
     protected function validatePriceFilter(Request $request): void
     {
         $priceMin = $request->input('price_min');
@@ -994,7 +1121,176 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Validate condition filter
+     * Validate bộ lọc tình trạng
+     */
+    protected function validateConditionFilter(Request $request): void
+    {
+        $condition = $request->input('condition');
 
+        if ($condition !== null && $condition !== '') {
+            if (!Schema::hasColumn('products', 'condition')) {
+                throw ValidationException::withMessages([
+                    'condition' => 'Không thể lọc theo tình trạng vào lúc này',
+                ]);
+            }
+
+            $validConditions = ['new', 'like_new', 'good', 'fair', 'needs_repair'];
+            
+            if (!in_array($condition, $validConditions, true)) {
+                throw ValidationException::withMessages([
+                    'condition' => 'Tình trạng sản phẩm không hợp lệ',
+                ]);
+            }
+
+            $conditionExists = Product::query()
+                ->where('status', 'published')
+                ->where('condition', $condition)
+                ->exists();
+
+            if (!$conditionExists) {
+                throw ValidationException::withMessages([
+                    'condition' => 'Không tìm thấy sản phẩm với tình trạng đã chọn',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Validate status filter for product management
+     * Validate bộ lọc trạng thái cho quản lý sản phẩm
+     */
+    protected function validateStatusFilter(Request $request): void
+    {
+        $status = $request->input('status', 'all');
+
+        if ($status !== null && $status !== '') {
+            $validStatuses = ['all', 'published', 'pending', 'sold', 'hidden'];
+            
+            if (!in_array($status, $validStatuses, true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Trạng thái sản phẩm không hợp lệ',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Validate sort filter for product management
+     * Validate bộ lọc sắp xếp cho quản lý sản phẩm
+     */
+    protected function validateSortFilter(Request $request): void
+    {
+        $sort = $request->input('sort', 'newest');
+
+        if ($sort !== null && $sort !== '') {
+            $validSorts = [
+                'newest', 'oldest', 'name_asc', 'name_desc', 
+                'price_asc', 'price_desc', 'views_desc', 'views_asc'
+            ];
+            
+            if (!in_array($sort, $validSorts, true)) {
+                throw ValidationException::withMessages([
+                    'sort' => 'Tiêu chí sắp xếp không hợp lệ',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Validate inventory quantity filter
+     * Validate bộ lọc số lượng tồn kho
+     */
+    protected function validateInventoryFilter(Request $request): void
+    {
+        $minStock = $request->input('min_stock');
+        $maxStock = $request->input('max_stock');
+
+        // Validate min_stock
+        if ($minStock !== null && $minStock !== '') {
+            if (!is_numeric($minStock) || (int)$minStock < 0) {
+                throw ValidationException::withMessages([
+                    'min_stock' => 'Số lượng tồn kho tối thiểu không hợp lệ',
+                ]);
+            }
+        }
+
+        // Validate max_stock
+        if ($maxStock !== null && $maxStock !== '') {
+            if (!is_numeric($maxStock) || (int)$maxStock < 0) {
+                throw ValidationException::withMessages([
+                    'max_stock' => 'Số lượng tồn kho tối đa không hợp lệ',
+                ]);
+            }
+        }
+
+        // Validate range
+        if (($minStock !== null && $minStock !== '') && ($maxStock !== null && $maxStock !== '')) {
+            if ((int)$minStock > (int)$maxStock) {
+                throw ValidationException::withMessages([
+                    'min_stock' => 'Số lượng tồn kho tối thiểu không được lớn hơn tối đa',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Validate all product filters for comprehensive filtering
+     * Validate tất cả bộ lọc sản phẩm cho lọc toàn diện
+     */
+    protected function validateAllProductFilters(Request $request): void
+    {
+        $this->validatePageFilter($request);
+        $this->validateCategoryFilter($request);
+        $this->validatePriceFilter($request);
+        $this->validateLocationFilter($request);
+        $this->validateConditionFilter($request);
+        $this->validateStatusFilter($request);
+        $this->validateSortFilter($request);
+        $this->validateInventoryFilter($request);
+    }
+
+    /**
+     * Validate search term for product search
+     * Validate từ khóa tìm kiếm sản phẩm
+     */
+    protected function validateSearchTerm(Request $request): void
+    {
+        $searchTerm = $request->input('q');
+
+        if ($searchTerm !== null && $searchTerm !== '') {
+            $trimmedTerm = trim($searchTerm);
+            
+            // Check if search term is too short or too long
+            if (strlen($trimmedTerm) < 2) {
+                throw ValidationException::withMessages([
+                    'q' => 'Từ khóa tìm kiếm phải có ít nhất 2 ký tự',
+                ]);
+            }
+            
+            if (strlen($trimmedTerm) > 100) {
+                throw ValidationException::withMessages([
+                    'q' => 'Từ khóa tìm kiếm không được vượt quá 100 ký tự',
+                ]);
+            }
+
+            // Check for potentially dangerous patterns
+            $dangerousPatterns = ['<script', 'javascript:', 'data:', 'vbscript:'];
+            foreach ($dangerousPatterns as $pattern) {
+                if (stripos($trimmedTerm, $pattern) !== false) {
+                    throw ValidationException::withMessages([
+                        'q' => 'Từ khóa tìm kiếm chứa ký tự không hợp lệ',
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Normalize price value
+     * Chuẩn hóa giá trị giá
+     */
     protected function normalizePrice($value): ?int
     {
         if ($value === null || $value === '') {
@@ -1014,6 +1310,10 @@ class ProductController extends Controller
         return (int) $numeric;
     }
 
+    /**
+     * Normalize request prices
+     * Chuẩn hóa giá trong request
+     */
     protected function normalizeRequestPrices(Request $request): void
     {
         $request->merge([
@@ -1022,6 +1322,10 @@ class ProductController extends Controller
         ]);
     }
 
+    /**
+     * Delete image file from storage
+     * Xóa file ảnh khỏi storage
+     */
     protected function deleteImageFile(?string $url): void
     {
         if (!$url) {
@@ -1071,6 +1375,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Check if value contains full-width digits
+     * Kiểm tra giá trị có chứa số full-width không
+     */
     protected function containsFullWidthDigits($value): bool
     {
         if ($value === null || $value === '') {
@@ -1080,6 +1388,10 @@ class ProductController extends Controller
         return preg_match('/[\x{FF10}-\x{FF19}]/u', (string) $value) === 1;
     }
 
+    /**
+     * Reject full-width digits in form fields
+     * Từ chối số full-width trong các trường form
+     */
     protected function rejectFullWidthDigits(Request $request, array $fields): void
     {
         foreach ($fields as $field => $label) {
@@ -1097,6 +1409,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Reject whitespace-only text in form fields
+     * Từ chối văn bản chỉ chứa khoảng trắng
+     */
     protected function rejectWhitespaceOnlyText(Request $request, array $fields): void
     {
         foreach ($fields as $field => $label) {
@@ -1124,6 +1440,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Trim unicode whitespace
+     * Cắt khoảng trắng unicode
+     */
     protected function unicodeTrim(string $value): string
     {
         $trimmed = preg_replace('/^\s+|\s+$/u', '', $value);
@@ -1135,6 +1455,10 @@ class ProductController extends Controller
         return trim($trimmed);
     }
 
+    /**
+     * Split location string into city and district
+     * Tách chuỗi địa điểm thành thành phố và quận/huyện
+     */
     protected function splitLocation(?string $location): array
     {
         if (!$location) {
@@ -1149,13 +1473,16 @@ class ProductController extends Controller
         ];
     }
 
+    /**
+     * Resolve additional info from JSON
+     * Giải mã thông tin bổ sung từ JSON
+     */
     protected function resolveAdditionalInfo(?string $payload): array
     {
         if (!$payload) {
             return [
                 'return_policy' => '',
                 'shipping_policy' => '',
-                'additional_note' => '',
             ];
         }
 
@@ -1165,17 +1492,19 @@ class ProductController extends Controller
             return [
                 'return_policy' => '',
                 'shipping_policy' => '',
-                'additional_note' => '',
             ];
         }
 
         return [
             'return_policy' => (string) ($decoded['return_policy'] ?? ''),
             'shipping_policy' => (string) ($decoded['shipping_policy'] ?? ''),
-            'additional_note' => (string) ($decoded['additional_note'] ?? ''),
         ];
     }
 
+    /**
+     * Get contact method options
+     * Lấy các tùy chọn phương thức liên hệ
+     */
     protected function contactMethodOptions(): array
     {
         return [
@@ -1186,6 +1515,10 @@ class ProductController extends Controller
         ];
     }
 
+    /**
+     * Get condition options
+     * Lấy các tùy chọn tình trạng
+     */
     protected function conditionOptions(): array
     {
         return [
@@ -1197,11 +1530,19 @@ class ProductController extends Controller
         ];
     }
 
+    /**
+     * Get product draft cache key
+     * Lấy key cache cho bản nháp sản phẩm
+     */
     protected function productDraftCacheKey(int $userId, int $productId): string
     {
         return sprintf('product-draft-%d-%d', $userId, $productId);
     }
 
+    /**
+     * Get product draft from cache
+     * Lấy bản nháp sản phẩm từ cache
+     */
     protected function getProductDraft(int $userId, int $productId): ?array
     {
         $draft = Cache::get($this->productDraftCacheKey($userId, $productId));
@@ -1213,7 +1554,10 @@ class ProductController extends Controller
         return null;
     }
 
-    
+    /**
+     * Check if product can be deleted for users
+     * Kiểm tra điều kiện xóa sản phẩm cho người dùng
+     */
     public function checkDeleteConditions(Request $request, Product $product): JsonResponse
     {
         $user = $request->user();
@@ -1289,6 +1633,10 @@ class ProductController extends Controller
         ]);
     }
 
+    /**
+     * Remove the specified product for users
+     * Xóa sản phẩm cho người dùng
+     */
     public function destroy(Request $request, Product $product)
     {
         $user = $request->user();
@@ -1376,6 +1724,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Undo product deletion for users
+     * Hoàn tác việc xóa sản phẩm cho người dùng
+     */
     public function undoDelete(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -1457,6 +1809,10 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Perform bulk actions on user's products
+     * Thực hiện hành động hàng loạt trên sản phẩm của người dùng
+     */
     public function bulkAction(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -1534,8 +1890,13 @@ class ProductController extends Controller
         return back()->with('product_bulk_error', 'Không có sản phẩm nào phù hợp để xử lý');
     }
 
+    // ========================================
+    // ADMIN METHODS - dành cho quản trị viên
+    // ========================================
+
     /**
-     * Handle ModelNotFoundException for products
+     * Handle ModelNotFoundException for products (Admin method)
+     * Xử lý sản phẩm không tìm thấy (Phương thức Admin)
      */
     public function productNotFound()
     {

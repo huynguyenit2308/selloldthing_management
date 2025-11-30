@@ -108,7 +108,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/products/{product}/update-status', [AdminProductController::class, 'updateStatus'])->name('admin.products.updateStatus');
     Route::post('/products/{product}/extend', [AdminProductController::class, 'extendExpiration'])->name('admin.products.extend');
 });
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 
 Route::middleware('auth')->group(function () {
@@ -293,25 +293,4 @@ Route::delete('/favorites', [FavoriteController::class, 'clearAll'])
 
 Route::fallback(function () {
     abort(404);
-
-
-
-    Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-    // Danh sách voucher
-    Route::get('voucher/list', [CRUD_VoucherController::class, 'listvoucher'])->name('voucher.list');
-    // Chi tiết voucher
-    Route::get('voucher/detail', [CRUD_VoucherController::class, 'detailVoucher'])->name('voucher.detail');
-    // Thêm voucher
-    Route::get('voucher/add', [CRUD_VoucherController::class, 'addvoucher'])->name('voucher.add');
-    Route::post('voucher/add', [CRUD_VoucherController::class, 'postAddvoucher'])->name('voucher.store');
-    // Sửa voucher
-    Route::get('voucher/update', [CRUD_VoucherController::class, 'updatevoucher'])->name('voucher.edit');
-    Route::post('voucher/update', [CRUD_VoucherController::class, 'updatePostvoucher'])->name('voucher.update');
-    // Xóa voucher
-    Route::delete('voucher/delete', [CRUD_VoucherController::class, 'deleteVoucher'])->name('voucher.delete');
-
-    Route::fallback(function () {
-        abort(404);
-    });
 });
