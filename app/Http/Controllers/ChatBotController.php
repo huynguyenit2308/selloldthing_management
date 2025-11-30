@@ -8,13 +8,13 @@ use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use OpenAI;
+use OpenAI\Client;
 
 class ChatBotController extends Controller
 {
     public function send(Request $request)
     {
-        $client = OpenAI::client(env('OPENAI_API_KEY'));
+        $client = \OpenAI::client(env('OPENAI_API_KEY'));
         $userMessage = $request->message;
 
         $products = Product::take(5)->get(['name', 'quantity']);
