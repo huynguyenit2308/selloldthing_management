@@ -247,14 +247,14 @@
                         <div class="form-grid two-columns">
                             <div class="form-field">
                                 <label for="location_city">Khu vực (Tỉnh/Thành phố) <span class="required">*</span></label>
-                                <input id="location_city" name="location_city" type="text" value="{{ old('location_city', $locationCity) }}" placeholder="Ví dụ: Hà Nội" required maxlength="100">
+                                <input id="location_city" name="location_city" type="text" value="{{ old('location_city', $locationCity) }}" placeholder="Ví dụ: Hà Nội" required maxlength="255">
                                 @error('location_city')
                                     <p class="field-error">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div class="form-field">
                                 <label for="location_district">Quận/Huyện <span class="required">*</span></label>
-                                <input id="location_district" name="location_district" type="text" value="{{ old('location_district', $locationDistrict) }}" placeholder="Ví dụ: Cầu Giấy" required maxlength="100">
+                                <input id="location_district" name="location_district" type="text" value="{{ old('location_district', $locationDistrict) }}" placeholder="Ví dụ: Cầu Giấy" required maxlength="255">
                                 @error('location_district')
                                     <p class="field-error">{{ $message }}</p>
                                 @enderror
@@ -622,6 +622,50 @@
                         return false;
                     }
                     return true;
+                },
+                locationCity() {
+                    const input = form.location_city;
+                    if (!input) {
+                        return true;
+                    }
+                    const value = input.value.trim();
+                    clearFieldError(input);
+                    if (value.length < 1) {
+                        showFieldError(input, 'Tỉnh/Thành phố phải có ít nhất 1 ký tự');
+                        return false;
+                    }
+                    if (value.length > 30) {
+                        showFieldError(input, 'Tỉnh/Thành phố không được vượt quá 30 ký tự');
+                        return false;
+                    }
+                    // Check for special characters
+                    if (/[<>|!@#$%^&*()_+=\[\]{};:"\\|,.<>\/?]/.test(value)) {
+                        showFieldError(input, 'Tỉnh/Thành phố không được chứa ký tự đặc biệt');
+                        return false;
+                    }
+                    return true;
+                },
+                locationDistrict() {
+                    const input = form.location_district;
+                    if (!input) {
+                        return true;
+                    }
+                    const value = input.value.trim();
+                    clearFieldError(input);
+                    if (value.length < 1) {
+                        showFieldError(input, 'Quận/Huyện phải có ít nhất 1 ký tự');
+                        return false;
+                    }
+                    if (value.length > 30) {
+                        showFieldError(input, 'Quận/Huyện không được vượt quá 30 ký tự');
+                        return false;
+                    }
+                    // Check for special characters
+                    if (/[<>|!@#$%^&*()_+=\[\]{};:"\\|,.<>\/?]/.test(value)) {
+                        showFieldError(input, 'Quận/Huyện không được chứa ký tự đặc biệt');
+                        return false;
+                    }
+                    return true;
                 }
             };
 
@@ -667,6 +711,16 @@
                     formatPriceInput(form.price);
                 });
                 form.price.addEventListener('blur', validators.price);
+            }
+
+            if (form.location_city) {
+                form.location_city.addEventListener('input', validators.locationCity);
+                form.location_city.addEventListener('blur', validators.locationCity);
+            }
+
+            if (form.location_district) {
+                form.location_district.addEventListener('input', validators.locationDistrict);
+                form.location_district.addEventListener('blur', validators.locationDistrict);
             }
 
             if (form.original_price) {
