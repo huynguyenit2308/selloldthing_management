@@ -96,7 +96,7 @@
                             <div class="upload-hint">
                                 <span class="upload-icon">📷</span>
                                 <p>Tải sản phẩm lên</p>
-                                <small>(tối đa 5 ảnh, kích thước tối thiểu 300x300px)</small>
+                                <small>(tối đa 5 ảnh)</small>
                             </div>
                         </div>
                         <div id="image-preview" class="image-preview-grid" aria-live="polite"></div>
@@ -172,14 +172,14 @@
                     <div class="form-grid two-columns">
                         <div class="form-field">
                             <label for="location_city">Tỉnh/Thành phố <span class="required">*</span></label>
-                            <input id="location_city" name="location_city" type="text" value="{{ old('location_city') }}" placeholder="Ví dụ: Hà Nội" required maxlength="100">
+                            <input id="location_city" name="location_city" type="text" value="{{ old('location_city') }}" placeholder="Ví dụ: Hà Nội" required maxlength="255">
                             @error('location_city')
                                 <p class="field-error">{{ $message }}</p>
                             @enderror
                         </div>
                         <div class="form-field">
                             <label for="location_district">Quận/Huyện <span class="required">*</span></label>
-                            <input id="location_district" name="location_district" type="text" value="{{ old('location_district') }}" placeholder="Ví dụ: Cầu Giấy" required maxlength="100">
+                            <input id="location_district" name="location_district" type="text" value="{{ old('location_district') }}" placeholder="Ví dụ: Cầu Giấy" required maxlength="255">
                             @error('location_district')
                                 <p class="field-error">{{ $message }}</p>
                             @enderror

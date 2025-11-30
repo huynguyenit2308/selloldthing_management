@@ -441,6 +441,21 @@
             return Promise.resolve();
         }
 
+        if (keyword.length > 100) {
+            if (showValidationErrors) {
+                setError('Từ khóa tìm kiếm không được vượt quá 100 ký tự');
+            }
+            return Promise.resolve();
+        }
+
+        // Check for special characters - đơn giản hóa
+        if (/[<>|!@#$%^&*()+=\[\]{};:"\\\/?]/.test(keyword)) {
+            if (showValidationErrors) {
+                setError('Từ khóa chứa ký tự không hợp lệ. Vui lòng chỉ sử dụng chữ cái, số và các ký tự cơ bản');
+            }
+            return Promise.resolve();
+        }
+
         setError(null);
         setLoading(true);
         clearResults();

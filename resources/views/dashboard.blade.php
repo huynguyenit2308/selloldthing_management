@@ -385,7 +385,7 @@
                                     <label for="main-search" class="sr-only">Tìm kiếm sản phẩm</label>
                                     <input id="main-search" type="text" name="q"
                                         value="{{ request('q') }}" placeholder="Tìm kiếm sản phẩm..."
-                                        aria-label="Tìm kiếm sản phẩm" data-search-overlay-trigger="true">
+                                        aria-label="Tìm kiếm sản phẩm" data-search-overlay-trigger="true" maxlength="255">
                                     <button type="submit" aria-label="Tìm kiếm">
                                         <i class="fa fa-search" aria-hidden="true"></i>
                                     </button>
@@ -525,7 +525,7 @@
                 <div class="search-overlay__input-wrapper">
                     <i class="fa fa-search" aria-hidden="true"></i>
                     <input type="text" class="search-overlay__input" id="search-overlay-input"
-                        placeholder="Tìm kiếm sản phẩm..." autocomplete="off">
+                        placeholder="Tìm kiếm sản phẩm..." autocomplete="off" maxlength="255">
                     <div class="search-overlay__actions">
                         <button type="button" class="primary" data-action="submit">Tìm kiếm</button>
                         <button type="button" data-action="clear">Xóa</button>
@@ -601,6 +601,40 @@
         sendBtn.onclick = sendMessage;
         input.addEventListener('keypress', e => {
             if (e.key === 'Enter') sendMessage();
+        });
+
+        // Validation cho ô tìm kiếm chính
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainSearchForm = document.querySelector('.nav_search');
+            const mainSearchInput = document.getElementById('main-search');
+            
+            if (mainSearchForm && mainSearchInput) {
+                mainSearchForm.addEventListener('submit', function(e) {
+                    const keyword = mainSearchInput.value.trim();
+                    
+                    if (keyword.length < 2) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập ít nhất 2 ký tự');
+                        return false;
+                    }
+                    
+                    if (keyword.length > 100) {
+                        e.preventDefault();
+                        alert('Từ khóa tìm kiếm không được vượt quá 100 ký tự');
+                        return false;
+                    }
+                    
+                    // Check for special characters - đơn giản hóa
+                    if (/[<>|!@#$%^&*()+=\[\]{};:"\\\/?]/.test(keyword)) {
+                        e.preventDefault();
+                        alert('Từ khóa chứa ký tự không hợp lệ. Vui lòng chỉ sử dụng chữ cái, số và các ký tự cơ bản');
+                        return false;
+                    }
+                    
+                    // Nếu pass validation, cho phép submit
+                    return true;
+                });
+            }
         });
     </script>
     <script src="{{ asset('js/jquery-3.2.1.min.js') }}"></script>
