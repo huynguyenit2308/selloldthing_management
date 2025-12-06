@@ -708,7 +708,6 @@ class ProductSeeder extends Seeder
                 'price' => $data['price'],
                 'original_price' => $data['original_price'],
                 'description' => $data['description'],
-                'short_description' => $data['short_description'],
                 'condition' => $data['condition'],
                 'location' => $data['location'],
                 'seller_name' => $data['seller_name'],
