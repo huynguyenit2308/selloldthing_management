@@ -126,14 +126,16 @@
                     @foreach ($products as $product)
                     <article class="product-card">
                         <div class="product-card-image">
-                            @php
-                            $image = $product->images->first();
-                            @endphp
-                            @if ($image)
-                            <img src="{{ $image->image_url }}" alt="{{ $product->name }}">
-                            @else
-                            <img src="{{ asset('images/product_1.png') }}" alt="{{ $product->name }}">
-                            @endif
+                            <a href="{{ route('products.show', $product) }}">
+                                @php
+                                $image = $product->images->first();
+                                @endphp
+                                @if ($image)
+                                <img src="{{ $image->image_url }}" alt="{{ $product->name }}">
+                                @else
+                                <img src="{{ asset('images/product_1.png') }}" alt="{{ $product->name }}">
+                                @endif
+                            </a>
                         </div>
 
                         <div class="product-card-body">

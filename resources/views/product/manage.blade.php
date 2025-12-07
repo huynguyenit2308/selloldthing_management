@@ -348,7 +348,6 @@
     <div id="toastNotification" class="toast-notification" style="display: none;">
         <div class="toast-content">
             <span class="toast-message"></span>
-            <button type="button" class="toast-undo" id="undoDelete" style="display: none;">Hoàn tác</button>
         </div>
         <button type="button" class="toast-close" id="closeToast">×</button>
     </div>
@@ -421,7 +420,6 @@
                 
                 // Enhanced delete product functionality
                 let currentDeleteData = null;
-                let undoTimeout = null;
 
                 // Check product existence before action
                 async function checkProductExists(checkUrl) {
@@ -621,7 +619,7 @@
 
                             setTimeout(() => {
                                 currentDeleteData.row.style.display = 'none';
-                                showSuccessToast(data.message, data.undoData);
+                                showSuccessToast(data.message);
                             }, 300);
                         } else {
                             showAlert('error', data.message || 'Có lỗi xảy ra khi xóa sản phẩm');
@@ -632,62 +630,17 @@
                     });
                 }
 
-                function showSuccessToast(message, undoData = null) {
+                function showSuccessToast(message) {
                     const toast = document.getElementById('toastNotification');
                     const messageEl = toast.querySelector('.toast-message');
-                    const undoBtn = document.getElementById('undoDelete');
                     
                     messageEl.textContent = message;
-                    
-                    if (undoData) {
-                        undoBtn.style.display = 'inline-block';
-                        undoBtn.onclick = () => performUndo(undoData);
-                        
-                        // Auto-hide undo after 8 seconds
-                        undoTimeout = setTimeout(() => {
-                            undoBtn.style.display = 'none';
-                        }, 8000);
-                    } else {
-                        undoBtn.style.display = 'none';
-                    }
-                    
                     toast.style.display = 'block';
                     
                     // Auto-hide toast after 10 seconds
                     setTimeout(() => {
                         toast.style.display = 'none';
                     }, 10000);
-                }
-
-                function performUndo(undoData) {
-                    if (undoTimeout) {
-                        clearTimeout(undoTimeout);
-                        undoTimeout = null;
-                    }
-                    
-                    fetch('/my-products/undo-delete', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(undoData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Reload page to show restored product
-                            window.location.reload();
-                        } else {
-                            showAlert('error', data.message || 'Không thể hoàn tác');
-                        }
-                    })
-                    .catch(error => {
-                        showAlert('error', 'Lỗi khi hoàn tác. Vui lòng thử lại.');
-                    });
-                    
-                    document.getElementById('toastNotification').style.display = 'none';
                 }
 
                 function showAlert(type, message) {

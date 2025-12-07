@@ -479,10 +479,23 @@ body.product-detail-page {
     overflow: hidden;
 }
 
+.product-similar-image a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+}
+
 .product-similar-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.product-similar-image a:hover img {
+    transform: scale(1.05);
+    opacity: 0.9;
 }
 
 .product-similar-body {

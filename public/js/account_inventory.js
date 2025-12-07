@@ -140,6 +140,15 @@
             const payload = await response.json();
 
             if (!response.ok || !payload.success) {
+                // Handle 404 error - product was deleted in another tab
+                if (response.status === 404) {
+                    showToast(payload.message || 'Sản phẩm không còn tồn tại. Vui lòng tải lại trang.', 'error');
+                    // Reload page after a short delay to show the message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                    return false;
+                }
                 throw new Error(payload.message || 'Không thể cập nhật tồn kho');
             }
 
@@ -183,6 +192,15 @@
             const payload = await response.json();
 
             if (!response.ok || !payload.success) {
+                // Handle 404 error - some products were deleted in another tab
+                if (response.status === 404) {
+                    showToast(payload.message || 'Một số sản phẩm không còn tồn tại. Vui lòng tải lại trang.', 'error');
+                    // Reload page after a short delay to show the message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                    return;
+                }
                 throw new Error(payload.errors?.join(', ') || payload.message || 'Không thể lưu tất cả thay đổi');
             }
 
