@@ -210,7 +210,19 @@
         }
     </style>
 </head>
-
+@if(session('error'))
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi đường dẫn',
+                text: "{{ session('error') }}",
+                confirmButtonText: 'Quay lại trang chủ'
+            });
+        });
+    </script>
+@endif
 <body class="@yield('body-class')">
 	@auth
         @php
