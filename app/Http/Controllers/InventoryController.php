@@ -235,11 +235,29 @@ class InventoryController extends Controller
         }
     }
 
-    public function updateStock(Request $request, Product $product): JsonResponse
+    public function updateStock(Request $request, $productId): JsonResponse
     {
         $user = $request->user();
 
-        if (!$user || $product->user_id !== $user->id) {
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn không có quyền cập nhật sản phẩm này.',
+            ], 403);
+        }
+
+        // Find the product manually to handle case where it doesn't exist
+        $product = Product::find($productId);
+
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sản phẩm không còn tồn tại. Vui lòng tải lại trang.',
+                'reload' => true
+            ], 404);
+        }
+
+        if ($product->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Bạn không có quyền cập nhật sản phẩm này.',

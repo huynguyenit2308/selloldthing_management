@@ -639,7 +639,7 @@
                         return false;
                     }
                     // Check for special characters
-                    if (/[<>|!@#$%^&*()_+=\[\]{};:"\\|,.<>\/?]/.test(value)) {
+                    if (/[<>|!@#$%^&*()_+=\[\]{};:"\\|<>\/?]/.test(value)) {
                         showFieldError(input, 'Tỉnh/Thành phố không được chứa ký tự đặc biệt');
                         return false;
                     }
@@ -661,7 +661,7 @@
                         return false;
                     }
                     // Check for special characters
-                    if (/[<>|!@#$%^&*()_+=\[\]{};:"\\|,.<>\/?]/.test(value)) {
+                    if (/[<>|!@#$%^&*()_+=\[\]{};:"\\|<>\/?]/.test(value)) {
                         showFieldError(input, 'Quận/Huyện không được chứa ký tự đặc biệt');
                         return false;
                     }

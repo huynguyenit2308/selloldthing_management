@@ -613,18 +613,20 @@
                         <h2>Sản phẩm tương tự</h2>
                     </header>
 
-                    <div class="product-similar-grid">
+                    <div class="product-similar-grid">  
                         @forelse ($similarProducts as $similar)
                         @php
                         $similarImage = $similar->images->first();
                         @endphp
                         <article class="product-similar-card">
                             <div class="product-similar-image">
-                                @if ($similarImage)
-                                <img src="{{ $similarImage->image_url }}" alt="{{ $similar->name }}">
-                                @else
-                                <img src="{{ asset('images/product_1.png') }}" alt="{{ $similar->name }}">
-                                @endif
+                                <a href="{{ route('products.show', $similar) }}">
+                                    @if ($similarImage)
+                                    <img src="{{ $similarImage->image_url }}" alt="{{ $similar->name }}">
+                                    @else
+                                    <img src="{{ asset('images/product_1.png') }}" alt="{{ $similar->name }}">
+                                    @endif
+                                </a>
                             </div>
                             <div class="product-similar-body">
                                 <h3><a href="{{ route('products.show', $similar) }}">{{ $similar->name }}</a></h3>
